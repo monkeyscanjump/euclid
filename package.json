@@ -1,0 +1,100 @@
+{
+  "name": "@monkeyscanjump/euclid",
+  "version": "0.1.0",
+  "description": "A framework-agnostic, modular component library for interacting with the Euclid Protocol, built with StencilJS",
+  "license": "CC0-1.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/monkeyscanjump/euclid"
+  },
+  "main": "dist/index.cjs.js",
+  "module": "dist/index.js",
+  "types": "dist/types/index.d.ts",
+  "collection": "dist/collection/collection-manifest.json",
+  "files": [
+    "dist",
+    "loader"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs.js"
+    },
+    "./react": {
+      "types": "./dist/react/components.d.ts",
+      "import": "./dist/react/components.ts",
+      "default": "./dist/react/components.ts"
+    },
+    "./angular": {
+      "types": "./dist/angular/index.d.ts",
+      "import": "./dist/angular/index.ts"
+    },
+    "./vue": {
+      "types": "./dist/vue/index.d.ts",
+      "import": "./dist/vue/index.ts"
+    },
+    "./dist/components/*.js": {
+      "import": "./dist/components/*.js",
+      "types": "./dist/components/*.d.ts"
+    },
+    "./dist/www/sw-base.js": "./dist/www/sw-base.js",
+    "./loader": {
+      "types": "./loader/index.d.ts",
+      "import": "./loader/index.js",
+      "require": "./loader/index.cjs.js"
+    }
+  },
+  "scripts": {
+    "prebuild": "rimraf dist",
+    "build:stencil": "stencil build",
+    "build:sw:bundle": "esbuild src/sw.ts --bundle --outfile=dist/www/sw-base.js --format=esm --minify --external:fs --external:crypto",
+    "build:sw:inject": "node build-sw.mjs",
+    "build": "npm run build:stencil && npm run build:sw:bundle && npm run build:sw:inject",
+    "dev": "stencil build --dev --watch",
+    "start": "stencil build --dev --watch --serve",
+    "test": "stencil test --spec --e2e",
+    "test:watch": "stencil test --spec --e2e --watchAll",
+    "lint": "eslint .",
+    "clean": "rimraf dist .stencil tsconfig.tsbuildinfo node_modules package-lock.json || echo 'Clean completed'"
+  },
+  "dependencies": {
+    "@stencil/store": "^2.2.0",
+    "esbuild": "^0.25.9",
+    "idb": "^8.0.3",
+    "workbox-background-sync": "^7.3.0",
+    "workbox-core": "^7.3.0",
+    "workbox-expiration": "^7.3.0",
+    "workbox-precaching": "^7.3.0",
+    "workbox-routing": "^7.3.0",
+    "workbox-strategies": "^7.3.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.15.0",
+    "@stencil/angular-output-target": "^1.1.1",
+    "@stencil/core": "^4.37.0",
+    "@stencil/react-output-target": "^1.2.0",
+    "@stencil/vue-output-target": "^0.11.8",
+    "@types/node": "^22.8.7",
+    "@typescript-eslint/eslint-plugin": "^8.14.0",
+    "@typescript-eslint/parser": "^8.14.0",
+    "eslint": "^9.15.0",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.14.0",
+    "workbox-build": "^7.3.0"
+  },
+  "keywords": [
+    "stencil",
+    "web-components",
+    "euclid-protocol",
+    "multi-chain",
+    "defi",
+    "cross-chain",
+    "framework-agnostic",
+    "react",
+    "angular",
+    "vue",
+    "svelte"
+  ]
+}

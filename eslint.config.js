@@ -1,0 +1,61 @@
+// ESLint v9+ Flat Config
+import js from '@eslint/js';
+import typescript from 'typescript-eslint';
+
+export default [
+  // Base recommended config
+  js.configs.recommended,
+
+  // TypeScript configs
+  ...typescript.configs.recommended,
+
+  {
+    files: ['**/*.{js,mjs,cjs,ts,tsx}'],
+    languageOptions: {
+      ecmaVersion: 2020,
+      sourceType: 'module',
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true
+        }
+      },
+      globals: {
+        window: true,
+        document: true,
+        console: true,
+        process: true,
+        Buffer: true,
+        __dirname: true,
+        __filename: true,
+        global: true,
+        module: true,
+        require: true,
+        exports: true
+      }
+    },
+    rules: {
+      '@typescript-eslint/no-unused-vars': 'error',
+      '@typescript-eslint/no-explicit-any': 'off', // Allow any types for flexibility
+      '@typescript-eslint/explicit-function-return-type': 'off',
+      '@typescript-eslint/explicit-module-boundary-types': 'off',
+      '@typescript-eslint/no-empty-function': 'off',
+      '@typescript-eslint/ban-ts-comment': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'off',
+      '@typescript-eslint/no-require-imports': 'off'
+    }
+  },
+
+  {
+    ignores: [
+      'dist/',
+      'loader/',
+      'www/',
+      '.stencil/',
+      'node_modules/',
+      '**/*.d.ts',
+      'stencil.config.ts',
+      'build-sw.mjs',
+      'workbox-config.js'
+    ]
+  }
+];

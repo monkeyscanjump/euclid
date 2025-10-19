@@ -1,0 +1,110 @@
+/* 
+ * Global CSS for Euclid Protocol Components
+ * Design system tokens and CSS custom properties
+ */
+
+:root {
+  /* Colors - Euclid Protocol Brand */
+  --euclid-color-primary: #2563eb;
+  --euclid-color-primary-dark: #1d4ed8;
+  --euclid-color-primary-light: #3b82f6;
+  
+  --euclid-color-secondary: #64748b;
+  --euclid-color-secondary-dark: #475569;
+  --euclid-color-secondary-light: #94a3b8;
+  
+  --euclid-color-success: #10b981;
+  --euclid-color-warning: #f59e0b;
+  --euclid-color-error: #ef4444;
+  
+  --euclid-color-background: #ffffff;
+  --euclid-color-surface: #f8fafc;
+  --euclid-color-surface-alt: #f1f5f9;
+  
+  --euclid-color-text: #1e293b;
+  --euclid-color-text-secondary: #64748b;
+  --euclid-color-text-muted: #94a3b8;
+  
+  --euclid-color-border: #e2e8f0;
+  --euclid-color-border-light: #f1f5f9;
+  
+  /* Typography */
+  --euclid-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --euclid-font-family-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  
+  --euclid-font-size-xs: 0.75rem;
+  --euclid-font-size-sm: 0.875rem;
+  --euclid-font-size-base: 1rem;
+  --euclid-font-size-lg: 1.125rem;
+  --euclid-font-size-xl: 1.25rem;
+  --euclid-font-size-2xl: 1.5rem;
+  
+  --euclid-font-weight-normal: 400;
+  --euclid-font-weight-medium: 500;
+  --euclid-font-weight-semibold: 600;
+  --euclid-font-weight-bold: 700;
+  
+  --euclid-line-height-tight: 1.25;
+  --euclid-line-height-normal: 1.5;
+  --euclid-line-height-relaxed: 1.625;
+  
+  /* Spacing */
+  --euclid-space-xs: 0.25rem;
+  --euclid-space-sm: 0.5rem;
+  --euclid-space-md: 1rem;
+  --euclid-space-lg: 1.5rem;
+  --euclid-space-xl: 2rem;
+  --euclid-space-2xl: 3rem;
+  
+  /* Border radius */
+  --euclid-border-radius-sm: 0.25rem;
+  --euclid-border-radius-md: 0.375rem;
+  --euclid-border-radius-lg: 0.5rem;
+  --euclid-border-radius-xl: 0.75rem;
+  
+  /* Shadows */
+  --euclid-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --euclid-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --euclid-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  
+  /* Transitions */
+  --euclid-transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --euclid-transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --euclid-transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Z-index */
+  --euclid-z-dropdown: 1000;
+  --euclid-z-sticky: 1020;
+  --euclid-z-fixed: 1030;
+  --euclid-z-modal-backdrop: 1040;
+  --euclid-z-modal: 1050;
+  --euclid-z-popover: 1060;
+  --euclid-z-tooltip: 1070;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --euclid-color-background: #0f172a;
+    --euclid-color-surface: #1e293b;
+    --euclid-color-surface-alt: #334155;
+    
+    --euclid-color-text: #f1f5f9;
+    --euclid-color-text-secondary: #cbd5e1;
+    --euclid-color-text-muted: #94a3b8;
+    
+    --euclid-color-border: #334155;
+    --euclid-color-border-light: #475569;
+  }
+}
+
+/* Base styles for clean, performant components */
+* {
+  box-sizing: border-box;
+}
+
+/* Ensure components use the design system */
+[class*="euclid-"] {
+  font-family: var(--euclid-font-family);
+  color: var(--euclid-color-text);
+}

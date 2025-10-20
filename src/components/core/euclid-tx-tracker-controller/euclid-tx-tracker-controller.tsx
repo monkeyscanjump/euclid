@@ -75,7 +75,7 @@ export class EuclidTxTrackerController {
     try {
       console.log(`🔍 Checking transaction status: ${txHash}`);
 
-      const response = await apiClient.trackTransaction(txHash, chainUID);
+      const response = await apiClient.trackTransactionWrapped(txHash, chainUID);
 
       if (response.success && response.data) {
         const { status } = response.data;
@@ -83,7 +83,7 @@ export class EuclidTxTrackerController {
         // Update transaction status in wallet store
         walletStore.updateTransactionStatus(chainUID, txHash, status as 'pending' | 'confirmed' | 'failed');
 
-        if (status === 'success' || status === 'failed') {
+        if (status === 'confirmed' || status === 'failed') {
           // Transaction is final, stop tracking
           this.trackingTransactions.delete(txHash);
 
@@ -98,7 +98,7 @@ export class EuclidTxTrackerController {
           console.log(`✅ Transaction finalized: ${txHash} - Status: ${status}`);
 
           // If successful, refresh user data to update balances/positions
-          if (status === 'success') {
+          if (status === 'confirmed') {
             this.refreshUserDataAfterSuccess(chainUID, type);
           }
         } else {
@@ -169,7 +169,7 @@ export class EuclidTxTrackerController {
     error?: string;
   }> {
     try {
-      const response = await apiClient.trackTransaction(txHash, chainUID);
+      const response = await apiClient.trackTransactionWrapped(txHash, chainUID);
 
       if (response.success && response.data) {
         return {

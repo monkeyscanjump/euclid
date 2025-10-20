@@ -1,0 +1,22 @@
+{
+  "data": {
+    "factory": {
+      "all_pools": {
+        "pools": [
+          {
+            "pair": {
+              "token_1": "const",
+              "token_2": "euclid"
+            },
+            "vlp": "euclid1kq2pmqmcuccmjctwx0rqzc9f57lvcnctauyfkhflrts3upwtkzgqlrwdqu"
+          }
+        ],
+        "pagination": {
+          "total_count": 1,
+          "limit": 50,
+          "offset": 0
+        }
+      }
+    }
+  }
+}

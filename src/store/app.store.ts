@@ -1,6 +1,13 @@
 import { createStore } from '@stencil/store';
-import type { AppState } from '../utils/types';
 import type { BaseStore } from './types';
+
+export interface AppState {
+  walletModalOpen: boolean;
+  walletModalFilter: string | null;
+  tokenModalOpen: boolean;
+  isInitialized: boolean;
+  theme: 'light' | 'dark' | 'auto';
+}
 
 const initialState: AppState = {
   walletModalOpen: false,
@@ -63,5 +70,3 @@ export const appStore: AppStore = {
   dispose,
   ...actions,
 };
-
-export type { AppState };

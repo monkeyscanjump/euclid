@@ -156,9 +156,9 @@ export class EuclidWalletController {
       // Add wallet to store
       walletStore.addWallet(chainUID, {
         address: result.address,
-        chainUID,
         name: walletType,
-        type: walletType as 'keplr' | 'metamask' | 'walletconnect' | 'other',
+        walletType: walletType as 'keplr' | 'metamask' | 'phantom',
+        type: walletType as 'keplr' | 'metamask' | 'phantom', // legacy alias
         isConnected: true,
         balances: []
       });

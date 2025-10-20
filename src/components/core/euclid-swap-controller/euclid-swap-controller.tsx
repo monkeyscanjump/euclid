@@ -5,8 +5,6 @@ import { apiClient } from '../../../utils/api-client';
 import { WalletAdapterFactory } from '../../../utils/wallet-adapter';
 import { DEFAULTS } from '../../../utils/constants';
 import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
-import type { RoutePath } from '../../../utils/types/euclid-api.types';
-import type { SwapRoute } from '../../../utils/types/api.types';
 
 @Component({
   tag: 'euclid-swap-controller',
@@ -116,7 +114,7 @@ export class EuclidSwapController {
       });
 
       // Call the routes API
-      const response = await apiClient.getRoutes({
+      const response = await apiClient.getRoutesWrapped({
         amount_in: fromAmount,
         token_in: fromToken.id,
         token_out: toToken.id,
@@ -126,27 +124,15 @@ export class EuclidSwapController {
       if (response.success && response.data) {
         const routePaths = response.data.paths || [];
 
-        // Convert RoutePath[] to SwapRoute[]
-        const swapRoutes: SwapRoute[] = routePaths.map((route: RoutePath, index: number) => ({
-          id: `route-${index}`,
-          inputToken: fromToken,
-          outputToken: toToken,
-          inputAmount: fromAmount,
-          outputAmount: route.path[route.path.length - 1]?.amount_out || '0',
-          priceImpact: route.total_price_impact || '0',
-          fee: '0', // Fee calculation would need to be derived from route data
-          path: route.path.map(hop => hop.route).flat(),
-          estimatedTime: route.path.length * 30 // Rough estimate: 30s per hop
-        }));
-
-        swapStore.setRoutes(swapRoutes);
+        // Store the RoutePath[] directly
+        swapStore.setRoutes(routePaths);
 
         // Auto-select the best route (first one, typically best by default)
-        if (swapRoutes.length > 0 && !swapStore.state.selectedRoute) {
-          swapStore.setSelectedRoute(swapRoutes[0]);
+        if (routePaths.length > 0 && !swapStore.state.selectedRoute) {
+          swapStore.setSelectedRoute(routePaths[0]);
         }
 
-        console.log(`✅ Found ${swapRoutes.length} swap routes`);
+        console.log(`✅ Found ${routePaths.length} swap routes`);
       } else {
         console.warn('⚠️ Failed to fetch routes:', response.error);
         swapStore.setRoutes([]);
@@ -199,16 +185,23 @@ export class EuclidSwapController {
         return { success: false, error: `Wallet adapter not found for ${wallet.type}` };
       }
 
-      // Execute the swap via API
-      const swapResult = await apiClient.createSwapTransaction({
-        routeId: selectedRoute.id,
-        fromTokenId: fromToken.id,
-        toTokenId: toToken.id,
-        fromAmount: fromAmount,
-        toAmountMinimum: this.calculateMinimumReceived(selectedRoute.outputAmount, slippage),
-        slippage: slippage,
-        userAddress: wallet.address,
-        deadline: Math.floor(Date.now() / 1000) + 1200, // 20 minutes from now
+      // Execute the swap via API - create a basic SwapRequest structure
+      const swapResult = await apiClient.createSwapTransactionWrapped({
+        amount_in: fromAmount,
+        asset_in: {
+          token: fromToken.id,
+          token_type: { native: { denom: fromToken.id } }
+        },
+        slippage: slippage.toString(),
+        minimum_receive: this.calculateMinimumReceived(selectedRoute.outputAmount, slippage),
+        sender: {
+          address: wallet.address,
+          chain_uid: fromToken.chain_uid || fromToken.chainUID
+        },
+        swap_path: {
+          path: selectedRoute.path || []
+        },
+        timeout: (Math.floor(Date.now() / 1000) + 1200).toString() // 20 minutes from now
       });
 
       if (swapResult.success && swapResult.data) {
@@ -217,13 +210,8 @@ export class EuclidSwapController {
         // Add transaction to wallet store
         walletStore.addTransaction(fromToken.chainUID, {
           txHash,
-          fromAddress: wallet.address,
-          chainUID: fromToken.chainUID,
-          type: 'swap',
-          status: 'pending',
-          timestamp: Date.now().toString(),
-          amount: fromAmount,
-          tokenId: fromToken.symbol,
+          timestamp: Date.now(),
+          type: 'swap'
         });
 
         // Emit global event for transaction tracking

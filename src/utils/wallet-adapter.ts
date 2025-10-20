@@ -5,9 +5,9 @@
  * Used by euclid-wallet-controller to maintain separation of concerns.
  */
 
-import type { ChainConfig } from './types';
+import type { EuclidChainConfig } from './types/api.types';
 
-export type WalletType = 'keplr' | 'metamask' | 'cosmostation' | 'walletconnect' | 'other';
+export type WalletType = 'keplr' | 'metamask' | 'phantom' | 'cosmostation' | 'walletconnect' | 'other';
 
 // Declare global window extensions for wallets
 declare global {
@@ -15,7 +15,9 @@ declare global {
     keplr?: {
       enable: (chainId: string) => Promise<void>;
       experimentalSuggestChain: (chainInfo: unknown) => Promise<void>;
-      getOfflineSigner: (chainId: string) => { getAccounts: () => Promise<Array<{ address: string }>> };
+      getOfflineSigner: (chainId: string) => {
+        getAccounts: () => Promise<Array<{ address: string }>>;
+      };
       getKey: (chainId: string) => Promise<{ bech32Address: string }>;
     };
     ethereum?: {
@@ -27,6 +29,11 @@ declare global {
         request: (args: { method: string; params: unknown }) => Promise<unknown>;
       };
     };
+    solana?: {
+      isPhantom?: boolean;
+      connect: () => Promise<{ publicKey: { toString: () => string } }>;
+      disconnect: () => Promise<void>;
+    };
   }
 }export interface WalletConnectionResult {
   success: boolean;
@@ -37,10 +44,10 @@ declare global {
 
 export interface WalletAdapter {
   isInstalled(): boolean;
-  connect(chainConfig: ChainConfig): Promise<WalletConnectionResult>;
+  connect(chainConfig: EuclidChainConfig): Promise<WalletConnectionResult>;
   disconnect(chainUID: string): Promise<void>;
   getAddress(chainUID: string): Promise<string | null>;
-  switchChain(chainConfig: ChainConfig): Promise<boolean>;
+  switchChain(chainConfig: EuclidChainConfig): Promise<boolean>;
 }
 
 // Keplr Wallet Adapter
@@ -53,43 +60,43 @@ export class KeplrAdapter implements WalletAdapter {
     return !!window.keplr;
   }
 
-  async connect(chainConfig: ChainConfig): Promise<WalletConnectionResult> {
+  async connect(chainConfig: EuclidChainConfig): Promise<WalletConnectionResult> {
     try {
       if (!this.isInstalled()) {
         return { success: false, error: 'Keplr wallet not installed' };
       }
 
       // Suggest chain if not already added
-      if (chainConfig.type === 'cosmos') {
+      if (chainConfig.type === 'Cosmwasm') {
         try {
           await this.keplr.experimentalSuggestChain({
-            chainId: chainConfig.chainId,
-            chainName: chainConfig.displayName,
-            rpc: chainConfig.rpcUrl,
-            rest: chainConfig.restUrl,
+            chainId: chainConfig.chain_id,
+            chainName: chainConfig.display_name,
+            rpc: 'https://rpc.cosmos.network', // Default RPC
+            rest: 'https://api.cosmos.network', // Default REST
             bip44: { coinType: 118 },
             bech32Config: {
-              bech32PrefixAccAddr: this.getAddressPrefix(chainConfig.chainId),
-              bech32PrefixAccPub: this.getAddressPrefix(chainConfig.chainId) + 'pub',
-              bech32PrefixValAddr: this.getAddressPrefix(chainConfig.chainId) + 'valoper',
-              bech32PrefixValPub: this.getAddressPrefix(chainConfig.chainId) + 'valoperpub',
-              bech32PrefixConsAddr: this.getAddressPrefix(chainConfig.chainId) + 'valcons',
-              bech32PrefixConsPub: this.getAddressPrefix(chainConfig.chainId) + 'valconspub'
+              bech32PrefixAccAddr: this.getAddressPrefix(chainConfig.chain_id),
+              bech32PrefixAccPub: this.getAddressPrefix(chainConfig.chain_id) + 'pub',
+              bech32PrefixValAddr: this.getAddressPrefix(chainConfig.chain_id) + 'valoper',
+              bech32PrefixValPub: this.getAddressPrefix(chainConfig.chain_id) + 'valoperpub',
+              bech32PrefixConsAddr: this.getAddressPrefix(chainConfig.chain_id) + 'valcons',
+              bech32PrefixConsPub: this.getAddressPrefix(chainConfig.chain_id) + 'valconspub'
             },
             currencies: [{
-              coinDenom: chainConfig.nativeCurrency.symbol,
-              coinMinimalDenom: chainConfig.nativeCurrency.symbol.toLowerCase(),
-              coinDecimals: chainConfig.nativeCurrency.decimals,
+              coinDenom: 'ATOM', // Default
+              coinMinimalDenom: 'uatom',
+              coinDecimals: 6,
             }],
             feeCurrencies: [{
-              coinDenom: chainConfig.nativeCurrency.symbol,
-              coinMinimalDenom: chainConfig.nativeCurrency.symbol.toLowerCase(),
-              coinDecimals: chainConfig.nativeCurrency.decimals,
+              coinDenom: 'ATOM', // Default
+              coinMinimalDenom: 'uatom',
+              coinDecimals: 6,
             }],
             stakeCurrency: {
-              coinDenom: chainConfig.nativeCurrency.symbol,
-              coinMinimalDenom: chainConfig.nativeCurrency.symbol.toLowerCase(),
-              coinDecimals: chainConfig.nativeCurrency.decimals,
+              coinDenom: 'ATOM', // Default
+              coinMinimalDenom: 'uatom',
+              coinDecimals: 6,
             }
           });
         } catch (suggestError) {
@@ -98,11 +105,11 @@ export class KeplrAdapter implements WalletAdapter {
       }
 
       // Enable the chain
-      await this.keplr.enable(chainConfig.chainId);
+      await this.keplr.enable(chainConfig.chain_id);
 
       // Get the offline signer and accounts
-      const offlineSigner = this.keplr.getOfflineSigner(chainConfig.chainId);
-      const accounts = await offlineSigner.getAccounts();
+      const offlineSigner = this.keplr.getOfflineSigner(chainConfig.chain_id);
+      const accounts = await (offlineSigner as { getAccounts: () => Promise<Array<{ address: string }>> }).getAccounts();
 
       if (accounts.length === 0) {
         return { success: false, error: 'No accounts found' };
@@ -111,7 +118,7 @@ export class KeplrAdapter implements WalletAdapter {
       return {
         success: true,
         address: accounts[0].address,
-        chainId: chainConfig.chainId,
+        chainId: chainConfig.chain_id,
       };
     } catch (error) {
       return {
@@ -132,16 +139,16 @@ export class KeplrAdapter implements WalletAdapter {
       if (!this.isInstalled()) return null;
 
       // Use Keplr's getKey method to get the address
-      const key = await this.keplr.getKey(chainUID);
+      const key = await (this.keplr as unknown as { getKey: (chainId: string) => Promise<{ bech32Address: string }> }).getKey(chainUID);
       return key.bech32Address;
     } catch {
       return null;
     }
   }
 
-  async switchChain(chainConfig: ChainConfig): Promise<boolean> {
+  async switchChain(chainConfig: EuclidChainConfig): Promise<boolean> {
     try {
-      await this.keplr.enable(chainConfig.chainId);
+      await this.keplr.enable(chainConfig.chain_id);
       return true;
     } catch {
       return false;
@@ -170,13 +177,13 @@ export class MetaMaskAdapter implements WalletAdapter {
     return !!window.ethereum && window.ethereum.isMetaMask;
   }
 
-  async connect(chainConfig: ChainConfig): Promise<WalletConnectionResult> {
+  async connect(chainConfig: EuclidChainConfig): Promise<WalletConnectionResult> {
     try {
       if (!this.isInstalled()) {
         return { success: false, error: 'MetaMask not installed' };
       }
 
-      if (chainConfig.type !== 'evm') {
+      if (chainConfig.type !== 'EVM') {
         return { success: false, error: 'MetaMask only supports EVM chains' };
       }
 
@@ -198,7 +205,7 @@ export class MetaMaskAdapter implements WalletAdapter {
       return {
         success: true,
         address: accounts[0],
-        chainId: chainConfig.chainId,
+        chainId: chainConfig.chain_id,
       };
     } catch (error) {
       return {
@@ -227,9 +234,9 @@ export class MetaMaskAdapter implements WalletAdapter {
     }
   }
 
-  async switchChain(chainConfig: ChainConfig): Promise<boolean> {
+  async switchChain(chainConfig: EuclidChainConfig): Promise<boolean> {
     try {
-      const chainIdHex = `0x${parseInt(chainConfig.chainId).toString(16)}`;
+      const chainIdHex = `0x${parseInt(chainConfig.chain_id).toString(16)}`;
 
       // Try to switch to the chain
       try {
@@ -245,14 +252,14 @@ export class MetaMaskAdapter implements WalletAdapter {
             method: 'wallet_addEthereumChain',
             params: [{
               chainId: chainIdHex,
-              chainName: chainConfig.displayName,
-              rpcUrls: [chainConfig.rpcUrl],
+              chainName: chainConfig.display_name,
+              rpcUrls: ['https://rpc.example.com'], // Default RPC
               nativeCurrency: {
-                name: chainConfig.nativeCurrency.name,
-                symbol: chainConfig.nativeCurrency.symbol,
-                decimals: chainConfig.nativeCurrency.decimals,
+                name: 'ETH',
+                symbol: 'ETH',
+                decimals: 18,
               },
-              blockExplorerUrls: chainConfig.explorer ? [chainConfig.explorer] : [],
+              blockExplorerUrls: chainConfig.explorer_url ? [chainConfig.explorer_url] : [],
             }],
           });
           return true;
@@ -275,25 +282,25 @@ export class CosmostationAdapter implements WalletAdapter {
     return !!window.cosmostation;
   }
 
-  async connect(chainConfig: ChainConfig): Promise<WalletConnectionResult> {
+  async connect(chainConfig: EuclidChainConfig): Promise<WalletConnectionResult> {
     try {
       if (!this.isInstalled()) {
         return { success: false, error: 'Cosmostation wallet not installed' };
       }
 
-      if (chainConfig.type !== 'cosmos') {
+      if (chainConfig.type !== 'Cosmwasm') {
         return { success: false, error: 'Cosmostation only supports Cosmos chains' };
       }
 
       const account = await this.cosmostation.cosmos.request({
         method: 'cos_requestAccount',
-        params: { chainName: chainConfig.chainId },
+        params: { chainName: chainConfig.chain_id },
       });
 
       return {
         success: true,
         address: (account as {address: string}).address,
-        chainId: chainConfig.chainId,
+        chainId: chainConfig.chain_id,
       };
     } catch (error) {
       return {
@@ -321,9 +328,83 @@ export class CosmostationAdapter implements WalletAdapter {
     }
   }
 
-  async switchChain(_chainConfig: ChainConfig): Promise<boolean> {
+  async switchChain(_chainConfig: EuclidChainConfig): Promise<boolean> {
     // Cosmostation handles chain switching automatically
     return true;
+  }
+}
+
+// Phantom Wallet Adapter
+export class PhantomAdapter implements WalletAdapter {
+  private get phantom() {
+    return (window as { phantom?: { ethereum?: { request: (args: { method: string; params?: unknown[] }) => Promise<unknown> } } }).phantom?.ethereum;
+  }
+
+  isInstalled(): boolean {
+    return !!this.phantom;
+  }
+
+  async connect(chainConfig: EuclidChainConfig): Promise<WalletConnectionResult> {
+    try {
+      if (!this.isInstalled()) {
+        return { success: false, error: 'Phantom wallet not installed' };
+      }
+
+      if (chainConfig.type !== 'EVM') {
+        return { success: false, error: 'Phantom only supports EVM chains' };
+      }
+
+      // Request account access
+      const accounts = await this.phantom.request({
+        method: 'eth_requestAccounts'
+      });
+
+      if (!Array.isArray(accounts) || accounts.length === 0) {
+        return { success: false, error: 'No accounts found' };
+      }
+
+      return {
+        success: true,
+        address: accounts[0],
+        chainId: chainConfig.chain_id,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to connect to Phantom',
+      };
+    }
+  }
+
+  async disconnect(_chainUID: string): Promise<void> {
+    // Phantom doesn't have a programmatic disconnect method
+  }
+
+  async getAddress(_chainUID: string): Promise<string | null> {
+    try {
+      if (!this.isInstalled()) return null;
+
+      const accounts = await this.phantom.request({
+        method: 'eth_accounts'
+      });
+      return Array.isArray(accounts) && accounts.length > 0 ? accounts[0] : null;
+    } catch {
+      return null;
+    }
+  }
+
+  async switchChain(chainConfig: EuclidChainConfig): Promise<boolean> {
+    try {
+      const chainIdHex = `0x${parseInt(chainConfig.chain_id).toString(16)}`;
+
+      await this.phantom.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: chainIdHex }],
+      });
+      return true;
+    } catch {
+      return false;
+    }
   }
 }
 
@@ -334,6 +415,7 @@ export class WalletAdapterFactory {
   static {
     this.adapters.set('keplr', new KeplrAdapter());
     this.adapters.set('metamask', new MetaMaskAdapter());
+    this.adapters.set('phantom', new PhantomAdapter());
     this.adapters.set('cosmostation', new CosmostationAdapter());
   }
 
@@ -350,7 +432,7 @@ export class WalletAdapterFactory {
 
   static async connectWallet(
     walletType: WalletType,
-    chainConfig: ChainConfig
+    chainConfig: EuclidChainConfig
   ): Promise<WalletConnectionResult> {
     const adapter = this.getAdapter(walletType);
     if (!adapter) {

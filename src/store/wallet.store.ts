@@ -1,265 +1,340 @@
 import { createStore } from '@stencil/store';
-import type { WalletInfo } from '../utils/types';
-import type {
-  UserBalance,
-  UserTransaction,
-  LiquidityPosition
-} from '../utils/types';
+import type { WalletState, WalletInfo } from '../utils/types/euclid-api.types';
+import type { UserBalance } from '../utils/types/api.types';
 import type { BaseStore } from './types';
+import { walletAdapterFactory } from '../utils/wallet-adapters';
 
-// Enhanced wallet state for Address Book pattern
-export interface EnhancedWalletState {
-  wallets: Map<string, WalletInfo>; // chainUID -> WalletInfo
-  balances: Map<string, UserBalance[]>; // walletKey -> UserBalance[]
-  liquidityPositions: Map<string, LiquidityPosition[]>; // walletKey -> LiquidityPosition[]
-  transactions: Map<string, UserTransaction[]>; // walletKey -> UserTransaction[]
-  isInitialized: boolean;
-  isLoading: boolean;
-  lastUpdated: Map<string, number>; // walletKey -> timestamp
-  error: string | null;
+// Extended wallet state to support multiple wallets
+interface ExtendedWalletState extends WalletState {
+  connectedWallets: Map<string, WalletInfo>; // chainUID -> WalletInfo
+  wallets: Map<string, WalletInfo>; // alias for backward compatibility
 }
 
-const initialState: EnhancedWalletState = {
-  wallets: new Map<string, WalletInfo>(),
-  balances: new Map<string, UserBalance[]>(),
-  liquidityPositions: new Map<string, LiquidityPosition[]>(),
-  transactions: new Map<string, UserTransaction[]>(),
-  isInitialized: false,
-  isLoading: false,
-  lastUpdated: new Map<string, number>(),
+const initialState: ExtendedWalletState = {
+  isConnected: false,
+  address: null,
+  chainId: null,
+  chainUID: null,
+  walletType: null,
+  balances: [],
+  loading: false,
   error: null,
+  connectedWallets: new Map(),
+  wallets: new Map(), // alias for backward compatibility
 };
 
 const { state, onChange, reset, dispose } = createStore(initialState);
 
-// Helper function to create wallet key
-const createWalletKey = (chainUID: string, address: string): string => `${chainUID}:${address}`;
-
 // Actions
 const actions = {
-  initialize() {
-    state.isInitialized = true;
-  },
-
   setLoading(loading: boolean) {
-    state.isLoading = loading;
+    state.loading = loading;
   },
 
   setError(error: string | null) {
     state.error = error;
   },
 
-  // Wallet management (Address Book pattern)
-  addWallet(chainUID: string, walletInfo: WalletInfo) {
-    state.wallets = new Map(state.wallets.set(chainUID, walletInfo));
+  async connectWallet(walletType: 'metamask' | 'keplr' | 'phantom', chainId?: string) {
+    state.loading = true;
+    state.error = null;
 
-    // Initialize empty data maps for this wallet
-    const walletKey = createWalletKey(chainUID, walletInfo.address);
-    state.balances = new Map(state.balances.set(walletKey, []));
-    state.liquidityPositions = new Map(state.liquidityPositions.set(walletKey, []));
-    state.transactions = new Map(state.transactions.set(walletKey, []));
-    state.lastUpdated = new Map(state.lastUpdated.set(walletKey, Date.now()));
-  },
+    try {
+      const adapter = walletAdapterFactory.getAdapter(walletType);
 
-  removeWallet(chainUID: string) {
-    const wallet = state.wallets.get(chainUID);
-    if (wallet) {
-      const walletKey = createWalletKey(chainUID, wallet.address);
+      if (!adapter.isAvailable()) {
+        throw new Error(`${walletType} wallet is not installed`);
+      }
 
-      // Remove wallet and all associated data
-      const newWallets = new Map(state.wallets);
-      const newBalances = new Map(state.balances);
-      const newPositions = new Map(state.liquidityPositions);
-      const newTransactions = new Map(state.transactions);
-      const newLastUpdated = new Map(state.lastUpdated);
+      const connection = await adapter.connect(chainId);
 
-      newWallets.delete(chainUID);
-      newBalances.delete(walletKey);
-      newPositions.delete(walletKey);
-      newTransactions.delete(walletKey);
-      newLastUpdated.delete(walletKey);
-
-      state.wallets = newWallets;
-      state.balances = newBalances;
-      state.liquidityPositions = newPositions;
-      state.transactions = newTransactions;
-      state.lastUpdated = newLastUpdated;
+      state.isConnected = true;
+      state.address = connection.address;
+      state.chainId = connection.chainId;
+      state.chainUID = connection.chainId; // For now, using chainId as chainUID
+      state.walletType = walletType;
+      state.error = null;
+    } catch (error) {
+      state.error = error instanceof Error ? error.message : 'Failed to connect wallet';
+    } finally {
+      state.loading = false;
     }
   },
 
-  updateWalletBalances(chainUID: string, balances: UserBalance[]) {
-    const wallet = state.wallets.get(chainUID);
-    if (wallet) {
-      const walletKey = createWalletKey(chainUID, wallet.address);
-      state.balances = new Map(state.balances.set(walletKey, [...balances]));
-      state.lastUpdated = new Map(state.lastUpdated.set(walletKey, Date.now()));
+  async disconnectWallet(chainUID?: string) {
+    if (chainUID) {
+      // Disconnect specific wallet
+      actions.removeWallet(chainUID);
+    } else {
+      // Disconnect all wallets
+      if (state.walletType) {
+        try {
+          const adapter = walletAdapterFactory.getAdapter(state.walletType);
+          await adapter.disconnect();
+        } catch (error) {
+          console.warn('Error disconnecting wallet:', error);
+        }
+      }
+
+      state.isConnected = false;
+      state.address = null;
+      state.chainId = null;
+      state.chainUID = null;
+      state.walletType = null;
+      state.balances = [];
+      state.connectedWallets.clear();
+      state.error = null;
     }
   },
 
-  updateWalletPositions(chainUID: string, positions: LiquidityPosition[]) {
-    const wallet = state.wallets.get(chainUID);
-    if (wallet) {
-      const walletKey = createWalletKey(chainUID, wallet.address);
-      state.liquidityPositions = new Map(state.liquidityPositions.set(walletKey, [...positions]));
-      state.lastUpdated = new Map(state.lastUpdated.set(walletKey, Date.now()));
+  setBalances(balances: UserBalance[]) {
+    state.balances = [...balances];
+  },
+
+  updateBalance(tokenId: string, balance: string) {
+    const existingIndex = state.balances.findIndex(b => b.token === tokenId);
+
+    const balanceObject: UserBalance = {
+      amount: balance,
+      token_id: tokenId,
+      // Legacy compatibility fields
+      token: tokenId,
+      balance: balance,
+      chain_uid: state.chainUID || '',
+      token_type: { native: { denom: tokenId } },
+    };
+
+    if (existingIndex >= 0) {
+      state.balances[existingIndex] = balanceObject;
+    } else {
+      state.balances.push(balanceObject);
     }
   },
 
-  addTransaction(chainUID: string, transaction: UserTransaction) {
-    const wallet = state.wallets.get(chainUID);
-    if (wallet) {
-      const walletKey = createWalletKey(chainUID, wallet.address);
-      const currentTransactions = state.transactions.get(walletKey) || [];
-      const updatedTransactions = [transaction, ...currentTransactions];
-      state.transactions = new Map(state.transactions.set(walletKey, updatedTransactions));
-      state.lastUpdated = new Map(state.lastUpdated.set(walletKey, Date.now()));
+  async switchChain(chainId: string) {
+    if (!state.walletType) {
+      throw new Error('No wallet connected');
     }
-  },
 
-  updateTransactionStatus(chainUID: string, txHash: string, status: UserTransaction['status']) {
-    const wallet = state.wallets.get(chainUID);
-    if (wallet) {
-      const walletKey = createWalletKey(chainUID, wallet.address);
-      const transactions = state.transactions.get(walletKey) || [];
-      const updatedTransactions = transactions.map(tx =>
-        tx.txHash === txHash ? { ...tx, status } : tx
-      );
-      state.transactions = new Map(state.transactions.set(walletKey, updatedTransactions));
-      state.lastUpdated = new Map(state.lastUpdated.set(walletKey, Date.now()));
-    }
-  },
+    state.loading = true;
+    state.error = null;
 
-  disconnectWallet(chainUID: string) {
-    const wallet = state.wallets.get(chainUID);
-    if (wallet) {
-      const disconnectedWallet = { ...wallet, isConnected: false };
-      state.wallets = new Map(state.wallets.set(chainUID, disconnectedWallet));
+    try {
+      const adapter = walletAdapterFactory.getAdapter(state.walletType);
+      await adapter.switchChain(chainId);
+
+      state.chainId = chainId;
+      state.chainUID = chainId;
+      state.error = null;
+    } catch (error) {
+      state.error = error instanceof Error ? error.message : 'Failed to switch chain';
+    } finally {
+      state.loading = false;
     }
   },
 
   clear() {
     reset();
   },
+
+  // Multi-wallet support methods
+  initialize() {
+    // Check for previously connected wallets and restore connections if possible
+    console.log('Wallet store initialized');
+  },
+
+  addWallet(chainUID: string, walletInfo: Omit<WalletInfo, 'chainUID'>) {
+    const fullWalletInfo: WalletInfo = {
+      ...walletInfo,
+      chainUID,
+      type: walletInfo.walletType, // Set legacy alias
+      name: walletInfo.walletType, // Set legacy name
+    };
+
+    state.connectedWallets.set(chainUID, fullWalletInfo);
+    state.wallets.set(chainUID, fullWalletInfo); // Keep alias synchronized
+
+    // Update primary wallet state if this is the first connection
+    if (!state.isConnected) {
+      state.isConnected = true;
+      state.address = walletInfo.address;
+      state.chainUID = chainUID;
+      state.walletType = walletInfo.walletType;
+      state.balances = [...walletInfo.balances];
+    }
+  },
+
+  removeWallet(chainUID: string) {
+    state.connectedWallets.delete(chainUID);
+    state.wallets.delete(chainUID); // Keep alias synchronized
+
+    // Update primary wallet state if we removed the current primary
+    if (state.chainUID === chainUID) {
+      const remaining = Array.from(state.connectedWallets.values());
+      if (remaining.length > 0) {
+        const newPrimary = remaining[0];
+        state.address = newPrimary.address;
+        state.chainUID = newPrimary.chainUID;
+        state.walletType = newPrimary.walletType;
+        state.balances = [...newPrimary.balances];
+      } else {
+        state.isConnected = false;
+        state.address = null;
+        state.chainUID = null;
+        state.walletType = null;
+        state.balances = [];
+      }
+    }
+  },
+
+  updateWalletBalances(chainUID: string, balances: UserBalance[]) {
+    const wallet = state.connectedWallets.get(chainUID);
+    if (wallet) {
+      const updatedWallet = { ...wallet, balances: [...balances] };
+      state.connectedWallets.set(chainUID, updatedWallet);
+
+      // Update primary state if this is the current primary wallet
+      if (state.chainUID === chainUID) {
+        state.balances = [...balances];
+      }
+    }
+  },
 };
 
 // Getters
 const getters = {
-  getWallet: (chainUID: string) => state.wallets.get(chainUID),
-
-  isWalletConnected: (chainUID: string) => {
-    const wallet = state.wallets.get(chainUID);
-    return wallet?.isConnected ?? false;
+  getBalance: (tokenId: string) => {
+    return state.balances.find(balance => balance.token === tokenId);
   },
 
-  getAllConnectedWallets: () => {
-    return Array.from(state.wallets.values()).filter(wallet => wallet.isConnected);
-  },
-
-  getWalletBalances: (chainUID: string) => {
-    const wallet = state.wallets.get(chainUID);
-    if (!wallet) return [];
-
-    const walletKey = createWalletKey(chainUID, wallet.address);
-    return state.balances.get(walletKey) || [];
-  },
-
-  getWalletBalance: (chainUID: string, tokenId: string) => {
-    const balances = getters.getWalletBalances(chainUID);
-    return balances.find(balance => balance.tokenId === tokenId);
-  },
-
-  getWalletPositions: (chainUID: string) => {
-    const wallet = state.wallets.get(chainUID);
-    if (!wallet) return [];
-
-    const walletKey = createWalletKey(chainUID, wallet.address);
-    return state.liquidityPositions.get(walletKey) || [];
-  },
-
-  getWalletTransactions: (chainUID: string) => {
-    const wallet = state.wallets.get(chainUID);
-    if (!wallet) return [];
-
-    const walletKey = createWalletKey(chainUID, wallet.address);
-    return state.transactions.get(walletKey) || [];
-  },
-
-  getAllBalances: () => {
-    const allBalances: UserBalance[] = [];
-    state.balances.forEach(balances => {
-      allBalances.push(...balances);
-    });
-    return allBalances;
-  },
-
-  getAllPositions: () => {
-    const allPositions: LiquidityPosition[] = [];
-    state.liquidityPositions.forEach(positions => {
-      allPositions.push(...positions);
-    });
-    return allPositions;
-  },
-
-  getTotalPortfolioValue: () => {
-    // Simplified calculation - in production would need market data
-    const allBalances = getters.getAllBalances();
-    return allBalances.reduce((total, balance) => {
-      try {
-        return (BigInt(total) + BigInt(balance.amount)).toString();
-      } catch {
-        return total;
-      }
-    }, '0');
-  },
-
-  hasSufficientBalance: (chainUID: string, tokenId: string, amount: string) => {
-    const balance = getters.getWalletBalance(chainUID, tokenId);
-    if (!balance) return false;
+  getFormattedBalance: (tokenId: string, decimals: number = 18) => {
+    const balance = getters.getBalance(tokenId);
+    if (!balance) return '0';
 
     try {
-      return BigInt(balance.amount) >= BigInt(amount);
+      const value = BigInt(balance.balance);
+      const divisor = BigInt(10 ** decimals);
+      const beforeDecimal = value / divisor;
+      const afterDecimal = value % divisor;
+
+      return `${beforeDecimal.toString()}.${afterDecimal.toString().padStart(decimals, '0')}`;
+    } catch {
+      return '0';
+    }
+  },
+
+  hasSufficientBalance: (tokenIdOrChainUID: string, amountOrTokenId?: string, amountParam?: string) => {
+    // Support both signatures:
+    // hasSufficientBalance(tokenId, amount) - 2 params
+    // hasSufficientBalance(chainUID, tokenId, amount) - 3 params
+    if (typeof amountParam === 'string' && amountOrTokenId && amountParam) {
+      // 3-parameter version: chainUID, tokenId, amount
+      const chainUID = tokenIdOrChainUID;
+      const tokenId = amountOrTokenId;
+      const amount = amountParam;
+
+      const wallet = state.connectedWallets.get(chainUID);
+      if (!wallet) return false;
+
+      const balance = wallet.balances.find(b => b.token === tokenId);
+      if (!balance) return false;
+
+      try {
+        return BigInt(balance.balance) >= BigInt(amount);
+      } catch {
+        return false;
+      }
+    } else {
+      // 2-parameter version: tokenId, amount
+      const tokenId = tokenIdOrChainUID;
+      const amount = amountOrTokenId || '';
+
+      const balance = getters.getBalance(tokenId);
+      if (!balance) return false;
+
+      try {
+        return BigInt(balance.balance) >= BigInt(amount);
+      } catch {
+        return false;
+      }
+    }
+  },  isWalletAvailable: (walletType: 'metamask' | 'keplr' | 'phantom') => {
+    try {
+      const adapter = walletAdapterFactory.getAdapter(walletType);
+      return adapter.isAvailable();
     } catch {
       return false;
     }
   },
 
-  isDataStale: (chainUID: string, maxAge: number = 5 * 60 * 1000) => {
-    const wallet = state.wallets.get(chainUID);
-    if (!wallet) return true;
+  getAvailableWallets: () => {
+    return walletAdapterFactory.getAvailableWalletTypes();
+  },
 
-    const walletKey = createWalletKey(chainUID, wallet.address);
-    const lastUpdate = state.lastUpdated.get(walletKey);
-    if (!lastUpdate) return true;
+  // Multi-wallet getters
+  isWalletConnected: (chainUID: string) => {
+    const wallet = state.connectedWallets.get(chainUID);
+    return wallet ? wallet.isConnected : false;
+  },
 
-    return Date.now() - lastUpdate > maxAge;
+  getAllConnectedWallets: () => {
+    return Array.from(state.connectedWallets.values()).filter(wallet => wallet.isConnected);
+  },
+
+  getWalletBalance: (chainUID: string, tokenSymbol: string) => {
+    const wallet = state.connectedWallets.get(chainUID);
+    if (!wallet) return null;
+
+    return wallet.balances.find(balance =>
+      balance.token === tokenSymbol ||
+      balance.token.toLowerCase() === tokenSymbol.toLowerCase()
+    );
+  },
+
+  // Additional method for getting wallet by chain
+  getWallet: (chainUID: string) => {
+    return state.connectedWallets.get(chainUID) || null;
+  },
+
+  // Method for adding transaction records (placeholder)
+  addTransaction: (chainUID: string, transaction: { txHash: string; timestamp?: number; type?: string }) => {
+    // This would typically store transaction history
+    // For now, just log it
+    console.log(`Transaction added for ${chainUID}:`, transaction);
+  },
+
+  // Method for updating transaction status
+  updateTransactionStatus: (chainUID: string, txHash: string, status: 'pending' | 'confirmed' | 'failed') => {
+    // This would typically update stored transaction history
+    console.log(`Transaction ${txHash} on ${chainUID} updated to status: ${status}`);
   },
 };
 
 // Proper store type definition extending BaseStore
-export interface WalletStore extends BaseStore<EnhancedWalletState> {
-  initialize: () => void;
+export interface WalletStore extends BaseStore<ExtendedWalletState> {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
-  addWallet: (chainUID: string, walletInfo: WalletInfo) => void;
+  connectWallet: (walletType: 'metamask' | 'keplr' | 'phantom', chainId?: string) => Promise<void>;
+  disconnectWallet: (chainUID?: string) => Promise<void>;
+  setBalances: (balances: UserBalance[]) => void;
+  updateBalance: (tokenId: string, balance: string) => void;
+  switchChain: (chainId: string) => Promise<void>;
+  clear: () => void;
+  initialize: () => void;
+  addWallet: (chainUID: string, walletInfo: Omit<WalletInfo, 'chainUID'>) => void;
   removeWallet: (chainUID: string) => void;
   updateWalletBalances: (chainUID: string, balances: UserBalance[]) => void;
-  updateWalletPositions: (chainUID: string, positions: LiquidityPosition[]) => void;
-  addTransaction: (chainUID: string, transaction: UserTransaction) => void;
-  updateTransactionStatus: (chainUID: string, txHash: string, status: UserTransaction['status']) => void;
-  disconnectWallet: (chainUID: string) => void;
-  clear: () => void;
-  getWallet: (chainUID: string) => WalletInfo | undefined;
+  getBalance: (tokenId: string) => UserBalance | undefined;
+  getFormattedBalance: (tokenId: string, decimals?: number) => string;
+  hasSufficientBalance: (tokenIdOrChainUID: string, amountOrTokenId?: string, amountParam?: string) => boolean;
+  isWalletAvailable: (walletType: 'metamask' | 'keplr' | 'phantom') => boolean;
+  getAvailableWallets: () => ('metamask' | 'keplr' | 'phantom')[];
   isWalletConnected: (chainUID: string) => boolean;
   getAllConnectedWallets: () => WalletInfo[];
-  getWalletBalances: (chainUID: string) => UserBalance[];
-  getWalletBalance: (chainUID: string, tokenId: string) => UserBalance | undefined;
-  getWalletPositions: (chainUID: string) => LiquidityPosition[];
-  getWalletTransactions: (chainUID: string) => UserTransaction[];
-  getAllBalances: () => UserBalance[];
-  getAllPositions: () => LiquidityPosition[];
-  getTotalPortfolioValue: () => string;
-  hasSufficientBalance: (chainUID: string, tokenId: string, amount: string) => boolean;
-  isDataStale: (chainUID: string, maxAge?: number) => boolean;
+  getWalletBalance: (chainUID: string, tokenSymbol: string) => UserBalance | null;
+  getWallet: (chainUID: string) => WalletInfo | null;
+  addTransaction: (chainUID: string, transaction: { txHash: string; timestamp?: number; type?: string }) => void;
+  updateTransactionStatus: (chainUID: string, txHash: string, status: 'pending' | 'confirmed' | 'failed') => void;
 }
 
 export const walletStore: WalletStore = {
@@ -271,4 +346,4 @@ export const walletStore: WalletStore = {
   ...getters,
 };
 
-export type { EnhancedWalletState as WalletState, WalletInfo };
+export type { WalletState };

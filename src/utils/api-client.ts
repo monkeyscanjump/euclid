@@ -1,474 +1,438 @@
-import type { ApiResponse } from './types';
+/**
+ * Unified API Client for Euclid Protocol
+ * Combines GraphQL and REST clients for a single interface
+ */
+
+import { euclidGraphQLClient } from './graphql-client';
+import { euclidRESTClient } from './rest-client';
 import type {
-  ChainsResponse,
-  TokensResponse,
-  TokenDenomsGraphQLResponse,
-  EscrowsResponse,
-  RouteResponse,
-  TransactionResponse
-} from './types';
-import { apiConfig } from './env';
+  EuclidChainConfig,
+  TokenMetadata,
+  PoolInfo,
+  UserBalance,
+  RoutePath,
+  SwapRequest,
+  AddLiquidityRequest,
+  RemoveLiquidityRequest,
+  TransactionResponse,
+  CrossChainUser,
+  GetRoutesRequest
+} from './types/api.types';
 
-export interface ApiClientConfig {
-  baseUrl?: string;
-  graphqlEndpoint?: string;
-  timeout?: number;
-  headers?: Record<string, string>;
-}
+/**
+ * Main API client that provides a unified interface to Euclid Protocol
+ * Uses dedicated GraphQL and REST clients under the hood
+ */
+export class EuclidAPIClient {
+  private graphql = euclidGraphQLClient;
+  private rest = euclidRESTClient;
 
-export class ApiClient {
-  private config: Required<ApiClientConfig>;
+  // ============================================================================
+  // CHAIN & TOKEN METADATA (GraphQL)
+  // ============================================================================
 
-  constructor(config: ApiClientConfig = {}) {
-    this.config = {
-      baseUrl: config.baseUrl || apiConfig.restEndpoint,
-      graphqlEndpoint: config.graphqlEndpoint || apiConfig.graphqlEndpoint,
-      timeout: config.timeout || apiConfig.timeout,
-      headers: {
-        'Content-Type': 'application/json',
-        ...config.headers,
-      },
-    };
+  /**
+   * Get all supported blockchain networks
+   */
+  async getChains(options?: { showAllChains?: boolean; type?: string }): Promise<EuclidChainConfig[]> {
+    return this.graphql.getChains(options);
   }
 
-  private async request<T = unknown>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<ApiResponse<T>> {
-    return this.requestWithRetry(endpoint, options);
+  /**
+   * Get token metadata information
+   */
+  async getTokenMetadata(options?: {
+    limit?: number;
+    offset?: number;
+    verified?: boolean;
+    dex?: string[];
+    chainUids?: string[];
+    showVolume?: boolean;
+    search?: string;
+  }): Promise<TokenMetadata[]> {
+    return this.graphql.getTokenMetadata(options);
   }
 
-  private async requestWithRetry<T = unknown>(
-    endpoint: string,
-    options: RequestInit = {},
-    maxRetries: number = 3
-  ): Promise<ApiResponse<T>> {
-    let lastError: Error;
-
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        const result = await this.executeRequest<T>(endpoint, options, attempt);
-        if (result.success) {
-          return result;
-        }
-
-        // If it's a client error (4xx), don't retry
-        if (result.error && result.error.includes('HTTP 4')) {
-          return result;
-        }
-
-        lastError = new Error(result.error || 'Request failed');
-      } catch (error) {
-        lastError = error as Error;
-
-        // Don't retry client errors
-        if (error.name === 'AbortError' || error.message.includes('4')) {
-          break;
-        }
-
-        if (attempt === maxRetries) break;
-
-        // Exponential backoff with jitter
-        const baseDelay = Math.pow(2, attempt) * 1000;
-        const jitter = Math.random() * 0.1 * baseDelay;
-        const delay = baseDelay + jitter;
-
-        console.log(`🔄 Retrying API request (${attempt}/${maxRetries}) after ${Math.round(delay)}ms...`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-      }
-    }
-
-    console.error(`❌ API request failed after ${maxRetries} attempts:`, lastError.message);
-    return {
-      success: false,
-      error: `Failed after ${maxRetries} attempts: ${lastError.message}`
-    };
+  /**
+   * Search for tokens by symbol or name
+   */
+  async searchTokens(searchTerm: string, chainUID?: string): Promise<TokenMetadata[]> {
+    return this.graphql.searchTokens(searchTerm, chainUID);
   }
 
-  private async executeRequest<T = unknown>(
-    endpoint: string,
-    options: RequestInit = {},
-    attempt: number = 1
-  ): Promise<ApiResponse<T>> {
-    const url = `${this.config.baseUrl}${endpoint}`;
-    const controller = new AbortController();
+  /**
+   * Get a specific token by symbol and chain
+   */
+  async getTokenBySymbol(symbol: string, chainUID: string): Promise<TokenMetadata | null> {
+    return this.graphql.getTokenBySymbol(symbol, chainUID);
+  }
 
-    // Set up timeout
-    const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
+  // ============================================================================
+  // LIQUIDITY POOLS (GraphQL)
+  // ============================================================================
 
+  /**
+   * Get all liquidity pools
+   */
+  async getAllPools(): Promise<{ success: boolean; data?: PoolInfo[]; error?: string }> {
     try {
-      const response = await fetch(url, {
-        ...options,
-        headers: {
-          'X-Request-Attempt': attempt.toString(),
-          'X-Request-ID': this.generateRequestId(),
-          ...this.config.headers,
-          ...options.headers,
-        },
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-
-      const contentType = response.headers.get('content-type');
-      const isJson = contentType?.includes('application/json');
-
-      if (!response.ok) {
-        const errorData = isJson ? await response.json() : { message: response.statusText };
-        console.warn(`⚠️ API ${options.method || 'GET'} ${endpoint} - ${response.status} [attempt ${attempt}]`);
-        return {
-          success: false,
-          error: errorData.message || `HTTP ${response.status}`,
-        };
-      }
-
-      const data = isJson ? await response.json() : await response.text();
-      console.log(`✅ API ${options.method || 'GET'} ${endpoint} - ${response.status} [attempt ${attempt}]`);
-
-      return {
-        success: true,
-        data,
-      };
+      const data = await this.graphql.getAllPools();
+      return { success: true, data };
     } catch (error) {
-      clearTimeout(timeoutId);
-
-      if (error instanceof Error) {
-        if (error.name === 'AbortError') {
-          console.error(`⏱️ API timeout: ${endpoint} [attempt ${attempt}]`);
-          return {
-            success: false,
-            error: 'Request timeout',
-          };
-        }
-
-        if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-          console.error(`🌐 Network error: ${endpoint} [attempt ${attempt}]`);
-          return {
-            success: false,
-            error: 'Network connection failed - please check your internet connection',
-          };
-        }
-
-        console.error(`❌ API error: ${endpoint} [attempt ${attempt}]:`, error.message);
-        return {
-          success: false,
-          error: error.message,
-        };
-      }
-
-      return {
-        success: false,
-        error: 'Unknown error occurred',
-      };
+      return { success: false, error: error instanceof Error ? error.message : 'Failed to get pools' };
     }
   }
 
-  private generateRequestId(): string {
-    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+  /**
+   * Get pool information for a specific token pair
+   */
+  async getPoolInfo(token1: string, token2: string): Promise<PoolInfo | null> {
+    return this.graphql.getPoolInfo(token1, token2);
   }
 
-  async get<T = unknown>(endpoint: string, params?: Record<string, unknown>): Promise<ApiResponse<T>> {
-    const url = new URL(endpoint, this.config.baseUrl);
+  // ============================================================================
+  // LEGACY METHOD ALIASES FOR BACKWARD COMPATIBILITY
+  // ============================================================================
 
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          url.searchParams.append(key, String(value));
-        }
-      });
-    }
-
-    return this.request<T>(url.pathname + url.search);
-  }
-
-  async post<T = unknown>(endpoint: string, data?: unknown): Promise<ApiResponse<T>> {
-    return this.request<T>(endpoint, {
-      method: 'POST',
-      body: data ? JSON.stringify(data) : undefined,
-    });
-  }
-
-  async put<T = unknown>(endpoint: string, data?: unknown): Promise<ApiResponse<T>> {
-    return this.request<T>(endpoint, {
-      method: 'PUT',
-      body: data ? JSON.stringify(data) : undefined,
-    });
-  }
-
-  async delete<T = unknown>(endpoint: string): Promise<ApiResponse<T>> {
-    return this.request<T>(endpoint, {
-      method: 'DELETE',
-    });
-  }
-
-  // GraphQL support for Euclid Protocol
-  async graphql<T = unknown>(query: string, variables?: Record<string, unknown>): Promise<ApiResponse<T>> {
-    const url = this.config.graphqlEndpoint;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
-
+  /**
+   * @deprecated Use getChains() instead
+   */
+  async getAllChains(showAllChains?: boolean): Promise<{ success: boolean; data?: EuclidChainConfig[]; error?: string }> {
     try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: this.config.headers,
-        body: JSON.stringify({ query, variables }),
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        return {
-          success: false,
-          error: `HTTP ${response.status}: ${response.statusText}`,
-        };
-      }
-
-      const result = await response.json();
-
-      if (result.errors?.length) {
-        return {
-          success: false,
-          error: result.errors[0]?.message || 'GraphQL error',
-        };
-      }
-
-      return {
-        success: true,
-        data: result.data,
-      };
+      const data = await this.getChains({ showAllChains });
+      return { success: true, data };
     } catch (error) {
-      clearTimeout(timeoutId);
-
-      if (error instanceof Error) {
-        if (error.name === 'AbortError') {
-          return {
-            success: false,
-            error: 'Request timeout',
-          };
-        }
-        return {
-          success: false,
-          error: error.message,
-        };
-      }
-
-      return {
-        success: false,
-        error: 'Unknown GraphQL error occurred',
-      };
+      return { success: false, error: error instanceof Error ? error.message : 'Failed to get chains' };
     }
   }
 
-  // Update configuration
-  updateConfig(config: Partial<ApiClientConfig>) {
-    this.config = {
-      ...this.config,
-      ...config,
-      headers: {
-        ...this.config.headers,
-        ...config.headers,
-      },
-    };
+  /**
+   * @deprecated Use getTokenMetadata() instead
+   */
+  async getAllTokens(): Promise<{ success: boolean; data?: TokenMetadata[]; error?: string }> {
+    try {
+      const data = await this.getTokenMetadata();
+      return { success: true, data };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Failed to get tokens' };
+    }
   }
 
-  // Euclid Protocol specific methods
+  /**
+   * Get token denominations for a token ID (placeholder - not implemented in Euclid API)
+   */
+  async getTokenDenoms(tokenId: string): Promise<{ success: boolean; data?: { router: { token_denoms: { denoms: string[] } } }; error?: string }> {
+    // This method doesn't exist in the real Euclid API
+    console.warn(`getTokenDenoms(${tokenId}) is not implemented in Euclid API`);
+    return { success: true, data: { router: { token_denoms: { denoms: [] } } } };
+  }
 
-  // Get all supported chains
-  async getAllChains(showAllChains = false, type?: string): Promise<ApiResponse<ChainsResponse>> {
-    return this.graphql(`
-      query Chains($showAllChains: Boolean, $type: String) {
-        chains {
-          all_chains(show_all_chains: $showAllChains, type: $type) {
-            chain_id
-            factory_address
-            token_factory_address
-            display_name
-            explorer_url
-            chain_uid
-            logo
-            type
-          }
+  /**
+   * Get escrow information for a token (placeholder - not implemented in Euclid API)
+   */
+  async getEscrows(tokenId: string): Promise<{ success: boolean; data?: { router: { escrows: unknown[] } }; error?: string }> {
+    // This method doesn't exist in the real Euclid API
+    console.warn(`getEscrows(${tokenId}) is not implemented in Euclid API`);
+    return { success: true, data: { router: { escrows: [] } } };
+  }
+
+  /**
+   * Get balance for a specific address and chain (legacy compatibility)
+   */
+  async getBalance(address: string, chainUID: string): Promise<{ success: boolean; data?: { balance?: { all?: Array<{ denom: string; amount: string }> } }; error?: string }> {
+    try {
+      const balances = await this.getUserBalances({ address, chain_uid: chainUID });
+      const data = {
+        balance: {
+          all: balances.map(b => ({
+            denom: b.token,
+            amount: b.balance
+          }))
         }
-      }
-    `, { showAllChains, type });
+      };
+      return { success: true, data };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Failed to get balance' };
+    }
   }
 
-  // Get all available tokens
-  async getAllTokens(options?: { max?: string; min?: string; skip?: number; limit?: number }): Promise<ApiResponse<TokensResponse>> {
-    return this.graphql(`
-      query All_tokens($max: String, $min: String, $skip: Int, $limit: Int) {
-        router {
-          all_tokens(max: $max, min: $min, skip: $skip, limit: $limit) {
-            tokens
-          }
-        }
-      }
-    `, options);
+  // ============================================================================
+  // USER DATA (GraphQL)
+  // ============================================================================
+
+  /**
+   * Get user token balances across all chains
+   */
+  async getUserBalances(user: CrossChainUser): Promise<UserBalance[]> {
+    return this.graphql.getUserBalances(user);
   }
 
-  // Get token denominations for a specific token
-  async getTokenDenoms(token: string): Promise<ApiResponse<TokenDenomsGraphQLResponse>> {
-    return this.graphql(`
-      query Router($token: String!) {
-        router {
-          token_denoms(token: $token) {
-            denoms {
-              chain_uid
-              token_type {
-                ... on NativeTokenType {
-                  native {
-                    denom
-                  }
-                }
-                ... on SmartTokenType {
-                  smart {
-                    contract_address
-                  }
-                }
-                ... on VoucherTokenType {
-                  voucher
-                }
-              }
-            }
-          }
-        }
-      }
-    `, { token });
+  // ============================================================================
+  // ROUTING & SWAPS (REST)
+  // ============================================================================
+
+  /**
+   * Get routing paths for a swap
+   */
+  async getRoutes(request: GetRoutesRequest): Promise<RoutePath[]> {
+    return this.rest.getRoutes(request);
   }
 
-  // Get escrows for a token
-  async getEscrows(token: string): Promise<ApiResponse<EscrowsResponse>> {
-    return this.graphql(`
-      query Escrows($token: String!) {
-        router {
-          escrows(token: $token) {
-            chain_uid
-            balance
-            chain_id
-          }
-        }
-      }
-    `, { token });
+  /**
+   * Legacy method that returns wrapped response format (used by swap controller)
+   */
+  async getRoutesWrapped(request: GetRoutesRequest): Promise<{ success: boolean; data?: { paths: RoutePath[] }; error?: string }> {
+    try {
+      const paths = await this.getRoutes(request);
+      return { success: true, data: { paths } };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Failed to get routes' };
+    }
   }
 
-  // Simulate a swap
-  async simulateSwap(params: {
-    assetIn: string;
-    amountIn: string;
-    assetOut: string;
-    minAmountOut: string;
-    swaps: string[];
-  }) {
-    return this.graphql(`
-      query Simulate_swap($assetIn: String!, $amountIn: String!, $assetOut: String!, $minAmountOut: String!, $swaps: [String!]) {
-        router {
-          simulate_swap(asset_in: $assetIn, amount_in: $amountIn, asset_out: $assetOut, min_amount_out: $minAmountOut, swaps: $swaps) {
-            amount_out
-            asset_out
-          }
-        }
-      }
-    `, params);
+  /**
+   * Override getRoutes to return wrapped format by default for backward compatibility
+   */
+  async getRoutesLegacy(request: GetRoutesRequest): Promise<{ success: boolean; data?: { paths: RoutePath[] }; error?: string }> {
+    return this.getRoutesWrapped(request);
   }
 
-  // Get user's pools
-  async getMyPools(userAddress: string, chainUid?: string) {
-    return this.graphql(`
-      query Pool($userAddress: String!, $chainUid: String) {
-        pool {
-          my_pools(user_address: $userAddress, chain_uid: $chainUid) {
-            height
-            vlp
-            user {
-              chain_uid
-              address
-            }
-            pair {
-              token_1
-              token_2
-            }
-          }
-        }
-      }
-    `, { userAddress, chainUid });
+  /**
+   * Get the optimal route for a swap
+   */
+  async getBestRoute(request: GetRoutesRequest): Promise<RoutePath | null> {
+    return this.rest.getBestRoute(request);
   }
 
-  // REST API Methods
-
-  // Get swap routes
-  async getRoutes(params: {
+  /**
+   * Simulate a swap to get expected output
+   */
+  async simulateSwap(request: {
     amount_in: string;
     token_in: string;
     token_out: string;
-    external?: boolean;
-    chain_uids?: string[];
-  }): Promise<ApiResponse<RouteResponse>> {
-    return this.post('/routes', params);
+    chain_uid?: string;
+  }): Promise<{ amount_out: string; price_impact: string }> {
+    return this.rest.simulateSwap(request);
   }
 
-  // Generate swap transaction
-  async createSwapTransaction(params: Record<string, unknown>): Promise<ApiResponse<TransactionResponse>> {
-    return this.post('/execute/swap', params);
+  // ============================================================================
+  // TRANSACTION BUILDING (REST)
+  // ============================================================================
+
+  /**
+   * Create a swap transaction
+   */
+  async createSwapTransaction(request: SwapRequest): Promise<TransactionResponse> {
+    return this.rest.buildSwapTransaction(request);
   }
 
-  // Generate add liquidity transaction
-  async createAddLiquidityTransaction(params: Record<string, unknown>) {
-    return this.post('/execute/liquidity/add', params);
+  /**
+   * Create a swap transaction with wrapped response
+   */
+  async createSwapTransactionWrapped(request: SwapRequest): Promise<{ success: boolean; data?: TransactionResponse; error?: string }> {
+    try {
+      const data = await this.createSwapTransaction(request);
+      return { success: true, data };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Failed to create swap transaction' };
+    }
   }
 
-  // Generate remove liquidity transaction
-  async createRemoveLiquidityTransaction(params: Record<string, unknown>) {
-    return this.post('/execute/liquidity/remove', params);
+  /**
+   * Create a swap transaction (legacy method name)
+   */
+  async buildSwapTransaction(request: SwapRequest): Promise<TransactionResponse> {
+    return this.createSwapTransaction(request);
   }
 
-  // Get user balance
-  async getBalance(address: string, _chainUID?: string): Promise<ApiResponse<unknown>> {
-    return this.graphql(`
-      query GetBalance($address: String!) {
-        balance(user_address: $address) {
-          all {
-            denom
-            amount
-          }
-        }
-      }
-    `, { address });
+  /**
+   * Create add liquidity transaction (legacy method name)
+   */
+  async createAddLiquidityTransaction(request: AddLiquidityRequest): Promise<TransactionResponse> {
+    return this.rest.buildAddLiquidityTransaction(request);
   }
 
-  // Get user pools/liquidity positions
-  async getUserPools(address: string): Promise<ApiResponse<unknown>> {
-    return this.graphql(`
-      query GetUserPools($address: String!) {
-        factory {
-          my_pools(user_address: $address) {
-            pools {
-              pool_id
-              pair
-              total_lp_tokens
-            }
-          }
-        }
-      }
-    `, { address });
+  /**
+   * Create add liquidity transaction with wrapped response
+   */
+  async createAddLiquidityTransactionWrapped(request: AddLiquidityRequest): Promise<{ success: boolean; data?: TransactionResponse; error?: string }> {
+    try {
+      const data = await this.createAddLiquidityTransaction(request);
+      return { success: true, data };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Failed to create add liquidity transaction' };
+    }
   }
 
-  // Track transaction status
-  async trackTransaction(txHash: string, chainUID?: string): Promise<ApiResponse<{ status: string; blockHeight?: number }>> {
-    // Stub implementation - in a real app this would call the blockchain explorer API
-    console.log(`Tracking transaction ${txHash} on chain ${chainUID}`);
+  /**
+   * Create remove liquidity transaction (legacy method name)
+   */
+  async createRemoveLiquidityTransaction(request: RemoveLiquidityRequest): Promise<TransactionResponse> {
+    return this.rest.buildRemoveLiquidityTransaction(request);
+  }
 
-    // Simulate successful tracking
+  /**
+   * Create remove liquidity transaction with wrapped response
+   */
+  async createRemoveLiquidityTransactionWrapped(request: RemoveLiquidityRequest): Promise<{ success: boolean; data?: TransactionResponse; error?: string }> {
+    try {
+      const data = await this.createRemoveLiquidityTransaction(request);
+      return { success: true, data };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Failed to create remove liquidity transaction' };
+    }
+  }
+
+  /**
+   * Track transaction status (placeholder - not implemented in Euclid API)
+   */
+  async trackTransaction(txHash: string, chainUID: string): Promise<{ status: 'pending' | 'confirmed' | 'failed' }> {
+    // This would typically query blockchain for transaction status
+    console.warn(`trackTransaction(${txHash}, ${chainUID}) not implemented`);
+    return { status: 'pending' };
+  }
+
+  /**
+   * Track transaction status with wrapped response
+   */
+  async trackTransactionWrapped(txHash: string, chainUID: string): Promise<{ success: boolean; data?: { status: 'pending' | 'confirmed' | 'failed' }; error?: string }> {
+    try {
+      const data = await this.trackTransaction(txHash, chainUID);
+      return { success: true, data };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Failed to track transaction' };
+    }
+  }
+
+  /**
+   * Build an add liquidity transaction
+   */
+  async buildAddLiquidityTransaction(request: AddLiquidityRequest): Promise<TransactionResponse> {
+    return this.rest.buildAddLiquidityTransaction(request);
+  }
+
+  /**
+   * Build a remove liquidity transaction
+   */
+  async buildRemoveLiquidityTransaction(request: RemoveLiquidityRequest): Promise<TransactionResponse> {
+    return this.rest.buildRemoveLiquidityTransaction(request);
+  }
+
+  // ============================================================================
+  // TRANSACTION STATUS & GAS ESTIMATION (REST)
+  // ============================================================================
+
+  /**
+   * Get transaction status
+   */
+  async getTransactionStatus(txHash: string, chainUID: string): Promise<{
+    status: 'pending' | 'success' | 'failed';
+    blockHeight?: number;
+    gasUsed?: string;
+    fee?: string;
+  }> {
+    return this.rest.getTransactionStatus(txHash, chainUID);
+  }
+
+  /**
+   * Estimate gas for a transaction
+   */
+  async estimateGas(transaction: TransactionResponse): Promise<{ gasLimit: string; gasPrice: string }> {
+    return this.rest.estimateGas(transaction);
+  }
+
+  // ============================================================================
+  // CONVENIENCE METHODS
+  // ============================================================================
+
+  /**
+   * Get comprehensive market data
+   */
+  async getMarketData(): Promise<{
+    chains: EuclidChainConfig[];
+    tokens: TokenMetadata[];
+    pools: PoolInfo[];
+  }> {
+    const [chains, tokens, poolsResult] = await Promise.all([
+      this.getChains(),
+      this.getTokenMetadata(),
+      this.getAllPools(),
+    ]);
+
+    const pools = poolsResult.success ? (poolsResult.data || []) : [];
+
+    return { chains, tokens, pools };
+  }
+
+  /**
+   * Get user's complete portfolio
+   */
+  async getUserPortfolio(user: CrossChainUser): Promise<{
+    balances: UserBalance[];
+    chains: EuclidChainConfig[];
+    tokens: TokenMetadata[];
+  }> {
+    const [balances, chains, tokens] = await Promise.all([
+      this.getUserBalances(user),
+      this.getChains(),
+      this.getTokenMetadata(),
+    ]);
+
+    return { balances, chains, tokens };
+  }
+
+  /**
+   * Get quote for a swap with the best route
+   */
+  async getSwapQuote(
+    tokenIn: string,
+    tokenOut: string,
+    amountIn: string,
+    chainUIDs?: string[]
+  ): Promise<{
+    route: RoutePath | null;
+    expectedOutput: string;
+    priceImpact: string;
+  }> {
+    const routeRequest: GetRoutesRequest = {
+      amount_in: amountIn,
+      token_in: tokenIn,
+      token_out: tokenOut,
+      chain_uids: chainUIDs,
+    };
+
+    const [route, simulation] = await Promise.all([
+      this.getBestRoute(routeRequest),
+      this.simulateSwap({
+        amount_in: amountIn,
+        token_in: tokenIn,
+        token_out: tokenOut,
+      }).catch(() => ({ amount_out: '0', price_impact: '0' })),
+    ]);
+
     return {
-      success: true,
-      data: {
-        status: Math.random() > 0.5 ? 'confirmed' : 'pending',
-        blockHeight: Math.floor(Math.random() * 1000000)
-      },
-      error: null
+      route,
+      expectedOutput: simulation.amount_out,
+      priceImpact: simulation.price_impact,
     };
   }
 }
 
-// Default instance
-export const apiClient = new ApiClient();
+// Export the default instance
+export const apiClient = new EuclidAPIClient();
+
+// Re-export types for convenience
+export type {
+  EuclidChainConfig,
+  TokenMetadata,
+  PoolInfo,
+  UserBalance,
+  RoutePath,
+  SwapRequest,
+  AddLiquidityRequest,
+  RemoveLiquidityRequest,
+  TransactionResponse,
+  CrossChainUser,
+  GetRoutesRequest
+} from './types/api.types';

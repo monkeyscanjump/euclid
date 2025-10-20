@@ -1,0 +1,1673 @@
+{
+  "data": {
+    "token": {
+      "token_metadatas": [
+        {
+          "coinDecimal": 18,
+          "displayName": "AVAX",
+          "tokenId": "avax",
+          "description": "",
+          "image": "https://euclid-bucket.s3.ap-south-1.amazonaws.com/chains/ava.png",
+          "price": "380260.731417",
+          "price_change_24h": 1.208052322987111e-10,
+          "price_change_7d": 234.42855793656892,
+          "dex": [
+            "euclid"
+          ],
+          "chain_uids": [
+            "avalanchefuji"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": null,
+          "min_swap_value": 0.0001,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 18,
+          "displayName": "ETH",
+          "tokenId": "eth",
+          "description": "eth Token",
+          "image": "https://testnet.api.euclidprotocol.com/files/chains/ethereum-eth-logo.png",
+          "price": "1758831.292400",
+          "price_change_24h": 2.832890110451625e-12,
+          "price_change_7d": 191.93863548906882,
+          "dex": [
+            "euclid"
+          ],
+          "chain_uids": [
+            "sepolia",
+            "manta",
+            "unichain",
+            "linea",
+            "megaeth",
+            "base",
+            "arbitrum",
+            "optimism",
+            "soneium",
+            "scroll"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "new",
+            "hot"
+          ],
+          "min_swap_value": 0.001,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "STARS",
+          "tokenId": "stars",
+          "description": "STARS Token",
+          "image": "https://testnet.api.euclidprotocol.com/files/chains/stars.png",
+          "price": "1154.666193",
+          "price_change_24h": 3.635938924113343e-09,
+          "price_change_7d": 339.00975731344977,
+          "dex": [
+            "euclid"
+          ],
+          "chain_uids": [
+            "stargaze"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "trending"
+          ],
+          "min_swap_value": 0.1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 18,
+          "displayName": "INJ",
+          "tokenId": "inj",
+          "description": "INJ Token",
+          "image": "https://testnet.api.euclidprotocol.com/files/chains/injective-inj-logo.png",
+          "price": "13.659108",
+          "price_change_24h": -3.174261473122709e-06,
+          "price_change_7d": 27.69413971272548,
+          "dex": [
+            "euclid"
+          ],
+          "chain_uids": [
+            "injective"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "trending"
+          ],
+          "min_swap_value": 0.1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 18,
+          "displayName": "GIMO",
+          "tokenId": "gimo",
+          "description": "Gimo Token",
+          "image": "https://testnet.api.euclidprotocol.com/files/tokens/gimo.eucl.png",
+          "price": "115658.009892",
+          "price_change_24h": -1.9087921894532257e-10,
+          "price_change_7d": 286.7434303221737,
+          "dex": [
+            "euclid"
+          ],
+          "chain_uids": [
+            "0g"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "hot"
+          ],
+          "min_swap_value": 0.1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 18,
+          "displayName": "PLUME",
+          "tokenId": "plume",
+          "description": "PLUME Token",
+          "image": "https://testnet.api.euclidprotocol.com/files/tokens/plume.png",
+          "price": "3798.381294",
+          "price_change_24h": -2.2878750717226785e-11,
+          "price_change_7d": 722.6013568907241,
+          "dex": [
+            "euclid"
+          ],
+          "chain_uids": [
+            "plume"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": null,
+          "min_swap_value": 0.1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "ELYS",
+          "tokenId": "elys",
+          "description": "Elys Token",
+          "image": "https://ping.pub/logos/elys.png",
+          "price": "4877.809989",
+          "price_change_24h": 5.324927866828911e-09,
+          "price_change_7d": 552.5987033428607,
+          "dex": [
+            "euclid"
+          ],
+          "chain_uids": [
+            "elys"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "hot"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 18,
+          "displayName": "CONST",
+          "tokenId": "const",
+          "description": "CONST Token",
+          "image": "https://testnet.osmosis.zone/tokens/generated/const.svg",
+          "price": "10.061522",
+          "price_change_24h": 3.698550746933164e-06,
+          "price_change_7d": 565.170526438544,
+          "dex": [
+            "euclid"
+          ],
+          "chain_uids": [
+            "archway"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "hot"
+          ],
+          "min_swap_value": 0.1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 18,
+          "displayName": "POL",
+          "tokenId": "pol",
+          "description": "POL Token",
+          "image": "https://testnet.api.euclidprotocol.com/files/chains/polygon-matic-logo.png",
+          "price": "302.398686",
+          "price_change_24h": 1.5288634022807085e-07,
+          "price_change_7d": -84.17195983810365,
+          "dex": [
+            "euclid"
+          ],
+          "chain_uids": null,
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "hot"
+          ],
+          "min_swap_value": 0.1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 18,
+          "displayName": "0G",
+          "tokenId": "0g",
+          "description": "0G Token",
+          "image": "https://euclid-bucket.s3.ap-south-1.amazonaws.com/chains/0g_logo.png",
+          "price": "5523534.734776",
+          "price_change_24h": -4.434440062117288e-12,
+          "price_change_7d": 432.14316380062655,
+          "dex": [
+            "euclid"
+          ],
+          "chain_uids": [
+            "0g"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": null,
+          "min_swap_value": 0.001,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "NIBI",
+          "tokenId": "nibi",
+          "description": "Nibiru Token",
+          "image": "https://testnet.api.euclidprotocol.com/files/chains/nibi-logomark-profile-pic-circular.CZllM35a.png",
+          "price": "106.726848",
+          "price_change_24h": 1.695278409805184e-07,
+          "price_change_7d": 314.3385488588862,
+          "dex": [
+            "euclid"
+          ],
+          "chain_uids": [
+            "nibiru"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "new",
+            "hot"
+          ],
+          "min_swap_value": 0.1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "EUCLID",
+          "tokenId": "euclid",
+          "description": "Euclid Token",
+          "image": "https://testnet.api.euclidprotocol.com/files/tokens/vsl.webp",
+          "price": "156936.035410",
+          "price_change_24h": 1.3513761322194375e-10,
+          "price_change_7d": 288.30261827691373,
+          "dex": [
+            "euclid"
+          ],
+          "chain_uids": [
+            "somnia",
+            "taiko",
+            "plume",
+            "base",
+            "injective",
+            "archway",
+            "soneium",
+            "pharos",
+            "elys",
+            "stargaze",
+            "unichain",
+            "scroll",
+            "avalanchefuji",
+            "coreum",
+            "neutron",
+            "oraichain",
+            "sepolia",
+            "megaeth",
+            "sonic",
+            "kiichain",
+            "mantle",
+            "neuron",
+            "nibiru",
+            "andromeda",
+            "osmosis",
+            "0g",
+            "monad",
+            "arbitrum",
+            "ronin",
+            "optimism",
+            "bsc",
+            "hyperliquid",
+            "manta",
+            "linea"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "hot"
+          ],
+          "min_swap_value": 0.1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "USDT",
+          "tokenId": "usdt",
+          "description": "USD tether",
+          "image": "https://testnet.api.euclidprotocol.com/files/tokens/usdt.png",
+          "price": "1.000000",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "euclid"
+          ],
+          "chain_uids": [
+            "injective"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "hot",
+            "trending"
+          ],
+          "min_swap_value": 0.1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "pUSDC",
+          "tokenId": "usdc.p",
+          "description": "USDC (Pharos)",
+          "image": "https://testnet.api.euclidprotocol.com/files/tokens/usd-coin-usdc-logo.png",
+          "price": "173089103945.330292",
+          "price_change_24h": 0,
+          "price_change_7d": 184.74291564869446,
+          "dex": [
+            "euclid"
+          ],
+          "chain_uids": [
+            "pharos"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "hot"
+          ],
+          "min_swap_value": 0.1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 18,
+          "displayName": "BNB",
+          "tokenId": "bnb",
+          "description": "",
+          "image": "https://euclid-bucket.s3.ap-south-1.amazonaws.com/chains/bnb-bnb-logo.png",
+          "price": "1267836.554854",
+          "price_change_24h": 3.239481097409456e-11,
+          "price_change_7d": 238.8175434204352,
+          "dex": [
+            "euclid"
+          ],
+          "chain_uids": [
+            "bsc"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": null,
+          "min_swap_value": 0.0001,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "OSMO",
+          "tokenId": "osmo",
+          "description": "OSMO Token",
+          "image": "https://testnet.api.euclidprotocol.com/files/chains/osmosis-osmo-logo.png",
+          "price": "7647.246907",
+          "price_change_24h": -4.549503121637649e-09,
+          "price_change_7d": 3046.0826657162356,
+          "dex": [
+            "euclid",
+            "osmosis"
+          ],
+          "chain_uids": [
+            "osmosis"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "hot"
+          ],
+          "min_swap_value": 0.1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 18,
+          "displayName": "STT",
+          "tokenId": "stt",
+          "description": "STT Token",
+          "image": "https://euclid-bucket.s3.ap-south-1.amazonaws.com/chains/somnia.png?v=1",
+          "price": "2058.601577",
+          "price_change_24h": -2.216786709289422e-08,
+          "price_change_7d": 282.70733998627725,
+          "dex": [
+            "euclid"
+          ],
+          "chain_uids": [
+            "somnia"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": null,
+          "min_swap_value": 0.1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "TESTCORE",
+          "tokenId": "testcore",
+          "description": "TESTCORE Token",
+          "image": "https://docs.coredao.org/img/core.png",
+          "price": "24.469947",
+          "price_change_24h": 1.6271033412646106e-06,
+          "price_change_7d": 324.13184337682685,
+          "dex": [
+            "euclid"
+          ],
+          "chain_uids": [
+            "coreum"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "hot",
+            "trending"
+          ],
+          "min_swap_value": 0.1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 18,
+          "displayName": "TETH",
+          "tokenId": "teth",
+          "description": "TETH Token",
+          "image": "https://testnet.api.euclidprotocol.com/files/tokens/teth.png",
+          "price": "285541.406564",
+          "price_change_24h": -6.84732681543733e-11,
+          "price_change_7d": 315.94509249480956,
+          "dex": [
+            "euclid"
+          ],
+          "chain_uids": [
+            "taiko"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": null,
+          "min_swap_value": 0.1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 18,
+          "displayName": "HYPE",
+          "tokenId": "hype",
+          "description": "",
+          "image": "https://euclid-bucket.s3.ap-south-1.amazonaws.com/chains/hyperliquid.png",
+          "price": "10722234.946679",
+          "price_change_24h": -1.3202567565953073e-12,
+          "price_change_7d": 288.89483356271535,
+          "dex": [
+            "euclid"
+          ],
+          "chain_uids": [
+            "hyperliquid"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": null,
+          "min_swap_value": 0.001,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 18,
+          "displayName": "PHRS",
+          "tokenId": "phrs",
+          "description": "Pharos Token",
+          "image": "https://testnet.api.euclidprotocol.com/files/chains/Pharos-Logo.png",
+          "price": "234065.613812",
+          "price_change_24h": 1.6204051177580906e-10,
+          "price_change_7d": 184.74291564894983,
+          "dex": [
+            "euclid"
+          ],
+          "chain_uids": [
+            "pharos"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "hot"
+          ],
+          "min_swap_value": 0.1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 18,
+          "displayName": "KII",
+          "tokenId": "kii",
+          "description": "KII Token",
+          "image": "https://euclid-bucket.s3.ap-south-1.amazonaws.com/chains/kiichain_logo.jpeg",
+          "price": "309511.020299",
+          "price_change_24h": 1.212444033645728e-10,
+          "price_change_7d": -10.571395794250853,
+          "dex": [
+            "euclid"
+          ],
+          "chain_uids": [
+            "kiichain"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": null,
+          "min_swap_value": 0.1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "USDC",
+          "tokenId": "usdc",
+          "description": "",
+          "image": "https://testnet.api.euclidprotocol.com/files/tokens/usd-coin-usdc-logo.png",
+          "price": "1.000000",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "euclid"
+          ],
+          "chain_uids": [
+            "injective"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "hot"
+          ],
+          "min_swap_value": 0.1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "pUSDT",
+          "tokenId": "usdt.p",
+          "description": "USDT(Pharos)",
+          "image": "https://testnet.api.euclidprotocol.com/files/tokens/usdt.png",
+          "price": "518.034936",
+          "price_change_24h": 6.693214504579835e-08,
+          "price_change_7d": 612.8851063818192,
+          "dex": [
+            "euclid"
+          ],
+          "chain_uids": [
+            "pharos"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "hot"
+          ],
+          "min_swap_value": 0.1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 18,
+          "displayName": "S",
+          "tokenId": "sonic",
+          "description": "SONIC Token",
+          "image": "https://euclid-bucket.s3.ap-south-1.amazonaws.com/tokens/sonic_token.png",
+          "price": "831.530580",
+          "price_change_24h": 1.0581114114954066e-08,
+          "price_change_7d": 183.53348706136128,
+          "dex": [
+            "euclid"
+          ],
+          "chain_uids": [
+            "sonic"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": null,
+          "min_swap_value": 0.1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 18,
+          "displayName": "MON",
+          "tokenId": "mon",
+          "description": "MON Token",
+          "image": "https://testnet.api.euclidprotocol.com/files/chains/Monad.png",
+          "price": "1144382.992127",
+          "price_change_24h": -2.4638421874898447e-11,
+          "price_change_7d": 137.2639085080127,
+          "dex": [
+            "euclid"
+          ],
+          "chain_uids": [
+            "monad"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "new",
+            "trending"
+          ],
+          "min_swap_value": 0.1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "NTRN",
+          "tokenId": "ntrn",
+          "description": "NTRN Token",
+          "image": "https://testnet.api.euclidprotocol.com/files/chains/neutron.png",
+          "price": "751.610645",
+          "price_change_24h": -6.321043860999755e-08,
+          "price_change_7d": 186.64348034629262,
+          "dex": [
+            "astroport.neutron",
+            "euclid"
+          ],
+          "chain_uids": [
+            "neutron"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "trending"
+          ],
+          "min_swap_value": 0.1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 18,
+          "displayName": "RON",
+          "tokenId": "ron",
+          "description": "Ronin Token",
+          "image": "https://testnet.api.euclidprotocol.com/files/chains/ronin-ron-logo.png",
+          "price": "4729.718487",
+          "price_change_24h": 3.8963879867834325e-09,
+          "price_change_7d": 385.44862549919276,
+          "dex": [
+            "euclid"
+          ],
+          "chain_uids": [
+            "ronin"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "hot"
+          ],
+          "min_swap_value": 0.01,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "ORAI",
+          "tokenId": "orai",
+          "description": "ORAI Token",
+          "image": "https://testnet.api.euclidprotocol.com/files/chains/oraichain.png",
+          "price": "23.569409",
+          "price_change_24h": -8.439005412900764e-07,
+          "price_change_7d": 415.949382740888,
+          "dex": [
+            "euclid"
+          ],
+          "chain_uids": [
+            "oraichain"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "new"
+          ],
+          "min_swap_value": 0.1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "ANDR",
+          "tokenId": "andr",
+          "description": "ANDR Token",
+          "image": "https://testnet.api.euclidprotocol.com/files/chains/andromeda.png",
+          "price": "6118.629859",
+          "price_change_24h": -3.193085851957099e-09,
+          "price_change_7d": 299.01299295839254,
+          "dex": [
+            "euclid"
+          ],
+          "chain_uids": [
+            "andromeda"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "new",
+            "trending"
+          ],
+          "min_swap_value": 0.1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 18,
+          "displayName": "MNT",
+          "tokenId": "mnt",
+          "description": "MNT Token",
+          "image": "https://testnet.api.euclidprotocol.com/files/chains/mantle-mnt-logo.png",
+          "price": "0.387002",
+          "price_change_24h": 1.4526249401841167e-05,
+          "price_change_7d": 545.8753587624556,
+          "dex": [
+            "euclid"
+          ],
+          "chain_uids": [
+            "mantle"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": null,
+          "min_swap_value": 0.1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "XPRT",
+          "tokenId": "XPRT.osmosis",
+          "description": "Persistence Testnet",
+          "image": "https://testnet.osmosis.zone/tokens/generated/xprt.svg",
+          "price": "0.0",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "osmosis"
+          ],
+          "chain_uids": [
+            "osmosis"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "trending"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 18,
+          "displayName": "ETH",
+          "tokenId": "ETH.osmosis",
+          "description": "Ether (Axelar Testnet)",
+          "image": "https://testnet.osmosis.zone/tokens/generated/eth.svg",
+          "price": "0.0",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "osmosis"
+          ],
+          "chain_uids": [
+            "osmosis"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "new"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "ATOM",
+          "tokenId": "ATOM.astroport.neutron",
+          "description": "",
+          "image": "https://raw.githubusercontent.com/astroport-fi/astroport-token-lists/main/img/atom.svg",
+          "price": "4.850000",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "astroport.neutron"
+          ],
+          "chain_uids": null,
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "new",
+            "hot"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 18,
+          "displayName": "CONST",
+          "tokenId": "CONST.osmosis",
+          "description": "Archway Testnet",
+          "image": "https://testnet.osmosis.zone/tokens/generated/const.svg",
+          "price": "0.0",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "osmosis"
+          ],
+          "chain_uids": [
+            "osmosis"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "new",
+            "hot"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "MARS",
+          "tokenId": "MARS.astroport.neutron",
+          "description": "",
+          "image": "https://raw.githubusercontent.com/astroport-fi/astroport-token-lists/main/img/mars.svg",
+          "price": "0.000000",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "astroport.neutron"
+          ],
+          "chain_uids": null,
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "hot"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 14,
+          "displayName": "nBTC",
+          "tokenId": "nBTC.osmosis",
+          "description": "Nomic Bitcoin",
+          "image": "https://testnet.osmosis.zone/tokens/generated/nbtc.svg",
+          "price": "0.0",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "osmosis"
+          ],
+          "chain_uids": [
+            "osmosis"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "trending"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "ATOM",
+          "tokenId": "ATOM.osmosis",
+          "description": "[DEPRECATED] Cosmos Hub Public Testnet, will be sunset 2024-12-01",
+          "image": "https://testnet.osmosis.zone/tokens/generated/atom.svg",
+          "price": "0.0",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "osmosis"
+          ],
+          "chain_uids": [
+            "osmosis"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "hot"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "xASTRO",
+          "tokenId": "xASTRO.astroport.neutron",
+          "description": "",
+          "image": "https://raw.githubusercontent.com/astroport-fi/astroport-token-lists/main/img/xAstro.svg",
+          "price": "0.000096",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "astroport.neutron"
+          ],
+          "chain_uids": null,
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "new"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "USDT",
+          "tokenId": "USDT.astroport.neutron",
+          "description": "",
+          "image": "https://raw.githubusercontent.com/astroport-fi/astroport-token-lists/main/img/usdt.svg",
+          "price": "0.000000",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "astroport.neutron"
+          ],
+          "chain_uids": null,
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "trending"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "MFX",
+          "tokenId": "MFX.osmosis",
+          "description": "Manifest Testnet Token",
+          "image": "https://testnet.osmosis.zone/tokens/generated/mfx.svg",
+          "price": "0.0",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "osmosis"
+          ],
+          "chain_uids": [
+            "osmosis"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "trending"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "vUSDC",
+          "tokenId": "vUSDC.astroport.neutron",
+          "description": "",
+          "image": "https://raw.githubusercontent.com/astroport-fi/astroport-token-lists/main/img/usdc.svg",
+          "price": "0.999788",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "astroport.neutron"
+          ],
+          "chain_uids": null,
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "hot"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "QCK",
+          "tokenId": "QCK.osmosis",
+          "description": "Quicksilver Testnet 2",
+          "image": "https://testnet.osmosis.zone/tokens/generated/qck.png",
+          "price": "0.0",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "osmosis"
+          ],
+          "chain_uids": [
+            "osmosis"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "trending"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "C4E",
+          "tokenId": "C4E.osmosis",
+          "description": "Chain4Energy Testnet",
+          "image": "https://testnet.osmosis.zone/tokens/generated/c4e.png",
+          "price": "0.0",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "osmosis"
+          ],
+          "chain_uids": [
+            "osmosis"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "new",
+            "trending"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "MARS.test",
+          "tokenId": "MARS.test.astroport.neutron",
+          "description": "",
+          "image": "https://raw.githubusercontent.com/astroport-fi/astroport-token-lists/main/img/mars.svg",
+          "price": "2.105027",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "astroport.neutron"
+          ],
+          "chain_uids": null,
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "new",
+            "hot"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "TSAGA",
+          "tokenId": "TSAGA.osmosis",
+          "description": "Saga Testnet",
+          "image": "https://testnet.osmosis.zone/tokens/generated/tsaga.svg",
+          "price": "0.0",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "osmosis"
+          ],
+          "chain_uids": [
+            "osmosis"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "new",
+            "trending"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "MLD",
+          "tokenId": "MLD.osmosis",
+          "description": "Symphony Testnet",
+          "image": "https://testnet.osmosis.zone/tokens/generated/mld.png",
+          "price": "0.0",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "osmosis"
+          ],
+          "chain_uids": [
+            "osmosis"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "trending"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "MARS",
+          "tokenId": "MARS.osmosis",
+          "description": "Mars Hub Testnet",
+          "image": "https://testnet.osmosis.zone/tokens/generated/mars.svg",
+          "price": "0.0",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "osmosis"
+          ],
+          "chain_uids": [
+            "osmosis"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "new",
+            "hot"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "amATOM",
+          "tokenId": "amATOM.astroport.neutron",
+          "description": "",
+          "image": "https://raw.githubusercontent.com/astroport-fi/astroport-token-lists/main/img/amATOM.svg",
+          "price": "4.849828",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "astroport.neutron"
+          ],
+          "chain_uids": null,
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "hot"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "USDC",
+          "tokenId": "USDC.astroport.neutron",
+          "description": "",
+          "image": "https://raw.githubusercontent.com/astroport-fi/astroport-token-lists/main/img/usdc.svg",
+          "price": "0.999788",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "astroport.neutron"
+          ],
+          "chain_uids": null,
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "new",
+            "hot"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "AKT",
+          "tokenId": "AKT.osmosis",
+          "description": "Sandbox",
+          "image": "https://testnet.osmosis.zone/tokens/generated/akt.svg",
+          "price": "0.0",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "osmosis"
+          ],
+          "chain_uids": [
+            "osmosis"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "trending"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "vNTRN",
+          "tokenId": "vNTRN.astroport.neutron",
+          "description": "",
+          "image": "https://raw.githubusercontent.com/astroport-fi/astroport-token-lists/main/img/neutron.svg",
+          "price": "0.152231",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "astroport.neutron"
+          ],
+          "chain_uids": null,
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "hot"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "vxASTRO",
+          "tokenId": "vxASTRO.astroport.neutron",
+          "description": "",
+          "image": "/tokens/vxastro.svg",
+          "price": "0.000000",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "astroport.neutron"
+          ],
+          "chain_uids": null,
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "trending"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "(Old) ATOM",
+          "tokenId": "(Old) ATOM.astroport.neutron",
+          "description": "",
+          "image": "https://raw.githubusercontent.com/astroport-fi/astroport-token-lists/main/img/atom.svg",
+          "price": "4.850000",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "astroport.neutron"
+          ],
+          "chain_uids": null,
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "hot",
+            "trending"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "USDC.test",
+          "tokenId": "USDC.test.astroport.neutron",
+          "description": "",
+          "image": "https://raw.githubusercontent.com/astroport-fi/astroport-token-lists/main/img/usdc.svg",
+          "price": "0.999788",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "astroport.neutron"
+          ],
+          "chain_uids": null,
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "new",
+            "hot"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "NLS",
+          "tokenId": "NLS.astroport.neutron",
+          "description": "",
+          "image": "https://raw.githubusercontent.com/astroport-fi/astroport-token-lists/main/img/nolus.svg",
+          "price": "0.000000",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "astroport.neutron"
+          ],
+          "chain_uids": null,
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "hot"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "USDC.axl",
+          "tokenId": "USDC.axl.astroport.neutron",
+          "description": "",
+          "image": "https://raw.githubusercontent.com/astroport-fi/astroport-token-lists/main/img/axlusdc.svg",
+          "price": "0.000000",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "astroport.neutron"
+          ],
+          "chain_uids": null,
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "new",
+            "trending"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "JUNOX",
+          "tokenId": "JUNOX.osmosis",
+          "description": "Juno Testnet",
+          "image": "https://testnet.osmosis.zone/tokens/generated/junox.svg",
+          "price": "0.0",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "osmosis"
+          ],
+          "chain_uids": [
+            "osmosis"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "new",
+            "hot"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "aUSDC.axl",
+          "tokenId": "aUSDC.axl.osmosis",
+          "description": "USDC (Axelar Testnet)",
+          "image": "https://testnet.osmosis.zone/tokens/generated/ausdc.axl.svg",
+          "price": "0.0",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "osmosis"
+          ],
+          "chain_uids": [
+            "osmosis"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "new",
+            "trending"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "XION",
+          "tokenId": "XION.osmosis",
+          "description": "Xion Testnet 1",
+          "image": "https://testnet.osmosis.zone/tokens/generated/xion.png",
+          "price": "0.0",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "osmosis"
+          ],
+          "chain_uids": [
+            "osmosis"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "trending"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "KYVE",
+          "tokenId": "KYVE.osmosis",
+          "description": "KYVE Kaon",
+          "image": "https://testnet.osmosis.zone/tokens/generated/kyve.svg",
+          "price": "0.0",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "osmosis"
+          ],
+          "chain_uids": [
+            "osmosis"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "new",
+            "hot"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "ASTRO.cw20",
+          "tokenId": "ASTRO.cw20.astroport.neutron",
+          "description": "",
+          "image": "https://raw.githubusercontent.com/astroport-fi/astroport-token-lists/main/img/astro-cw20.svg",
+          "price": "0.000094",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "astroport.neutron"
+          ],
+          "chain_uids": null,
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "hot"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "ION",
+          "tokenId": "ION.osmosis",
+          "description": "Ion",
+          "image": "https://testnet.osmosis.zone/tokens/generated/ion.svg",
+          "price": "84.055249726236160000",
+          "price_change_24h": -0.003841161,
+          "price_change_7d": 0.0611375413,
+          "dex": [
+            "osmosis"
+          ],
+          "chain_uids": [
+            "osmosis"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "new",
+            "trending"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "IXO",
+          "tokenId": "IXO.osmosis",
+          "description": "ixo",
+          "image": "https://testnet.osmosis.zone/tokens/generated/ixo.svg",
+          "price": "0.0",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "osmosis"
+          ],
+          "chain_uids": [
+            "osmosis"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "hot"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "USDC",
+          "tokenId": "USDC.osmosis",
+          "description": "USD Coin",
+          "image": "https://testnet.osmosis.zone/tokens/generated/usdc.svg",
+          "price": "0.0",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "osmosis"
+          ],
+          "chain_uids": [
+            "osmosis"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "hot"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "ASTRO",
+          "tokenId": "ASTRO.astroport.neutron",
+          "description": "",
+          "image": "https://raw.githubusercontent.com/astroport-fi/astroport-token-lists/main/img/astro.svg",
+          "price": "0.000095",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "astroport.neutron"
+          ],
+          "chain_uids": null,
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "new",
+            "trending"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 18,
+          "displayName": "WETH.axl",
+          "tokenId": "WETH.axl.astroport.neutron",
+          "description": "",
+          "image": "https://raw.githubusercontent.com/astroport-fi/astroport-token-lists/main/img/eth.svg",
+          "price": "0.000000",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "astroport.neutron"
+          ],
+          "chain_uids": null,
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "new"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 18,
+          "displayName": "wstETH",
+          "tokenId": "wstETH.astroport.neutron",
+          "description": "",
+          "image": "https://raw.githubusercontent.com/astroport-fi/astroport-token-lists/main/img/wstETH.svg",
+          "price": "0.000000",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "astroport.neutron"
+          ],
+          "chain_uids": null,
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "hot",
+            "trending"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        },
+        {
+          "coinDecimal": 6,
+          "displayName": "KIMA",
+          "tokenId": "KIMA.osmosis",
+          "description": "Kima Network Testnet",
+          "image": "https://testnet.osmosis.zone/tokens/generated/kima.svg",
+          "price": "0.0",
+          "price_change_24h": 0,
+          "price_change_7d": 0,
+          "dex": [
+            "osmosis"
+          ],
+          "chain_uids": [
+            "osmosis"
+          ],
+          "total_volume": 0,
+          "total_volume_24h": 0,
+          "tags": [
+            "hot",
+            "trending"
+          ],
+          "min_swap_value": 1,
+          "social": {},
+          "is_verified": true
+        }
+      ]
+    }
+  }
+}

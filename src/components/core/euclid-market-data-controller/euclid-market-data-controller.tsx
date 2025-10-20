@@ -3,7 +3,6 @@ import { marketStore } from '../../../store/market.store';
 import { apiClient } from '../../../utils/api-client';
 import { DEFAULTS } from '../../../utils/constants';
 import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
-import type { ChainInfo } from '../../../utils/types/euclid-api.types';
 
 @Component({
   tag: 'euclid-market-data-controller',
@@ -24,6 +23,11 @@ export class EuclidMarketDataController {
   }
 
   private async initialize() {
+    console.log('📊 Initializing Market Data Controller...');
+
+    // Load initial market data
+    await this.loadInitialData();
+
     // Set up periodic market data refresh
     this.setupPeriodicRefresh();
 
@@ -40,25 +44,9 @@ export class EuclidMarketDataController {
       // Load chains
       const chainsResponse = await apiClient.getAllChains(false);
       if (chainsResponse.success && chainsResponse.data) {
-        // Convert ChainInfo[] to ChainConfig[]
-        const chainConfigs = chainsResponse.data.chains.all_chains.map((chain: ChainInfo) => ({
-          chainId: chain.chain_id,
-          chainUID: chain.chain_uid,
-          name: chain.display_name,
-          displayName: chain.display_name,
-          type: chain.type.toLowerCase() === 'evm' ? 'evm' : 'cosmos' as 'cosmos' | 'evm',
-          rpcUrl: '', // API doesn't provide this, would need to be configured separately
-          nativeCurrency: {
-            name: 'Unknown', // Would need to be configured per chain
-            symbol: 'TBD',
-            decimals: 18
-          },
-          explorer: chain.explorer_url,
-          logo: chain.logo
-        }));
-
-        marketStore.setChains(chainConfigs);
-        console.log('📡 Loaded chains:', chainConfigs.length);
+        // Store the EuclidChainConfig[] data directly
+        marketStore.setChains(chainsResponse.data);
+        console.log('📡 Loaded chains:', chainsResponse.data.length);
       } else {
         console.warn('Failed to load chains:', chainsResponse.error);
       }
@@ -66,19 +54,20 @@ export class EuclidMarketDataController {
       // Load tokens
       const tokensResponse = await apiClient.getAllTokens();
       if (tokensResponse.success && tokensResponse.data) {
-        // Convert token strings to TokenInfo objects
-        const tokens = tokensResponse.data.router.all_tokens.tokens.map(tokenId => ({
-          id: tokenId,
-          symbol: tokenId.toUpperCase(),
-          name: tokenId.charAt(0).toUpperCase() + tokenId.slice(1),
-          decimals: 6, // Default, will be updated when we get more detailed info
-          chainUID: 'vsl', // Default Virtual Settlement Layer
-          logo: `/assets/tokens/${tokenId}.png`, // Placeholder
-        }));
-        marketStore.setTokens(tokens);
-        console.log('🪙 Loaded tokens:', tokens.length);
+        // Store the TokenMetadata[] data directly
+        marketStore.setTokens(tokensResponse.data);
+        console.log('🪙 Loaded tokens:', tokensResponse.data.length);
       } else {
         console.warn('Failed to load tokens:', tokensResponse.error);
+      }
+
+      // Load pools
+      const poolsResponse = await apiClient.getAllPools();
+      if (poolsResponse.success && poolsResponse.data) {
+        marketStore.setPools(poolsResponse.data);
+        console.log('🏊 Loaded pools:', poolsResponse.data.length);
+      } else {
+        console.warn('Failed to load pools:', poolsResponse.error);
       }
 
     } catch (error) {
@@ -105,37 +94,13 @@ export class EuclidMarketDataController {
       // Refresh chains data
       const chainsResponse = await apiClient.getAllChains(false);
       if (chainsResponse.success && chainsResponse.data) {
-        // Convert ChainInfo[] to ChainConfig[]
-        const chainConfigs = chainsResponse.data.chains.all_chains.map((chain: ChainInfo) => ({
-          chainId: chain.chain_id,
-          chainUID: chain.chain_uid,
-          name: chain.display_name,
-          displayName: chain.display_name,
-          type: chain.type.toLowerCase() === 'evm' ? 'evm' : 'cosmos' as 'cosmos' | 'evm',
-          rpcUrl: '', // API doesn't provide this, would need to be configured separately
-          nativeCurrency: {
-            name: 'Unknown', // Would need to be configured per chain
-            symbol: 'TBD',
-            decimals: 18
-          },
-          explorer: chain.explorer_url,
-          logo: chain.logo
-        }));
-        marketStore.setChains(chainConfigs);
+        marketStore.setChains(chainsResponse.data);
       }
 
       // Refresh tokens data
       const tokensResponse = await apiClient.getAllTokens();
       if (tokensResponse.success && tokensResponse.data) {
-        const tokens = tokensResponse.data.router.all_tokens.tokens.map(tokenId => ({
-          id: tokenId,
-          symbol: tokenId.toUpperCase(),
-          name: tokenId.charAt(0).toUpperCase() + tokenId.slice(1),
-          decimals: 6,
-          chainUID: 'vsl',
-          logo: `/assets/tokens/${tokenId}.png`,
-        }));
-        marketStore.setTokens(tokens);
+        marketStore.setTokens(tokensResponse.data);
       }
 
       console.log('✅ Market data refreshed successfully');

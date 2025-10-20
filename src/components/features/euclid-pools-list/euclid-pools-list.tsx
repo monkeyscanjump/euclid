@@ -1,4 +1,4 @@
-import { Component, Prop, h, State, Event, EventEmitter, Listen, Element } from '@stencil/core';
+import { Component, Prop, h, State, Event, EventEmitter, Listen, Element, Watch } from '@stencil/core';
 
 export interface PoolToken {
   symbol: string;
@@ -132,11 +132,29 @@ export class EuclidPoolsList {
   @Event() claimRewards: EventEmitter<{ pool: PoolData; position: UserPoolPosition }>;
   @Event() filtersChanged: EventEmitter<PoolFilters>;
 
-  componentDidLoad() {
+  componentWillLoad() {
+    // Initialize filters on component load to avoid re-render warnings
     this.applyFilters();
   }
 
+  componentDidLoad() {
+    // Component is ready, no state changes needed here
+  }
+
   componentDidUpdate() {
+    // Only apply filters when pools data changes, not when internal state changes
+    // This prevents infinite loops from filteredPools state changes
+  }
+
+  @Watch('pools')
+  watchPoolsChange() {
+    // Only re-apply filters when pools prop actually changes
+    this.applyFilters();
+  }
+
+  @Watch('positions')
+  watchPositionsChange() {
+    // Re-apply filters when user positions change
     this.applyFilters();
   }
 
@@ -227,11 +245,24 @@ export class EuclidPoolsList {
       }
     });
 
-    this.filteredPools = filtered;
-    this.totalPages = Math.ceil(filtered.length / this.itemsPerPage);
+    // Only update state if the filtered results have actually changed
+    // This prevents infinite loops
+    const newFilteredLength = filtered.length;
+    const currentFilteredLength = this.filteredPools.length;
+    const hasChanged = newFilteredLength !== currentFilteredLength ||
+      !filtered.every((pool, index) => this.filteredPools[index]?.id === pool.id);
+
+    if (hasChanged) {
+      this.filteredPools = filtered;
+    }
+
+    const newTotalPages = Math.ceil(filtered.length / this.itemsPerPage);
+    if (this.totalPages !== newTotalPages) {
+      this.totalPages = newTotalPages;
+    }
 
     // Reset to first page if current page is out of bounds
-    if (this.currentPage > this.totalPages) {
+    if (this.currentPage > this.totalPages && this.totalPages > 0) {
       this.currentPage = 1;
     }
 
@@ -242,6 +273,7 @@ export class EuclidPoolsList {
     const target = event.target as HTMLInputElement;
     this.filters = { ...this.filters, search: target.value };
     this.currentPage = 1;
+    this.applyFilters();
   };
 
   private handleSortChange = (sortBy: PoolFilters['sortBy']) => {
@@ -259,6 +291,7 @@ export class EuclidPoolsList {
         sortOrder: 'desc',
       };
     }
+    this.applyFilters();
   };
 
   private handleFilterToggle = (filterKey: keyof PoolFilters, value?: unknown) => {
@@ -274,6 +307,7 @@ export class EuclidPoolsList {
       };
     }
     this.currentPage = 1;
+    this.applyFilters();
   };
 
   private handlePageChange = (page: number) => {
@@ -529,6 +563,7 @@ export class EuclidPoolsList {
                             maxTvl: Infinity,
                             tokenFilter: '',
                           };
+                          this.applyFilters();
                         }}
                         type="button"
                       >

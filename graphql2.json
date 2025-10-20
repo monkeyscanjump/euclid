@@ -1,0 +1,1473 @@
+{
+  "data": {
+    "pool": {
+      "volume": {
+        "volume_24hours": "29845963166215.6914062500",
+        "total_liquidity": "196296908975.4485168457",
+        "total_volume": "29845963166215.7031250000",
+        "volume_breakdown_24hours": [
+          {
+            "pair": "eulideee.eucl-0g",
+            "volume": "102736.6925424060"
+          },
+          {
+            "pair": "0g-p69.eucl",
+            "volume": "47140.3612467182"
+          },
+          {
+            "pair": "euclid-phrs",
+            "volume": "2541074937242.5815429688"
+          },
+          {
+            "pair": "testcore-euclid",
+            "volume": "3631959873.3311972618"
+          },
+          {
+            "pair": "eth-dnox.eucl",
+            "volume": "53050.1079285993"
+          },
+          {
+            "pair": "lumia.eucl-stt",
+            "volume": "858058.5587286000"
+          },
+          {
+            "pair": "bjl.eucl-stt",
+            "volume": "2890884.4607971879"
+          },
+          {
+            "pair": "0g-rudy102.eucl",
+            "volume": "3009420.7318217051"
+          },
+          {
+            "pair": "0g-aud.eucl",
+            "volume": "11446795.7377644796"
+          },
+          {
+            "pair": "0g-kcg.eucl",
+            "volume": "38437.6429572700"
+          },
+          {
+            "pair": "iss.eucl-0g",
+            "volume": "236081.8976455446"
+          },
+          {
+            "pair": "stt-sbae.eucl",
+            "volume": "89155599.2182878405"
+          },
+          {
+            "pair": "ron-rpf.eucl",
+            "volume": "17810734.3511143290"
+          },
+          {
+            "pair": "0g-lun.eucl",
+            "volume": "124187.8808882048"
+          },
+          {
+            "pair": "0g-crt69.eucl",
+            "volume": "25491.3359864683"
+          },
+          {
+            "pair": "0g-atla.eucl",
+            "volume": "59785.5899807638"
+          },
+          {
+            "pair": "stt-sos.eucl",
+            "volume": "1231455.3491148059"
+          },
+          {
+            "pair": "mnt-euclid",
+            "volume": "49965604460.1438598633"
+          },
+          {
+            "pair": "0g-lika.eucl",
+            "volume": "12271510.5257513002"
+          },
+          {
+            "pair": "dc.eucl-mon",
+            "volume": "1414553.5648039738"
+          },
+          {
+            "pair": "dm.eucl-0g",
+            "volume": "28456.9527577266"
+          },
+          {
+            "pair": "euclid-teth",
+            "volume": "6668086786.1049041748"
+          },
+          {
+            "pair": "usdc-usdt",
+            "volume": "58622121.6603879929"
+          },
+          {
+            "pair": "0g-b0g.eucl",
+            "volume": "34408590.0432943329"
+          },
+          {
+            "pair": "0g-hole.eucl",
+            "volume": "172189390.4267346859"
+          },
+          {
+            "pair": "0g-aph.eucl",
+            "volume": "1419350.0824467163"
+          },
+          {
+            "pair": "stt-psn.eucl",
+            "volume": "92543.9748299739"
+          },
+          {
+            "pair": "0g-alstra.eucl",
+            "volume": "80827.3109487404"
+          },
+          {
+            "pair": "mbg2.eucl-stt",
+            "volume": "6260799966.5356521606"
+          },
+          {
+            "pair": "dog.eucl-mon",
+            "volume": "7811163.2351513626"
+          },
+          {
+            "pair": "sandstt.eucl-stt",
+            "volume": "854138.7163928247"
+          },
+          {
+            "pair": "0g-node.eucl",
+            "volume": "258496.2756144570"
+          },
+          {
+            "pair": "stt-keto.eucl",
+            "volume": "7268.3412339663"
+          },
+          {
+            "pair": "0g-mkla.eucl",
+            "volume": "7342.3133224900"
+          },
+          {
+            "pair": "elige.eucl-gimo",
+            "volume": "15706.1061565824"
+          },
+          {
+            "pair": "euclid-nibi",
+            "volume": "9703339798.7270870209"
+          },
+          {
+            "pair": "euclid-orai",
+            "volume": "2038089014.2122688293"
+          },
+          {
+            "pair": "0g-bogo.eucl",
+            "volume": "49239413.0668141022"
+          },
+          {
+            "pair": "0g-0t.eucl",
+            "volume": "384237.4755045783"
+          },
+          {
+            "pair": "mon-sel.eucl",
+            "volume": "841262.5580734500"
+          },
+          {
+            "pair": "0g-kucing.eucl",
+            "volume": "257425.9333230365"
+          },
+          {
+            "pair": "0g-exploree.eucl",
+            "volume": "10091.8740897192"
+          },
+          {
+            "pair": "stt-euclid",
+            "volume": "2314902074147.0805664062"
+          },
+          {
+            "pair": "euclid-h0g.eucl",
+            "volume": "777286.0549779986"
+          },
+          {
+            "pair": "gaza.eucl-mon",
+            "volume": "16818952.2932785414"
+          },
+          {
+            "pair": "rtoken.eucl-ron",
+            "volume": "1415870.3694386370"
+          },
+          {
+            "pair": "0g-btc.eucl",
+            "volume": "10108461732833.2832031250"
+          },
+          {
+            "pair": "mon-poke.eucl",
+            "volume": "4612775.6177327745"
+          },
+          {
+            "pair": "0g-evo.eucl",
+            "volume": "198712.8122426688"
+          },
+          {
+            "pair": "mon-mepe.eucl",
+            "volume": "3641.6288329456"
+          },
+          {
+            "pair": "eth-spn.eucl",
+            "volume": "5626.5836339612"
+          },
+          {
+            "pair": "mon-god.eucl",
+            "volume": "55895.5151332892"
+          },
+          {
+            "pair": "lgo.eucl-mon",
+            "volume": "2479995.6760908002"
+          },
+          {
+            "pair": "0g-0gxbase.eucl",
+            "volume": "94725.0359769083"
+          },
+          {
+            "pair": "eth-scroll.eucl",
+            "volume": "303930.0096437351"
+          },
+          {
+            "pair": "gimo-rain.eucl",
+            "volume": "427586.7003025000"
+          },
+          {
+            "pair": "euclid-mon",
+            "volume": "7745078874636.9003906250"
+          },
+          {
+            "pair": "0g-cd.eucl",
+            "volume": "9625263.8427800946"
+          },
+          {
+            "pair": "ron-danadas.eucl",
+            "volume": "61671.2416389527"
+          },
+          {
+            "pair": "eth-glu.eucl",
+            "volume": "5482.9267308907"
+          },
+          {
+            "pair": "ndle.eucl-stt",
+            "volume": "3190186.5958429994"
+          },
+          {
+            "pair": "mon-snk.eucl",
+            "volume": "34801037.7492177039"
+          },
+          {
+            "pair": "0g-spgds.eucl",
+            "volume": "120186.8154902646"
+          },
+          {
+            "pair": "euclid-amntt.eucl",
+            "volume": "4215.6160219268"
+          },
+          {
+            "pair": "karma.eucl-mon",
+            "volume": "49629980.6990099996"
+          },
+          {
+            "pair": "0g-n69.eucl",
+            "volume": "39596.5641602600"
+          },
+          {
+            "pair": "mon-mnd.eucl",
+            "volume": "10511018.1435883138"
+          },
+          {
+            "pair": "cyanto.eucl-stt",
+            "volume": "13676864.4407506250"
+          },
+          {
+            "pair": "mon-ogm.eucl",
+            "volume": "252905868.0513919592"
+          },
+          {
+            "pair": "mon-fat.eucl",
+            "volume": "57546253483.6629791260"
+          },
+          {
+            "pair": "gbk.eucl-stt",
+            "volume": "324824947.0943305492"
+          },
+          {
+            "pair": "0g-pedas.eucl",
+            "volume": "84958.6925945600"
+          },
+          {
+            "pair": "0g-0gmn.eucl",
+            "volume": "20566720.4479511976"
+          },
+          {
+            "pair": "mon-amdt.eucl",
+            "volume": "46822419.0054807812"
+          },
+          {
+            "pair": "cupang.eucl-stt",
+            "volume": "1896320.3971597049"
+          },
+          {
+            "pair": "eth-jon.eucl",
+            "volume": "86269.7410256093"
+          },
+          {
+            "pair": "euclid-montt.eucl",
+            "volume": "1147736.8627976673"
+          },
+          {
+            "pair": "0g-gimo",
+            "volume": "19321393054.2471809387"
+          },
+          {
+            "pair": "0g-ob.eucl",
+            "volume": "31839.5283013452"
+          },
+          {
+            "pair": "0g-cj.eucl",
+            "volume": "311077380.2415759563"
+          },
+          {
+            "pair": "0g-ogc.eucl",
+            "volume": "76112026.9321810305"
+          },
+          {
+            "pair": "euclid-gimo",
+            "volume": "53504923446.3322448730"
+          },
+          {
+            "pair": "bnb-euclid",
+            "volume": "23986587205.1889343262"
+          },
+          {
+            "pair": "0g-m69.eucl",
+            "volume": "27911.0696349100"
+          },
+          {
+            "pair": "0g-euclidean.eucl",
+            "volume": "84242.0319530497"
+          },
+          {
+            "pair": "indomie.eucl-0g",
+            "volume": "49384.6333040382"
+          },
+          {
+            "pair": "euclid-hype",
+            "volume": "4394239895.8411235809"
+          },
+          {
+            "pair": "0g-monkey.eucl",
+            "volume": "4594.5016846988"
+          },
+          {
+            "pair": "sprueba.eucl-stt",
+            "volume": "1071894.3257656589"
+          },
+          {
+            "pair": "stt-kiara.eucl",
+            "volume": "584778112992.4738769531"
+          },
+          {
+            "pair": "eth-bloop.eucl",
+            "volume": "201293.7162534405"
+          },
+          {
+            "pair": "stt-exs.eucl",
+            "volume": "4447175043.7752819061"
+          },
+          {
+            "pair": "0g-kecap.eucl",
+            "volume": "50613.4418249673"
+          },
+          {
+            "pair": "0g-dg69.eucl",
+            "volume": "47780.0915375100"
+          },
+          {
+            "pair": "0g-rrq.eucl",
+            "volume": "17544.2974220536"
+          },
+          {
+            "pair": "euclid-usdc",
+            "volume": "1576834733.6465094090"
+          },
+          {
+            "pair": "0g-cyp450.eucl",
+            "volume": "2530470.9601851641"
+          },
+          {
+            "pair": "0g-mbg.eucl",
+            "volume": "481989.0720247992"
+          },
+          {
+            "pair": "plume-euclid",
+            "volume": "101934929221.2376251221"
+          },
+          {
+            "pair": "0g-plse.eucl",
+            "volume": "180071.1215161829"
+          },
+          {
+            "pair": "0g-0glabs.eucl",
+            "volume": "2145531.6104512741"
+          },
+          {
+            "pair": "0g-cute.eucl",
+            "volume": "34289.0630735520"
+          },
+          {
+            "pair": "euclid-elys",
+            "volume": "13969351703.7117614746"
+          },
+          {
+            "pair": "0g-mrrobotsg.eucl",
+            "volume": "1000794.5569626866"
+          },
+          {
+            "pair": "n0gt.eucl-0g",
+            "volume": "30683216.9913741164"
+          },
+          {
+            "pair": "euclid-ambt.eucl",
+            "volume": "154239.4685513659"
+          },
+          {
+            "pair": "0g-gajah.eucl",
+            "volume": "9199.4675143100"
+          },
+          {
+            "pair": "0g-lins.eucl",
+            "volume": "224089.6971465945"
+          },
+          {
+            "pair": "bi.eucl-stt",
+            "volume": "47698.5317846909"
+          },
+          {
+            "pair": "stt-eucl.eucl",
+            "volume": "575037.6624987674"
+          },
+          {
+            "pair": "mon-rise.eucl",
+            "volume": "1508833.9489344214"
+          },
+          {
+            "pair": "stt-somini.eucl",
+            "volume": "27045213.7632400468"
+          },
+          {
+            "pair": "0g-io.eucl",
+            "volume": "13498.9319896524"
+          },
+          {
+            "pair": "som.eucl-stt",
+            "volume": "362854726.8744918108"
+          },
+          {
+            "pair": "splp.eucl-stt",
+            "volume": "1498451304.6775751114"
+          },
+          {
+            "pair": "fomo.eucl-0g",
+            "volume": "1298852177.6025934219"
+          },
+          {
+            "pair": "euclid-amrsmt.eucl",
+            "volume": "1439609.3753966503"
+          },
+          {
+            "pair": "0g-sham.eucl",
+            "volume": "1337.4689700730"
+          },
+          {
+            "pair": "eth-aieth.eucl",
+            "volume": "1520637.5149454554"
+          },
+          {
+            "pair": "mon-monk.eucl",
+            "volume": "44481200.9174555391"
+          },
+          {
+            "pair": "ron-0b.eucl",
+            "volume": "56471628.9832720160"
+          },
+          {
+            "pair": "ctw.eucl-mon",
+            "volume": "21621288.5233882144"
+          },
+          {
+            "pair": "eth-coolshit.eucl",
+            "volume": "273547.1590239970"
+          },
+          {
+            "pair": "0g-og23.eucl",
+            "volume": "24532689.3326152787"
+          },
+          {
+            "pair": "lub.eucl-mon",
+            "volume": "689870.4726044999"
+          },
+          {
+            "pair": "scrls.eucl-eth",
+            "volume": "1191.7460821061"
+          },
+          {
+            "pair": "0g-test.eucl",
+            "volume": "11495.4749058618"
+          },
+          {
+            "pair": "0g-ph.eucl",
+            "volume": "65868.0109668148"
+          },
+          {
+            "pair": "0g-mp.eucl",
+            "volume": "20289.6395627400"
+          },
+          {
+            "pair": "0g-api.eucl",
+            "volume": "87688.8563529000"
+          },
+          {
+            "pair": "0g-gm.eucl",
+            "volume": "4116.0311213043"
+          },
+          {
+            "pair": "inj-usdt",
+            "volume": "529643718.2172836661"
+          },
+          {
+            "pair": "stt-ssd.eucl",
+            "volume": "1002566.7397124772"
+          },
+          {
+            "pair": "cast.eucl-mon",
+            "volume": "2594651.0072265500"
+          },
+          {
+            "pair": "0g-explore.eucl",
+            "volume": "53567.1103076500"
+          },
+          {
+            "pair": "0g-jaine.eucl",
+            "volume": "158583.2522730277"
+          },
+          {
+            "pair": "eth-optm.eucl",
+            "volume": "99877.3661173187"
+          },
+          {
+            "pair": "cdx.eucl-0g",
+            "volume": "222138.1496450858"
+          },
+          {
+            "pair": "stt-jb.eucl",
+            "volume": "266323.4211010267"
+          },
+          {
+            "pair": "andrea.eucl-0g",
+            "volume": "2637082.4210868385"
+          },
+          {
+            "pair": "codewizard.eucl-stt",
+            "volume": "1691.9011624741"
+          },
+          {
+            "pair": "mon-mos.eucl",
+            "volume": "1841463.5497941100"
+          },
+          {
+            "pair": "0g-b69.eucl",
+            "volume": "28183.3909924700"
+          },
+          {
+            "pair": "0g-s69.eucl",
+            "volume": "9632.3106872700"
+          },
+          {
+            "pair": "0g-nexus.eucl",
+            "volume": "22556.7679816616"
+          },
+          {
+            "pair": "duo.eucl-mon",
+            "volume": "18959818.6038223766"
+          },
+          {
+            "pair": "0g-brn.eucl",
+            "volume": "1916363.9206667920"
+          },
+          {
+            "pair": "0g-euc.eucl",
+            "volume": "152251.8490293747"
+          },
+          {
+            "pair": "stt-btcsb.eucl",
+            "volume": "426545.1513173764"
+          },
+          {
+            "pair": "0g-ersa.eucl",
+            "volume": "836128.1844913773"
+          },
+          {
+            "pair": "euclid-osmo",
+            "volume": "3010153558.0033636093"
+          },
+          {
+            "pair": "eth-optt.eucl",
+            "volume": "480946.8160356806"
+          },
+          {
+            "pair": "0g-kuro.eucl",
+            "volume": "19414325.5164974034"
+          },
+          {
+            "pair": "0g-0gxsomnia.eucl",
+            "volume": "1397676.8265727577"
+          },
+          {
+            "pair": "euclid-euclidean.eucl",
+            "volume": "197.1005041800"
+          },
+          {
+            "pair": "eth-halo.eucl",
+            "volume": "458228.0689432518"
+          },
+          {
+            "pair": "0g-cm.eucl",
+            "volume": "2457715.6858267337"
+          },
+          {
+            "pair": "stt-prd.eucl",
+            "volume": "4493.2991147894"
+          },
+          {
+            "pair": "shit.eucl-stt",
+            "volume": "40290009.0096684843"
+          },
+          {
+            "pair": "bea.eucl-mon",
+            "volume": "7564548.5087611135"
+          },
+          {
+            "pair": "mon-punkguy.eucl",
+            "volume": "14324433.3750361241"
+          },
+          {
+            "pair": "0g-d69.eucl",
+            "volume": "0.0000001684"
+          },
+          {
+            "pair": "eth-rbase.eucl",
+            "volume": "134689.0516022680"
+          },
+          {
+            "pair": "fmt.eucl-mon",
+            "volume": "13020062.6380040012"
+          },
+          {
+            "pair": "0g-alp.eucl",
+            "volume": "175674.9298669829"
+          },
+          {
+            "pair": "0g-evil.eucl",
+            "volume": "34896.4043354442"
+          },
+          {
+            "pair": "0g-12r.eucl",
+            "volume": "118561.7351766019"
+          },
+          {
+            "pair": "euclid-sonic",
+            "volume": "21994652243.4706726074"
+          },
+          {
+            "pair": "stt-exmpl.eucl",
+            "volume": "5868.7906682063"
+          },
+          {
+            "pair": "0g-ai.eucl",
+            "volume": "92774.8782780009"
+          },
+          {
+            "pair": "0g-not.eucl",
+            "volume": "35535.8853221777"
+          },
+          {
+            "pair": "gimo-0gfat.eucl",
+            "volume": "24721087.7904570103"
+          },
+          {
+            "pair": "0g-pills.eucl",
+            "volume": "20331532.2446515672"
+          },
+          {
+            "pair": "0g-0xb.eucl",
+            "volume": "313821.6656087614"
+          },
+          {
+            "pair": "0g-0xe.eucl",
+            "volume": "1650779.0337049006"
+          },
+          {
+            "pair": "0g-luxe.eucl",
+            "volume": "29198.2279967075"
+          },
+          {
+            "pair": "0g-pir.eucl",
+            "volume": "26931.0898247418"
+          },
+          {
+            "pair": "ntrn-euclid",
+            "volume": "1617602643.0857477188"
+          },
+          {
+            "pair": "eth-ssmn.eucl",
+            "volume": "10107.4440246450"
+          },
+          {
+            "pair": "r0g.eucl-0g",
+            "volume": "7899189.3786626756"
+          },
+          {
+            "pair": "0g-plr.eucl",
+            "volume": "40015.7383793200"
+          },
+          {
+            "pair": "0g-bn69.eucl",
+            "volume": "32452.3137378000"
+          },
+          {
+            "pair": "0g-crt.eucl",
+            "volume": "6647.1474679025"
+          },
+          {
+            "pair": "0g-hana.eucl",
+            "volume": "9276.7554255600"
+          },
+          {
+            "pair": "ron-ronin.eucl",
+            "volume": "1299.3457071000"
+          },
+          {
+            "pair": "ron-mto.eucl",
+            "volume": "271053966.2047625184"
+          },
+          {
+            "pair": "0g-0gxpanda.eucl",
+            "volume": "33278.8967022465"
+          },
+          {
+            "pair": "mon-rjs.eucl",
+            "volume": "3012660.3832996995"
+          },
+          {
+            "pair": "0g-eucog.eucl",
+            "volume": "31824006.5645402707"
+          },
+          {
+            "pair": "ron-init.eucl",
+            "volume": "40099.0992397666"
+          },
+          {
+            "pair": "bangyanto.eucl-mon",
+            "volume": "51603004.2606071979"
+          },
+          {
+            "pair": "0g-psc.eucl",
+            "volume": "333070.9405052826"
+          },
+          {
+            "pair": "0g-abcx.eucl",
+            "volume": "59164.7661103192"
+          },
+          {
+            "pair": "0g-amtt.eucl",
+            "volume": "9.8011453245"
+          },
+          {
+            "pair": "eth-lik.eucl",
+            "volume": "147175.9960524600"
+          },
+          {
+            "pair": "0g-og.eucl",
+            "volume": "172236498.4491235018"
+          },
+          {
+            "pair": "0g-gil.eucl",
+            "volume": "3963753.1604385488"
+          },
+          {
+            "pair": "stt-mv.eucl",
+            "volume": "1421625192.3450846672"
+          },
+          {
+            "pair": "0g-mike.eucl",
+            "volume": "228069.0242705563"
+          },
+          {
+            "pair": "0g-oge.eucl",
+            "volume": "5390276.8240378629"
+          },
+          {
+            "pair": "mon-nmtt.eucl",
+            "volume": "8504056.3247480001"
+          },
+          {
+            "pair": "mon-pirate.eucl",
+            "volume": "31865091.6681496799"
+          },
+          {
+            "pair": "kry.eucl-0g",
+            "volume": "688306.6503840557"
+          },
+          {
+            "pair": "makdavelitm.eucl-mon",
+            "volume": "1962657.8082756829"
+          },
+          {
+            "pair": "0g-luki.eucl",
+            "volume": "64040.6023334967"
+          },
+          {
+            "pair": "ron-rbg.eucl",
+            "volume": "146496165.8941512704"
+          },
+          {
+            "pair": "paw.eucl-stt",
+            "volume": "8344271.3963920828"
+          },
+          {
+            "pair": "0g-0xsui.eucl",
+            "volume": "785555.2008491419"
+          },
+          {
+            "pair": "0g-daoaii.eucl",
+            "volume": "74861.1031351647"
+          },
+          {
+            "pair": "stt-smv.eucl",
+            "volume": "232820.5183357520"
+          },
+          {
+            "pair": "0g-dontol.eucl",
+            "volume": "200.5148099524"
+          },
+          {
+            "pair": "c38.eucl-stt",
+            "volume": "36305.3303069650"
+          },
+          {
+            "pair": "stt-smc.eucl",
+            "volume": "601584.2521975656"
+          },
+          {
+            "pair": "0g-rudi.eucl",
+            "volume": "107570.5742029296"
+          },
+          {
+            "pair": "mon-monfat.eucl",
+            "volume": "5376035.1387160998"
+          },
+          {
+            "pair": "mon-net.eucl",
+            "volume": "754100.4560640706"
+          },
+          {
+            "pair": "0g-elig.eucl",
+            "volume": "17006.0945230800"
+          },
+          {
+            "pair": "0g-cat.eucl",
+            "volume": "2222067.2800041176"
+          },
+          {
+            "pair": "0g-reucl.eucl",
+            "volume": "726523.4531381599"
+          },
+          {
+            "pair": "eth-rsepol.eucl",
+            "volume": "2176507.8510768344"
+          },
+          {
+            "pair": "cimi.eucl-0g",
+            "volume": "2500300.9644899610"
+          },
+          {
+            "pair": "eth-ed.eucl",
+            "volume": "2101258.4600334507"
+          },
+          {
+            "pair": "euclid-somtt.eucl",
+            "volume": "7452134.9090515599"
+          },
+          {
+            "pair": "maan.eucl-stt",
+            "volume": "1416974267.2428193092"
+          },
+          {
+            "pair": "0g-role.eucl",
+            "volume": "6504567.0431979587"
+          },
+          {
+            "pair": "euclid-kii",
+            "volume": "8751196695.4468383789"
+          },
+          {
+            "pair": "jk.eucl-stt",
+            "volume": "4863858196.0362472534"
+          },
+          {
+            "pair": "jwr.eucl-0g",
+            "volume": "264297.4174716595"
+          },
+          {
+            "pair": "0g-cryla.eucl",
+            "volume": "554587.8961133097"
+          },
+          {
+            "pair": "mon-mas.eucl",
+            "volume": "9176020.8635004349"
+          },
+          {
+            "pair": "eth-ox.eucl",
+            "volume": "13246.2432532900"
+          },
+          {
+            "pair": "0g-gmn.eucl",
+            "volume": "70898.9493161000"
+          },
+          {
+            "pair": "0g-haha.eucl",
+            "volume": "387762.9017532828"
+          },
+          {
+            "pair": "0g-frdy.eucl",
+            "volume": "1417139.0407753647"
+          },
+          {
+            "pair": "mon-brkm.eucl",
+            "volume": "361.5614213221"
+          },
+          {
+            "pair": "0g-kp.eucl",
+            "volume": "194397.6614171446"
+          },
+          {
+            "pair": "phrs-usdc.p",
+            "volume": "359277093.9806704521"
+          },
+          {
+            "pair": "mon-0gj.eucl",
+            "volume": "149249059.6492317617"
+          },
+          {
+            "pair": "0g-lukas.eucl",
+            "volume": "29105.3491744148"
+          },
+          {
+            "pair": "mon-fak.eucl",
+            "volume": "31023.2932811958"
+          },
+          {
+            "pair": "euclid-0g",
+            "volume": "1922093136832.0488281250"
+          },
+          {
+            "pair": "euclnft.eucl-stt",
+            "volume": "21457490.5670791194"
+          },
+          {
+            "pair": "egbon.eucl-mon",
+            "volume": "0.0000005994"
+          },
+          {
+            "pair": "dak.eucl-mon",
+            "volume": "154.8124785903"
+          },
+          {
+            "pair": "stt-hr.eucl",
+            "volume": "198040620419.4655456543"
+          },
+          {
+            "pair": "stt-funkai.eucl",
+            "volume": "108035.9701669221"
+          },
+          {
+            "pair": "btcm.eucl-mon",
+            "volume": "236778630.1133419871"
+          },
+          {
+            "pair": "eth-amrunitt.eucl",
+            "volume": "1468245482.3035655022"
+          },
+          {
+            "pair": "usdc-inj",
+            "volume": "8880240452.0420207977"
+          },
+          {
+            "pair": "euclid-eth",
+            "volume": "3735671867144.7734375000"
+          },
+          {
+            "pair": "mon-ses.eucl",
+            "volume": "471134.3317555000"
+          },
+          {
+            "pair": "ron-ggwp.eucl",
+            "volume": "28792.3249387827"
+          },
+          {
+            "pair": "0g-0xbnb.eucl",
+            "volume": "3865863.6411258802"
+          },
+          {
+            "pair": "stt-hbg.eucl",
+            "volume": "37748.3683533445"
+          },
+          {
+            "pair": "nbt.eucl-eth",
+            "volume": "63619.0249638264"
+          },
+          {
+            "pair": "sb.eucl-stt",
+            "volume": "4225339.8260869998"
+          },
+          {
+            "pair": "0g-andrek.eucl",
+            "volume": "388553.7977021700"
+          },
+          {
+            "pair": "0g-borg.eucl",
+            "volume": "3494354.0870674402"
+          },
+          {
+            "pair": "0g-0xs.eucl",
+            "volume": "709045.5011039571"
+          },
+          {
+            "pair": "ogmi.eucl-0g",
+            "volume": "66210212195.5668640137"
+          },
+          {
+            "pair": "0g-gtime.eucl",
+            "volume": "45576.1065979200"
+          },
+          {
+            "pair": "ron-ronm6.eucl",
+            "volume": "99.6701355533"
+          },
+          {
+            "pair": "stt-era.eucl",
+            "volume": "1747888.7050307859"
+          },
+          {
+            "pair": "0g-b0.eucl",
+            "volume": "975.8566019896"
+          },
+          {
+            "pair": "0g-glk.eucl",
+            "volume": "8436.9830153300"
+          },
+          {
+            "pair": "0g-fida.eucl",
+            "volume": "15834.8915671209"
+          },
+          {
+            "pair": "0g-pris.eucl",
+            "volume": "92411.8322012153"
+          },
+          {
+            "pair": "euclid-sctt.eucl",
+            "volume": "217624.8262000000"
+          },
+          {
+            "pair": "eth-ropt.eucl",
+            "volume": "113422.1798246243"
+          },
+          {
+            "pair": "ron-rron.eucl",
+            "volume": "23430.6225480000"
+          },
+          {
+            "pair": "nad.eucl-mon",
+            "volume": "62556205.7500883713"
+          },
+          {
+            "pair": "somnex.eucl-stt",
+            "volume": "47511.3123470166"
+          },
+          {
+            "pair": "eth-puppet.eucl",
+            "volume": "48074.1912336425"
+          },
+          {
+            "pair": "0g-kte.eucl",
+            "volume": "8918386.4542448185"
+          },
+          {
+            "pair": "0g-mr.eucl",
+            "volume": "1217164.5382756842"
+          },
+          {
+            "pair": "0g-0gxgimo.eucl",
+            "volume": "6667620.6131160706"
+          },
+          {
+            "pair": "daz.eucl-mon",
+            "volume": "2317581.9588799998"
+          },
+          {
+            "pair": "mbt.eucl-eth",
+            "volume": "37424.9837262019"
+          },
+          {
+            "pair": "lolli.eucl-mon",
+            "volume": "12859327.9861241654"
+          },
+          {
+            "pair": "dtb.eucl-stt",
+            "volume": "80054.7282853000"
+          },
+          {
+            "pair": "0g-m0on.eucl",
+            "volume": "651430.3654762629"
+          },
+          {
+            "pair": "cool.eucl-stt",
+            "volume": "62273009.6545834392"
+          },
+          {
+            "pair": "stt-survivor.eucl",
+            "volume": "257552.6997313207"
+          },
+          {
+            "pair": "0g-enak.eucl",
+            "volume": "72516.9054697700"
+          },
+          {
+            "pair": "euclid-funkai.eucl",
+            "volume": "541.9420965540"
+          },
+          {
+            "pair": "0g-sd.eucl",
+            "volume": "1795567.4617004402"
+          },
+          {
+            "pair": "btt.eucl-eth",
+            "volume": "198237.4197455940"
+          },
+          {
+            "pair": "mon-pop.eucl",
+            "volume": "589329130.3510448933"
+          },
+          {
+            "pair": "euclid-inj",
+            "volume": "22456207304.0933151245"
+          },
+          {
+            "pair": "stars-euclid",
+            "volume": "1084642079.6849200726"
+          },
+          {
+            "pair": "mrch.eucl-stt",
+            "volume": "672997792.4978533983"
+          },
+          {
+            "pair": "blb.eucl-stt",
+            "volume": "228113295.5346959829"
+          },
+          {
+            "pair": "mon-btcb.eucl",
+            "volume": "8062477.4164309409"
+          },
+          {
+            "pair": "0g-prl.eucl",
+            "volume": "93759.0449206000"
+          },
+          {
+            "pair": "0g-barack.eucl",
+            "volume": "339828.1064311683"
+          },
+          {
+            "pair": "0g-nbtc.eucl",
+            "volume": "742060.2605495718"
+          },
+          {
+            "pair": "sand.eucl-eth",
+            "volume": "13418324.9457684420"
+          },
+          {
+            "pair": "0g-ppi.eucl",
+            "volume": "4564.4336532220"
+          },
+          {
+            "pair": "0g-r69.eucl",
+            "volume": "8888.5880904000"
+          },
+          {
+            "pair": "aipe.eucl-euclid",
+            "volume": "17736450.5148788653"
+          },
+          {
+            "pair": "alkali.eucl-eth",
+            "volume": "243292.7328933120"
+          },
+          {
+            "pair": "0g-ka.eucl",
+            "volume": "12200616.2329719849"
+          },
+          {
+            "pair": "oni.eucl-stt",
+            "volume": "22781453929.1223754883"
+          },
+          {
+            "pair": "0g-mkl.eucl",
+            "volume": "26599.7655659068"
+          },
+          {
+            "pair": "aug.eucl-mon",
+            "volume": "1090975.9999845000"
+          },
+          {
+            "pair": "0g-pole.eucl",
+            "volume": "1380588.0281354003"
+          },
+          {
+            "pair": "0g-lim.eucl",
+            "volume": "38966.5997740398"
+          },
+          {
+            "pair": "eth-aisepo.eucl",
+            "volume": "1801165.2188738976"
+          },
+          {
+            "pair": "loom.eucl-stt",
+            "volume": "34388098.8900722265"
+          },
+          {
+            "pair": "stt-stn.eucl",
+            "volume": "10163063.3947780635"
+          },
+          {
+            "pair": "fa8.eucl-stt",
+            "volume": "35379787.2813093811"
+          },
+          {
+            "pair": "0g-brk.eucl",
+            "volume": "121009.4734571024"
+          },
+          {
+            "pair": "cde.eucl-0g",
+            "volume": "172259.7416011055"
+          },
+          {
+            "pair": "0g-emc.eucl",
+            "volume": "314130.2811352500"
+          },
+          {
+            "pair": "eth-amopt.eucl",
+            "volume": "8278.3418741173"
+          },
+          {
+            "pair": "0g-gimo.eucl",
+            "volume": "3618302599.0567598343"
+          },
+          {
+            "pair": "drops.eucl-eth",
+            "volume": "2483587.8824009998"
+          },
+          {
+            "pair": "ogo.eucl-0g",
+            "volume": "6043594.7701758109"
+          },
+          {
+            "pair": "0g-0xtron.eucl",
+            "volume": "104098.5530392355"
+          },
+          {
+            "pair": "0g-lounch.eucl",
+            "volume": "55083.4308303300"
+          },
+          {
+            "pair": "bonkaninu.eucl-eth",
+            "volume": "563959.9397595600"
+          },
+          {
+            "pair": "0g-tllr.eucl",
+            "volume": "1711715.2912652965"
+          },
+          {
+            "pair": "plume-ptt.eucl",
+            "volume": "7642.2884077235"
+          },
+          {
+            "pair": "0g-ogphr.eucl",
+            "volume": "14074542.3866751865"
+          },
+          {
+            "pair": "0g-rebon.eucl",
+            "volume": "45973.6867866884"
+          },
+          {
+            "pair": "0g-quiq.eucl",
+            "volume": "11318.3251575108"
+          },
+          {
+            "pair": "0g-nk69.eucl",
+            "volume": "17260.1361512400"
+          },
+          {
+            "pair": "euclid-andr",
+            "volume": "3633337034.5397434235"
+          },
+          {
+            "pair": "euclid-const",
+            "volume": "7069493926.3974666595"
+          },
+          {
+            "pair": "0g-m.eucl",
+            "volume": "232296.9788463084"
+          },
+          {
+            "pair": "0g-0gxcat.eucl",
+            "volume": "535257.3562068995"
+          },
+          {
+            "pair": "0g-cds.eucl",
+            "volume": "33120.3224324025"
+          },
+          {
+            "pair": "eth-gbased.eucl",
+            "volume": "885844.8299702734"
+          },
+          {
+            "pair": "ron-euclid",
+            "volume": "138858875221.3422241211"
+          },
+          {
+            "pair": "gs04.eucl-stt",
+            "volume": "1008811064.0893669128"
+          },
+          {
+            "pair": "stt-hoh.eucl",
+            "volume": "12678224.4397348166"
+          },
+          {
+            "pair": "stt-rsom.eucl",
+            "volume": "12362.5426796968"
+          },
+          {
+            "pair": "eth-pepe.eucl",
+            "volume": "1639359.6761530386"
+          },
+          {
+            "pair": "eth-js.eucl",
+            "volume": "1530044.6117509999"
+          },
+          {
+            "pair": "0g-glo.eucl",
+            "volume": "770249.8919988207"
+          },
+          {
+            "pair": "0g-kgmn.eucl",
+            "volume": "59639.1662939600"
+          },
+          {
+            "pair": "eth-soto.eucl",
+            "volume": "597782.4562949750"
+          },
+          {
+            "pair": "0g-abc.eucl",
+            "volume": "103781.4380512368"
+          },
+          {
+            "pair": "stt-an.eucl",
+            "volume": "23261219.0335739851"
+          },
+          {
+            "pair": "0g-exo.eucl",
+            "volume": "79190.4634908300"
+          },
+          {
+            "pair": "0g-ecd.eucl",
+            "volume": "381656100.0639708638"
+          },
+          {
+            "pair": "mon-gdtoken.eucl",
+            "volume": "5873342.9922319222"
+          },
+          {
+            "pair": "0g-0gxbillions.eucl",
+            "volume": "28287.0157074795"
+          },
+          {
+            "pair": "stt-shn.eucl",
+            "volume": "16140.7887502819"
+          },
+          {
+            "pair": "mon-chan.eucl",
+            "volume": "881660.1340609532"
+          },
+          {
+            "pair": "0g-0xt.eucl",
+            "volume": "549624.7446422137"
+          },
+          {
+            "pair": "mon-dny.eucl",
+            "volume": "42514.3051131533"
+          },
+          {
+            "pair": "con.eucl-mon",
+            "volume": "745096.8269265001"
+          },
+          {
+            "pair": "eth-tgry.eucl",
+            "volume": "10793.4905331454"
+          },
+          {
+            "pair": "plume-ampt.eucl",
+            "volume": "6507721.7919375235"
+          },
+          {
+            "pair": "0g-sandf.eucl",
+            "volume": "89944.7754158797"
+          },
+          {
+            "pair": "stt-btcs.eucl",
+            "volume": "166975.6953322255"
+          },
+          {
+            "pair": "0g-daoai.eucl",
+            "volume": "79724.8529157931"
+          },
+          {
+            "pair": "0g-pools.eucl",
+            "volume": "39519.1157838900"
+          },
+          {
+            "pair": "avax-euclid",
+            "volume": "7152531606.8011217117"
+          },
+          {
+            "pair": "hjk.eucl-stt",
+            "volume": "9646.3878642285"
+          },
+          {
+            "pair": "smnsm.eucl-stt",
+            "volume": "24510259.8593585789"
+          },
+          {
+            "pair": "mon-moon.eucl",
+            "volume": "22999296.3120208345"
+          },
+          {
+            "pair": "stt-somnai.eucl",
+            "volume": "2561734.2995707029"
+          },
+          {
+            "pair": "0g-para.eucl",
+            "volume": "21999.1008789273"
+          }
+        ]
+      }
+    }
+  }
+}

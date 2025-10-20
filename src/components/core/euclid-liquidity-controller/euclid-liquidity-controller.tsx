@@ -1,5 +1,6 @@
 import { Component, Listen, State, Watch } from '@stencil/core';
 import { liquidityStore } from '../../../store/liquidity.store';
+import { marketStore } from '../../../store/market.store';
 import { walletStore } from '../../../store/wallet.store';
 import { apiClient } from '../../../utils/api-client';
 import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
@@ -78,16 +79,25 @@ export class EuclidLiquidityController {
       });
 
       // Execute add liquidity via API
-      const result = await apiClient.createAddLiquidityTransaction({
-        poolId: selectedPool.id,
-        token1Id: token1.id,
-        token2Id: token2.id,
-        token1Amount,
-        token2Amount,
-        token1UserAddress: token1Wallet.address,
-        token2UserAddress: token2Wallet.address,
-        slippage: 0.5, // Default 0.5% slippage
-        deadline: Math.floor(Date.now() / 1000) + 1200, // 20 minutes
+      const result = await apiClient.createAddLiquidityTransactionWrapped({
+        slippage_tolerance_bps: 50, // 0.5% = 50 basis points
+        timeout: (Math.floor(Date.now() / 1000) + 1200).toString(), // 20 minutes
+        pair_info: {
+          token_1: {
+            token: token1.id,
+            amount: token1Amount,
+            token_type: token1.token_type || { native: { denom: token1.id } }
+          },
+          token_2: {
+            token: token2.id,
+            amount: token2Amount,
+            token_type: token2.token_type || { native: { denom: token2.id } }
+          }
+        },
+        sender: {
+          address: token1Wallet.address,
+          chain_uid: token1.chainUID
+        }
       });
 
       if (result.success && result.data) {
@@ -101,13 +111,8 @@ export class EuclidLiquidityController {
 
         walletStore.addTransaction(primaryChain, {
           txHash: txHash || (result.data as TransactionResponse)?.transactionHash || 'pending',
-          fromAddress: walletInfo.address,
-          chainUID: primaryChain,
-          type: 'add_liquidity',
-          status: 'pending',
-          timestamp: Date.now().toString(),
-          amount: token1Amount,
-          tokenId: token1.symbol,
+          timestamp: Date.now(),
+          type: 'add_liquidity'
         });
 
         // Emit global event for transaction tracking
@@ -142,15 +147,29 @@ export class EuclidLiquidityController {
         return { success: false, error: 'Liquidity position not found' };
       }
 
-      const { pool } = position;
-      const primaryWallet = walletStore.getWallet(pool.token1.chainUID);
+      // Get the pool info from market store
+      const allPools = marketStore.state.pools;
+      const pool = allPools.find(p => p.id === poolId);
+
+      if (!pool) {
+        return { success: false, error: 'Pool not found' };
+      }
+
+      // Get token metadata to find chain info
+      const tokens = marketStore.state.tokens;
+      const token1 = tokens.find(t => t.address === pool.token_1);
+      if (!token1) {
+        return { success: false, error: 'Token metadata not found' };
+      }
+
+      const primaryWallet = walletStore.getWallet(token1.chain_uid);
 
       if (!primaryWallet?.isConnected) {
-        return { success: false, error: `Wallet not connected for ${pool.token1.chainUID}` };
+        return { success: false, error: `Wallet not connected for ${token1.chain_uid}` };
       }
 
       // Check sufficient LP token balance
-      const lpBalance = walletStore.getWalletBalance(pool.token1.chainUID, `lp-${poolId}`);
+      const lpBalance = walletStore.getWalletBalance(token1.chain_uid, `lp-${poolId}`);
       if (!lpBalance || BigInt(lpBalance.amount) < BigInt(lpTokenAmount)) {
         return { success: false, error: 'Insufficient LP token balance' };
       }
@@ -163,12 +182,14 @@ export class EuclidLiquidityController {
       });
 
       // Execute remove liquidity via API
-      const result = await apiClient.createRemoveLiquidityTransaction({
-        poolId,
-        lpTokenAmount,
-        userAddress: primaryWallet.address,
-        slippage: 0.5, // Default 0.5% slippage
-        deadline: Math.floor(Date.now() / 1000) + 1200, // 20 minutes
+      const result = await apiClient.createRemoveLiquidityTransactionWrapped({
+        slippage_tolerance_bps: 50, // 0.5% = 50 basis points
+        timeout: (Math.floor(Date.now() / 1000) + 1200).toString(), // 20 minutes
+        lp_token_amount: lpTokenAmount,
+        sender: {
+          address: primaryWallet.address,
+          chain_uid: token1.chain_uid
+        }
       });
 
       if (result.success && result.data) {
@@ -176,22 +197,16 @@ export class EuclidLiquidityController {
         const { txHash } = transactionData;
 
         // Add transaction to wallet store
-        const walletInfo = walletStore.getWallet(pool.token1.chainUID);
-        walletStore.addTransaction(pool.token1.chainUID, {
+        walletStore.addTransaction(token1.chain_uid, {
           txHash,
-          fromAddress: walletInfo.address,
-          chainUID: pool.token1.chainUID,
-          type: 'remove_liquidity',
-          status: 'pending',
-          timestamp: Date.now().toString(),
-          amount: lpTokenAmount,
-          tokenId: `LP-${pool.token1.symbol}-${pool.token2.symbol}`,
+          timestamp: Date.now(),
+          type: 'remove_liquidity'
         });
 
         // Emit global event for transaction tracking
         dispatchEuclidEvent(EUCLID_EVENTS.TRANSACTION.SUBMITTED, {
           txHash,
-          chainUID: pool.token1.chainUID,
+          chainUID: token1.chain_uid,
           type: 'remove_liquidity',
         });
 

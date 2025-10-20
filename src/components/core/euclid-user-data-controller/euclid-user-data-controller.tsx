@@ -112,11 +112,13 @@ export class EuclidUserDataController {
           const balanceData = balanceResponse.data as BalanceData;
           if (balanceData.balance?.all) {
             const chainBalances: UserBalance[] = balanceData.balance.all.map(item => ({
-              tokenId: item.denom,
               amount: item.amount,
-              chainUID: wallet.chainUID,
-              address: wallet.address,
-              lastUpdated: Date.now()
+              token_id: item.denom,
+              // Legacy compatibility fields
+              token: item.denom,
+              balance: item.amount,
+              chain_uid: wallet.chainUID,
+              token_type: { native: { denom: item.denom } }
             }));
 
             // Update wallet store with balances for this chain

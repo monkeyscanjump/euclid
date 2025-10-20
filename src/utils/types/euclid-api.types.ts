@@ -1,252 +1,231 @@
-// Euclid Protocol API types - based on official documentation
+// Euclid Protocol Specific Types
+// These are derived from the Euclid documentation and used internally
 
-// Common Cross-Chain Types
-export interface CrossChainUser {
-  address: string;
-  chain_uid: string;
-}
+import type {
+  TokenWithDenom,
+  TokenWithDenomAndAmount,
+  CrossChainUser,
+  EuclidChainConfig,
+  TokenMetadata,
+  PoolInfo,
+  UserBalance,
+  SwapPath,
+  RoutePath,
+  TransactionResponse
+} from './api.types';
 
-export interface CrossChainUserInput {
-  address?: string;
-  chain_uid?: string;
-}
+// Re-export for convenience
+export type { RoutePath } from './api.types';
 
-export type Limit =
-  | { less_than_or_equal: string }
-  | { equal: string }
-  | { greater_than_or_equal: string };
+// Legacy alias
+export type ChainInfo = EuclidChainConfig;
 
-export interface CrossChainUserWithLimit {
-  limit?: Limit | null;
-  user: CrossChainUser;
-}
+// ============================================================================
+// INTERNAL STORE TYPES
+// ============================================================================
 
-// Token Types
-export type TokenType =
-  | { native: { denom: string } }
-  | { smart: { contract_address: string } }
-  | { voucher: Record<string, never> };
-
-export interface TokenWithDenom {
-  token: string;
-  token_type: TokenType;
-}
-
-export interface TokenWithDenomAndAmount {
-  token: string;
-  amount: string;
-  token_type: TokenType;
-}
-
-export interface PairWithDenomAndAmount {
-  token_1: TokenWithDenomAndAmount;
-  token_2: TokenWithDenomAndAmount;
-}
-
-// Chain Types
-export interface ChainInfo {
-  chain_id: string;
-  chain_uid: string;
-  display_name: string;
-  factory_address: string;
-  token_factory_address: string;
-  explorer_url: string;
-  logo: string;
-  type: 'EVM' | 'Cosmwasm';
-}
-
-// Token Denom Response
-export interface TokenDenom {
-  chain_uid: string;
-  token_type: TokenType;
-}
-
-export interface TokenDenomsResponse {
-  denoms: TokenDenom[];
-}
-
-// Escrow Types
-export interface EscrowInfo {
-  chain_uid: string;
-  balance: string;
-  chain_id: string;
-}
-
-// Route Types
-export interface RouteHop {
-  route: string[];
-  dex: string;
-  amount_in: string;
-  amount_out: string;
-  chain_uid: string;
-  amount_out_for_hops: string[];
-}
-
-export interface RoutePath {
-  path: RouteHop[];
-  total_price_impact: string;
-}
-
-export interface RouteResponse {
-  paths: RoutePath[];
-}
-
-// Swap Types
-export interface SwapPath {
-  path: Array<{
-    route: string[];
-    dex: string;
-    chain_uid?: string;
-    amount_in?: string;
-    amount_out?: string;
-  }>;
-}
-
-export interface PartnerFee {
-  partner_fee_bps: number;
-  recipient: string;
-}
-
-export interface SwapRequest {
-  amount_in: string;
-  asset_in: TokenWithDenom;
-  slippage: string;
-  cross_chain_addresses?: CrossChainUserWithLimit[];
-  partnerFee?: PartnerFee;
-  sender: CrossChainUser;
-  swap_path: SwapPath;
-  timeout?: string;
-}
-
-export interface SimulateSwapResponse {
-  amount_out: string;
-  asset_out: string;
-}
-
-// Liquidity Types
-export interface AddLiquidityRequest {
-  slippage_tolerance_bps: number;
-  timeout?: string;
-  pair_info: PairWithDenomAndAmount;
-  sender: CrossChainUser;
-}
-
-// Pool Types
-export interface Pair {
-  token_1: string;
-  token_2: string;
-}
-
-export interface MyPoolInfo {
-  height: number;
-  vlp: string;
-  user: CrossChainUser;
-  pair: Pair;
-}
-
-// Transaction Response Types
-export interface CosmWasmMessage {
-  contractAddress: string;
-  msg: Record<string, unknown>;
-  funds: Array<{ denom: string; amount: string }>;
-}
-
-export interface EVMMessage {
-  chainId: string;
-  to: string;
-  data: string;
-  value: string;
-  gasLimit?: string;
-}
-
-export interface CosmWasmTransactionResponse {
-  type: 'cosmwasm';
-  sender: CrossChainUser;
-  contract: string;
-  chain_id: string;
-  rpc_url: string;
-  rest_url: string;
-  msgs: CosmWasmMessage[];
-  meta?: string;
-}
-
-export interface EVMTransactionResponse {
-  type: 'evm';
-  sender: CrossChainUser;
-  chain_id: string;
-  contract: string;
-  rpc_url: string;
-  rest_url: string;
-  msgs: EVMMessage[];
-  meta?: string;
-}
-
-export type TransactionResponse = CosmWasmTransactionResponse | EVMTransactionResponse;
-
-// GraphQL Response Wrappers
-export interface ChainsResponse {
-  chains: {
-    all_chains: ChainInfo[];
-  };
-}
-
-export interface TokensResponse {
-  router: {
-    all_tokens: {
-      tokens: string[];
-    };
-  };
-}
-
-export interface TokenDenomsGraphQLResponse {
-  router: {
-    token_denoms: TokenDenomsResponse;
-  };
-}
-
-export interface EscrowsResponse {
-  router: {
-    escrows: EscrowInfo[];
-  };
-}
-
-export interface SimulateSwapGraphQLResponse {
-  router: {
-    simulate_swap: SimulateSwapResponse;
-  };
-}
-
-export interface MyPoolsResponse {
-  pool: {
-    my_pools: MyPoolInfo[];
-  };
-}
-
-// User-related types for the store
-export interface UserAddress {
-  address: string;
-  chainUID: string;
-  walletType: 'keplr' | 'metamask' | 'walletconnect';
+export interface WalletState {
   isConnected: boolean;
+  address: string | null;
+  chainId: string | null;
+  chainUID: string | null;
+  walletType: 'metamask' | 'keplr' | 'phantom' | null;
+  balances: UserBalance[];
+  loading: boolean;
+  error: string | null;
 }
 
-export interface UserBalance {
-  tokenId: string;
-  amount: string;
-  chainUID: string;
+// Legacy wallet info type for backward compatibility
+export interface WalletInfo {
   address: string;
+  chainUID: string;
+  isConnected: boolean;
+  walletType: 'metamask' | 'keplr' | 'phantom';
+  type?: 'metamask' | 'keplr' | 'phantom'; // legacy alias for walletType
+  name?: string; // legacy compatibility
+  balances: UserBalance[];
 }
 
-export interface UserTransaction {
-  txHash: string;
-  type: 'swap' | 'add_liquidity' | 'remove_liquidity' | 'transfer';
-  status: 'pending' | 'confirmed' | 'failed';
-  fromAddress: string;
-  toAddress?: string;
-  amount: string;
-  tokenId: string;
+export interface SwapState {
+  tokenIn: TokenMetadata | null;
+  tokenOut: TokenMetadata | null;
+  fromToken: TokenMetadata | null; // alias for backward compatibility
+  toToken: TokenMetadata | null;   // alias for backward compatibility
+  amountIn: string;
+  amountOut: string;
+  fromAmount: string; // alias for backward compatibility
+  toAmount: string;   // alias for backward compatibility
+  routes: RoutePath[];
+  selectedRoute: RoutePath | null;
+  slippage: number;
+  loading: boolean;
+  error: string | null;
+}
+
+export interface LiquidityState {
+  token1: TokenMetadata | null;
+  token2: TokenMetadata | null;
+  amount1: string;
+  amount2: string;
+  token1Amount: string; // legacy alias for amount1
+  token2Amount: string; // legacy alias for amount2
+  pool: PoolInfo | null;
+  selectedPool: PoolInfo | null; // legacy alias for pool
+  userLpBalance: string;
+  loading: boolean;
+  error: string | null;
+}
+
+export interface MarketState {
+  chains: EuclidChainConfig[];
+  tokens: TokenMetadata[];
+  pools: PoolInfo[];
+  prices: Record<string, number>;
+  loading: boolean;
+  error: string | null;
+  lastUpdated: number;
+}
+
+// ============================================================================
+// COMPONENT PROP TYPES
+// ============================================================================
+
+export interface TokenInputProps {
+  label: string;
+  value: string;
+  token: TokenMetadata | null;
+  balances: UserBalance[];
+  onValueChange: (value: string) => void;
+  onTokenSelect: () => void;
+  disabled?: boolean;
+  showBalance?: boolean;
+  showMax?: boolean;
+}
+
+export interface PoolCardProps {
+  pool: PoolInfo;
+  token1Metadata: TokenMetadata;
+  token2Metadata: TokenMetadata;
+  userLpBalance?: string;
+  onAddLiquidity: () => void;
+  onRemoveLiquidity: () => void;
+}
+
+// ============================================================================
+// API CLIENT INTERFACES
+// ============================================================================
+
+export interface EuclidGraphQLClient {
+  getChains(variables?: { showAllChains?: boolean; type?: string }): Promise<EuclidChainConfig[]>;
+  getTokenMetadata(variables?: { token?: string; chain_uid?: string }): Promise<TokenMetadata[]>;
+  getAllPools(): Promise<PoolInfo[]>;
+  getUserBalances(user: CrossChainUser): Promise<UserBalance[]>;
+}
+
+export interface EuclidRESTClient {
+  getRoutes(request: {
+    amount_in: string;
+    token_in: string;
+    token_out: string;
+    external?: boolean;
+    chain_uids?: string[];
+  }): Promise<RoutePath[]>;
+
+  buildSwapTransaction(request: {
+    amount_in: string;
+    asset_in: TokenWithDenom;
+    slippage: string;
+    sender: CrossChainUser;
+    swap_path: SwapPath;
+  }): Promise<TransactionResponse>;
+
+  buildAddLiquidityTransaction(request: {
+    slippage_tolerance_bps: number;
+    pair_info: { token_1: TokenWithDenomAndAmount; token_2: TokenWithDenomAndAmount };
+    sender: CrossChainUser;
+  }): Promise<TransactionResponse>;
+
+  buildRemoveLiquidityTransaction(request: {
+    slippage_tolerance_bps: number;
+    lp_token_amount: string;
+    sender: CrossChainUser;
+  }): Promise<TransactionResponse>;
+}
+
+// ============================================================================
+// WALLET ADAPTER TYPES
+// ============================================================================
+
+export interface WalletAdapter {
+  type: 'metamask' | 'keplr' | 'phantom';
+  isAvailable(): boolean;
+  connect(chainId?: string): Promise<{ address: string; chainId: string }>;
+  disconnect(): Promise<void>;
+  getBalance(address: string): Promise<string>;
+  signAndBroadcast(transaction: TransactionResponse): Promise<string>;
+  switchChain(chainId: string): Promise<void>;
+  addChain(config: EuclidChainConfig): Promise<void>;
+}
+
+// ============================================================================
+// EVENT TYPES
+// ============================================================================
+
+export interface WalletConnectedEvent {
+  address: string;
+  chainId: string;
   chainUID: string;
-  timestamp: string;
-  fee?: string;
+  walletType: 'metamask' | 'keplr' | 'phantom';
+}
+
+export interface SwapCompletedEvent {
+  txHash: string;
+  tokenIn: TokenWithDenomAndAmount;
+  tokenOut: TokenWithDenomAndAmount;
+  route: RoutePath;
+}
+
+export interface LiquidityAddedEvent {
+  txHash: string;
+  token1: TokenWithDenomAndAmount;
+  token2: TokenWithDenomAndAmount;
+  lpTokenAmount: string;
+}
+
+export interface LiquidityRemovedEvent {
+  txHash: string;
+  lpTokenAmount: string;
+  token1Amount: string;
+  token2Amount: string;
+}
+
+// ============================================================================
+// UTILITY TYPES
+// ============================================================================
+
+export type ChainType = 'EVM' | 'Cosmwasm';
+
+export interface FormattedBalance {
+  raw: string;
+  formatted: string;
+  symbol: string;
+  usdValue?: number;
+}
+
+export interface PriceInfo {
+  tokenId: string;
+  price: number;
+  change24h: number;
+  marketCap?: number;
+  volume24h?: number;
+}
+
+export interface TransactionStatus {
+  hash: string;
+  status: 'pending' | 'success' | 'failed';
+  timestamp: number;
+  chainUID: string;
   blockHeight?: number;
+  gasUsed?: string;
+  fee?: string;
 }

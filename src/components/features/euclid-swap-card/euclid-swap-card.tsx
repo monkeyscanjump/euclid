@@ -159,6 +159,12 @@ export class EuclidSwapCard {
 
   @Listen('tokenSelect')
   handleTokenModalSelect(event: CustomEvent) {
+    // Add null checks to prevent errors when event.detail is null
+    if (!event.detail || !event.detail.token) {
+      console.warn('Token select event received without valid token data:', event.detail);
+      return;
+    }
+
     const selectedToken = event.detail.token;
 
     if (this.tokenSelectorType === 'input') {
@@ -285,23 +291,35 @@ export class EuclidSwapCard {
 
     // Update swap store and trigger swap execution - convert to TokenInfo format
     const fromTokenInfo: TokenInfo = {
+      tokenId: this.inputToken.id || this.inputToken.address,
+      displayName: this.inputToken.name,
+      coinDecimal: this.inputToken.decimals,
+      // Legacy compatibility fields
       id: this.inputToken.id || this.inputToken.address,
       symbol: this.inputToken.symbol,
       name: this.inputToken.name,
       decimals: this.inputToken.decimals,
-      chainUID: this.inputToken.chainUID,
+      chain_uid: this.inputToken.chainUID,
+      chainUID: this.inputToken.chainUID, // legacy compatibility
       address: this.inputToken.address,
-      logo: this.inputToken.logoUrl
+      logo: this.inputToken.logoUrl,
+      token_type: { native: { denom: this.inputToken.address } } // Default to native token
     };
 
     const toTokenInfo: TokenInfo = {
+      tokenId: this.outputToken.id || this.outputToken.address,
+      displayName: this.outputToken.name,
+      coinDecimal: this.outputToken.decimals,
+      // Legacy compatibility fields
       id: this.outputToken.id || this.outputToken.address,
       symbol: this.outputToken.symbol,
       name: this.outputToken.name,
       decimals: this.outputToken.decimals,
-      chainUID: this.outputToken.chainUID,
+      chain_uid: this.outputToken.chainUID,
+      chainUID: this.outputToken.chainUID, // legacy compatibility
       address: this.outputToken.address,
-      logo: this.outputToken.logoUrl
+      logo: this.outputToken.logoUrl,
+      token_type: { native: { denom: this.outputToken.address } } // Default to native token
     };
 
     swapStore.setFromToken(fromTokenInfo);
@@ -462,6 +480,7 @@ export class EuclidSwapCard {
             value={this.inputAmount}
             placeholder="0.0"
             show-max={!!this.inputToken?.balance}
+            token-selectable={false}
             onMaxClick={this.handleMaxClick}
           >
             <div slot="token" class="token-selector" onClick={() => this.openTokenSelector('input')}>
@@ -521,6 +540,7 @@ export class EuclidSwapCard {
             placeholder="0.0"
             disabled={true}
             loading={this.isQuoting}
+            token-selectable={false}
           >
             <div slot="token" class="token-selector" onClick={() => this.openTokenSelector('output')}>
               {this.outputToken ? (

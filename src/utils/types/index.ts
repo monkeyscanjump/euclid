@@ -1,63 +1,59 @@
 // Export all types with explicit names to avoid conflicts
+
+// API Types (actual Euclid types)
 export type {
-  // API Types
   ApiResponse,
   PaginatedResponse,
-  ChainConfig,
-  TokenInfo,
-  TokenBalance,
+  EuclidChainConfig,
+  TokenMetadata,
   PoolInfo,
-  SwapRoute,
-  Transaction
-} from './api.types';
-
-export type {
-  // State Types
-  WalletInfo,
-  WalletState,
-  MarketState,
-  AppState,
-  SwapState,
-  LiquidityPosition,
-  LiquidityState
-} from './state.types';
-
-export type {
-  // Euclid API Types
+  UserBalance,
+  SwapPath,
+  TransactionResponse,
   CrossChainUser,
-  CrossChainUserInput,
-  CrossChainUserWithLimit,
-  TokenType,
   TokenWithDenom,
   TokenWithDenomAndAmount,
-  PairWithDenomAndAmount,
-  ChainInfo,
-  TokenDenom,
-  TokenDenomsResponse,
-  EscrowInfo,
-  RouteHop,
-  RoutePath,
-  RouteResponse,
-  SwapPath,
-  PartnerFee,
+  GetRoutesRequest,
   SwapRequest,
-  SimulateSwapResponse,
   AddLiquidityRequest,
-  Pair,
-  MyPoolInfo,
+  RemoveLiquidityRequest,
+  ChainsQueryResponse,
+  TokenMetadataQueryResponse,
+  AllPoolsQueryResponse,
+  UserBalanceQueryResponse,
   CosmWasmMessage,
   EVMMessage,
   CosmWasmTransactionResponse,
   EVMTransactionResponse,
-  TransactionResponse,
-  ChainsResponse,
-  TokensResponse,
-  TokenDenomsGraphQLResponse,
-  EscrowsResponse,
-  SimulateSwapGraphQLResponse,
-  MyPoolsResponse,
-  UserAddress,
-  UserBalance,
-  UserTransaction,
-  Limit
+  // Legacy compatibility aliases
+  TokenInfo,
+  ChainConfig,
+  SwapRoute,
+  TokenBalance,
+  LiquidityPosition,
+  Transaction
+} from './api.types';
+
+// Internal App Types
+export type {
+  WalletState,
+  SwapState,
+  LiquidityState,
+  MarketState,
+  TokenInputProps,
+  PoolCardProps,
+  WalletAdapter,
+  EuclidGraphQLClient,
+  EuclidRESTClient,
+  FormattedBalance,
+  PriceInfo,
+  TransactionStatus,
+  WalletInfo,
+  ChainInfo
 } from './euclid-api.types';
+
+// Re-export RoutePath specifically from api.types to avoid duplicates
+export type { RoutePath } from './api.types';
+
+// Re-export AppState from its store
+export type { AppState } from '../../store/app.store';

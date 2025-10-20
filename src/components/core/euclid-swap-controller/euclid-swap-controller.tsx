@@ -29,9 +29,12 @@ export class EuclidSwapController {
     console.log('🔄 Initializing Swap Controller...');
 
     // Subscribe to swap store changes for smart polling
-    swapStore.onChange('fromToken', () => this.handleTokenChange());
-    swapStore.onChange('toToken', () => this.handleTokenChange());
-    swapStore.onChange('fromAmount', () => this.handleAmountChange());
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (swapStore.onChange as any)('fromToken', () => this.handleTokenChange());
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (swapStore.onChange as any)('toToken', () => this.handleTokenChange());
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (swapStore.onChange as any)('fromAmount', () => this.handleAmountChange());
 
     this.isInitialized = true;
     console.log('✅ Swap Controller initialized');
@@ -131,7 +134,7 @@ export class EuclidSwapController {
           id: `route-${index}`,
           inputToken: fromToken,
           outputToken: toToken,
-          inputAmount: amount,
+          inputAmount: fromAmount,
           outputAmount: route.path[route.path.length - 1]?.amount_out || '0',
           priceImpact: route.total_price_impact || '0',
           fee: '0', // Fee calculation would need to be derived from route data

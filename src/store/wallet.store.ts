@@ -237,9 +237,9 @@ const getters = {
 // Proper store type definition
 export interface WalletStore {
   state: EnhancedWalletState;
-  onChange: typeof onChange;
-  reset: typeof reset;
-  dispose: typeof dispose;
+  onChange: unknown; // Stencil store onChange type - using unknown for portability
+  reset: () => void;
+  dispose: () => void;
   initialize: () => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;

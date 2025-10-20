@@ -24,7 +24,8 @@ export class EuclidLiquidityController {
     console.log('💧 Initializing Liquidity Controller...');
 
     // Subscribe to liquidity store changes
-    liquidityStore.onChange('selectedPool', () => this.handlePoolChange());
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (liquidityStore.onChange as any)('selectedPool', () => this.handlePoolChange());
 
     this.isInitialized = true;
     console.log('✅ Liquidity Controller initialized');

@@ -112,7 +112,8 @@ export class EuclidTokenInput {
 
   private setupStoreSubscriptions() {
     // Subscribe to wallet balance changes
-    walletStore.onChange('balances', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (walletStore.onChange as any)('balances', () => {
       this.updateUserBalance();
     });
   }

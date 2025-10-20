@@ -47,9 +47,9 @@ const actions = {
 // Proper store type definition
 export interface AppStore {
   state: AppState;
-  onChange: typeof onChange;
-  reset: typeof reset;
-  dispose: typeof dispose;
+  onChange: unknown; // Stencil store onChange type - using unknown for portability
+  reset: () => void;
+  dispose: () => void;
   initialize: () => void;
   openWalletModal: (chainFilter?: string) => void;
   closeWalletModal: () => void;

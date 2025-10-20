@@ -76,9 +76,9 @@ const getters = {
 // Proper store type definition
 export interface MarketStore {
   state: MarketState;
-  onChange: typeof onChange;
-  reset: typeof reset;
-  dispose: typeof dispose;
+  onChange: unknown; // Stencil store onChange type - using unknown for portability
+  reset: () => void;
+  dispose: () => void;
   setLoading: (loading: boolean) => void;
   setChains: (chains: ChainConfig[]) => void;
   setTokens: (tokens: TokenInfo[]) => void;

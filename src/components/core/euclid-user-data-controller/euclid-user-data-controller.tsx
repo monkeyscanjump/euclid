@@ -42,7 +42,8 @@ export class EuclidUserDataController {
     console.log('👤 Initializing User Data Controller...');
 
     // Listen for wallet connection changes
-    walletStore.onChange('wallets', async (wallets) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (walletStore.onChange as any)('wallets', async (wallets: Map<string, WalletInfo>) => {
       const connectedWallets = Array.from(wallets.values()).filter(wallet => wallet.isConnected);
       if (connectedWallets.length > 0) {
         await this.handleWalletConnection(connectedWallets);

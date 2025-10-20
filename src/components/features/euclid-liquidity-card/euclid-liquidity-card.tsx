@@ -294,8 +294,30 @@ export class EuclidLiquidityCard {
 
     this.isQuoting = true;
 
+    // Convert LiquidityPoolInfo to PoolInfo format for the event
+    const apiPool: PoolInfo = {
+      id: this.selectedPool.address,
+      token1: {
+        id: this.selectedPool.tokenA.address,
+        symbol: this.selectedPool.tokenA.symbol,
+        name: this.selectedPool.tokenA.name,
+        decimals: this.selectedPool.tokenA.decimals,
+        chainUID: this.selectedPool.tokenA.chainUID,
+        address: this.selectedPool.tokenA.address
+      },
+      token2: {
+        id: this.selectedPool.tokenB.address,
+        symbol: this.selectedPool.tokenB.symbol,
+        name: this.selectedPool.tokenB.name,
+        decimals: this.selectedPool.tokenB.decimals,
+        chainUID: this.selectedPool.tokenB.chainUID,
+        address: this.selectedPool.tokenB.address
+      },
+      liquidity: this.selectedPool.totalSupply
+    };
+
     this.quoteRequested.emit({
-      pool: this.selectedPool,
+      pool: apiPool,
       tokenAAmount: this.mode === 'add' ? this.tokenAAmount : undefined,
       tokenBAmount: this.mode === 'add' ? this.tokenBAmount : undefined,
       lpTokenAmount: this.mode === 'remove' ? this.lpTokenAmount : undefined,

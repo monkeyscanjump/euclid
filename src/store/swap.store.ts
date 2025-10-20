@@ -109,9 +109,9 @@ const getters = {
 // Proper store type definition
 export interface SwapStore {
   state: SwapState;
-  onChange: typeof onChange;
-  reset: typeof reset;
-  dispose: typeof dispose;
+  onChange: unknown; // Stencil store onChange type - using unknown for portability
+  reset: () => void;
+  dispose: () => void;
   setFromToken: (token: TokenInfo) => void;
   setToToken: (token: TokenInfo) => void;
   setFromAmount: (amount: string) => void;

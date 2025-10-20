@@ -105,7 +105,23 @@ export class EuclidMarketDataController {
       // Refresh chains data
       const chainsResponse = await apiClient.getAllChains(false);
       if (chainsResponse.success && chainsResponse.data) {
-        marketStore.setChains(chainsResponse.data.chains.all_chains);
+        // Convert ChainInfo[] to ChainConfig[]
+        const chainConfigs = chainsResponse.data.chains.all_chains.map((chain: ChainInfo) => ({
+          chainId: chain.chain_id,
+          chainUID: chain.chain_uid,
+          name: chain.display_name,
+          displayName: chain.display_name,
+          type: chain.type.toLowerCase() === 'evm' ? 'evm' : 'cosmos' as 'cosmos' | 'evm',
+          rpcUrl: '', // API doesn't provide this, would need to be configured separately
+          nativeCurrency: {
+            name: 'Unknown', // Would need to be configured per chain
+            symbol: 'TBD',
+            decimals: 18
+          },
+          explorer: chain.explorer_url,
+          logo: chain.logo
+        }));
+        marketStore.setChains(chainConfigs);
       }
 
       // Refresh tokens data

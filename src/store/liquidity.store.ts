@@ -118,9 +118,9 @@ const getters = {
 // Proper store type definition
 export interface LiquidityStore {
   state: LiquidityState;
-  onChange: typeof onChange;
-  reset: typeof reset;
-  dispose: typeof dispose;
+  onChange: unknown; // Stencil store onChange type - using unknown for portability
+  reset: () => void;
+  dispose: () => void;
   setPositions: (positions: LiquidityPosition[]) => void;
   addPosition: (position: LiquidityPosition) => void;
   updatePosition: (poolId: string, updates: Partial<LiquidityPosition>) => void;

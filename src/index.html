@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0" />
-  <title>Euclid Protocol - Component Test Page</title>
+  <title>Euclid Protocol - Component Testing</title>
 
   <script type="module" src="/build/euclid.esm.js"></script>
   <script nomodule src="/build/euclid.js"></script>
@@ -19,53 +19,38 @@
     }
 
     .container {
-      max-width: 1200px;
+      max-width: 1400px;
       margin: 0 auto;
       background: white;
       border-radius: 12px;
-      padding: 20px;
+      padding: 30px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    .components-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 40px;
+    }
+
+    .component-section {
+      padding: 20px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #fafafa;
+    }
+
+    .component-section h3 {
+      margin: 0 0 20px 0;
+      color: #2d3748;
+      font-size: 18px;
+      font-weight: 600;
     }
 
     h1 {
       color: #333;
       text-align: center;
       margin-bottom: 30px;
-    }
-
-    .test-controls {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-    }
-
-    button {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 6px;
-      background: #667eea;
-      color: white;
-      cursor: pointer;
-      font-weight: 500;
-      transition: background 0.2s;
-    }
-
-    button:hover {
-      background: #5a67d8;
-    }
-
-    button:disabled {
-      background: #ccc;
-      cursor: not-allowed;
-    }
-
-    #test-area {
-      min-height: 400px;
-      border: 2px dashed #ddd;
-      border-radius: 8px;
-      padding: 20px;
-      margin: 20px 0;
     }
 
     #logs {
@@ -95,19 +80,52 @@
 
 <body>
   <div class="container">
-    <h1>🚀 Euclid Protocol Components Test</h1>
+    <h1>🧪 Euclid Protocol - Component Testing</h1>
 
-    <div class="test-controls">
-      <button onclick="testPoolsList()">Test Pools List</button>
-      <button onclick="testSwapCard()">Test Swap Card</button>
-      <button onclick="testLiquidityCard()">Test Liquidity Card</button>
-      <button onclick="testPortfolioOverview()">Test Portfolio</button>
-      <button onclick="clearLogs()">Clear Logs</button>
-      <button onclick="testMarketData()">Test Market Data</button>
-    </div>
+    <div class="components-grid">
+      <!-- Pools List Component -->
+      <section class="component-section">
+        <h3>📊 Pools List Component</h3>
+        <euclid-pools-list
+          card-title="Liquidity Pools"
+          items-per-page="6">
+        </euclid-pools-list>
+      </section>
 
-    <div id="test-area">
-      <p>Click a test button above to load components...</p>
+      <!-- Tokens List Component -->
+      <section class="component-section">
+        <h3>🪙 Tokens List Component</h3>
+        <euclid-tokens-list
+          card-title="Available Tokens"
+          items-per-page="8">
+        </euclid-tokens-list>
+      </section>
+
+      <!-- Swap Card Component -->
+      <section class="component-section">
+        <h3>🔄 Swap Card Component</h3>
+        <euclid-swap-card
+          card-title="Token Swap"
+          show-advanced="true">
+        </euclid-swap-card>
+      </section>
+
+      <!-- Liquidity Card Component -->
+      <section class="component-section">
+        <h3>� Liquidity Card Component</h3>
+        <euclid-liquidity-card
+          card-title="Add Liquidity"
+          show-pool-selection="true">
+        </euclid-liquidity-card>
+      </section>
+
+      <!-- Portfolio Overview Component -->
+      <section class="component-section">
+        <h3>💼 Portfolio Overview Component</h3>
+        <euclid-portfolio-overview
+          show-breakdown="true">
+        </euclid-portfolio-overview>
+      </section>
     </div>
 
     <div id="logs"></div>
@@ -115,6 +133,9 @@
 
   <!-- Market Data Controller - This loads real Euclid API data -->
   <euclid-market-data-controller></euclid-market-data-controller>
+
+  <!-- Token Modal - For token selection in swap component -->
+  <euclid-token-modal></euclid-token-modal>
 
   <script>
     // Global logging system
@@ -131,132 +152,23 @@
       console.log(`[${type.toUpperCase()}] ${message}`);
     }
 
-    function clearLogs() {
-      document.getElementById('logs').innerHTML = '';
-    }
-
-    function testPoolsList() {
-      log('Testing euclid-pools-list component...');
-      try {
-        const testArea = document.getElementById('test-area');
-        testArea.innerHTML = '<h4>Testing Pools List Component:</h4><p>Creating component...</p>';
-
-        const poolsList = document.createElement('euclid-pools-list');
-        poolsList.setAttribute('show-search', 'true');
-        poolsList.setAttribute('show-filters', 'true');
-
-        // Wait for market data to load completely, checking multiple times if needed
-        let attempts = 0;
-        const maxAttempts = 10;
-        const checkAndSetPools = () => {
-          attempts++;
-
-          if (window.marketStore && window.marketStore.state.pools.length > 0) {
-            log(`Debug: Attempt ${attempts} - Found ${window.marketStore.state.pools.length} pools`, 'info');
-            log(`Debug: Attempt ${attempts} - Found ${window.marketStore.state.tokens.length} tokens`, 'info');
-
-            // Component automatically gets data from store - no manual setting needed!
-            log(`✅ Market data loaded! Component will automatically sync with store`, 'success');
-            return;
-          }
-
-          if (attempts < maxAttempts) {
-            log(`Waiting for market data... attempt ${attempts}/${maxAttempts}`, 'info');
-            setTimeout(checkAndSetPools, 1000);
-          } else {
-            log('❌ Timeout waiting for market data to load', 'error');
-          }
-        };
-
-        setTimeout(checkAndSetPools, 2000);
-
-        testArea.appendChild(poolsList);
-        log('euclid-pools-list component created successfully', 'success');
-
-      } catch (error) {
-        log(`Pools list test failed: ${error.message}`, 'error');
-      }
-    }
-
-    function testSwapCard() {
-      log('Testing euclid-swap-card component...');
-      try {
-        const testArea = document.getElementById('test-area');
-        testArea.innerHTML = '<h4>Testing Swap Card Component:</h4><p>Creating component...</p>';
-
-        const swapCard = document.createElement('euclid-swap-card');
-        swapCard.setAttribute('card-title', 'Real Euclid Swap');
-        swapCard.setAttribute('show-advanced', 'true');
-
-        testArea.appendChild(swapCard);
-        log('euclid-swap-card component created successfully', 'success');
-
-      } catch (error) {
-        log(`Swap card test failed: ${error.message}`, 'error');
-      }
-    }
-
-    function testLiquidityCard() {
-      log('Testing euclid-liquidity-card component...');
-      try {
-        const testArea = document.getElementById('test-area');
-        testArea.innerHTML = '<h4>Testing Liquidity Card Component:</h4><p>Creating component...</p>';
-
-        const liquidityCard = document.createElement('euclid-liquidity-card');
-        liquidityCard.setAttribute('card-title', 'Add Liquidity');
-        liquidityCard.setAttribute('show-pool-selection', 'true');
-
-        testArea.appendChild(liquidityCard);
-        log('euclid-liquidity-card component created successfully', 'success');
-
-      } catch (error) {
-        log(`Liquidity card test failed: ${error.message}`, 'error');
-      }
-    }
-
-    function testPortfolioOverview() {
-      log('Testing euclid-portfolio-overview component...');
-      try {
-        const testArea = document.getElementById('test-area');
-        testArea.innerHTML = '<h4>Testing Portfolio Overview Component:</h4><p>Creating component...</p>';
-
-        const portfolio = document.createElement('euclid-portfolio-overview');
-        portfolio.setAttribute('show-breakdown', 'true');
-
-        testArea.appendChild(portfolio);
-        log('euclid-portfolio-overview component created successfully', 'success');
-
-      } catch (error) {
-        log(`Portfolio overview test failed: ${error.message}`, 'error');
-      }
-    }
-
-    function testMarketData() {
-      log('Testing market data store...');
-
-      if (window.marketStore) {
-        log('Market store is available', 'success');
-        log(`Chains loaded: ${window.marketStore.state.chains.length}`, 'info');
-        log(`Tokens loaded: ${window.marketStore.state.tokens.length}`, 'info');
-        log(`Pools loaded: ${window.marketStore.state.pools.length}`, 'info');
-        log(`Loading state: ${window.marketStore.state.isLoading}`, 'info');
-
-        if (window.marketStore.state.error) {
-          log(`Store error: ${window.marketStore.state.error}`, 'error');
-        }
-
-      } else {
-        log('Market store not available yet', 'warning');
-      }
-    }
-
     // Initialize when page loads
     document.addEventListener('DOMContentLoaded', () => {
-      log('🎉 Euclid Protocol Components Test Page Loaded');
+      log('🧪 Euclid Protocol Component Testing Page Loaded');
       log('📡 Market data controller is initializing...');
 
+      // Check market data status after load
       setTimeout(() => {
-        testMarketData();
+        if (window.marketStore) {
+          log('Market store is available', 'success');
+          log(`Chains: ${window.marketStore.state.chains.length}, Tokens: ${window.marketStore.state.tokens.length}, Pools: ${window.marketStore.state.pools.length}`, 'info');
+
+          if (window.marketStore.state.error) {
+            log(`Store error: ${window.marketStore.state.error}`, 'error');
+          }
+        } else {
+          log('Market store not available yet', 'warning');
+        }
       }, 3000);
     });
   </script>

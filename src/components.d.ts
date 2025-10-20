@@ -8,21 +8,33 @@ import { HTMLStencilElement, JSXBase } from "@stencil/core/internal";
 import { ButtonSize, ButtonVariant } from "./components/ui/euclid-button/euclid-button";
 import { LiquidityPoolInfo, LiquidityPosition, LiquidityToken } from "./components/features/euclid-liquidity-card/euclid-liquidity-card";
 import { PoolInfo, TokenMetadata } from "./utils/types/api.types";
-import { PoolFilters, PoolToken, UserPoolPosition } from "./components/features/euclid-pools-list/euclid-pools-list";
+import { PoolFilters, UserPoolPosition } from "./components/features/euclid-pools-list/euclid-pools-list";
 import { ChartDataPoint, PoolPosition, PortfolioStats, StakingPosition, TokenBalance, Transaction } from "./components/features/euclid-portfolio-overview/euclid-portfolio-overview";
 import { SwapQuote, SwapSettings, SwapToken } from "./components/features/euclid-swap-card/euclid-swap-card";
 import { TokenInfo } from "./components/ui/euclid-token-content/euclid-token-content";
 import { TokenInfo as TokenInfo1 } from "./components/ui/euclid-token-input/euclid-token-input";
+import { ExtendedTokenInfo, PopularToken, TokenList } from "./components/ui/euclid-token-modal/euclid-token-modal";
+import { TokenInfo as TokenInfo2 } from "./components/ui/euclid-token-input/euclid-token-input";
+import { TokenFilters } from "./components/features/euclid-tokens-list/euclid-tokens-list";
 import { WalletProvider } from "./components/ui/euclid-wallet-content/euclid-wallet-content";
+import { UserPoolPosition as UserPoolPosition1 } from "./components/features/euclid-pools-list/pool-item";
+import { PoolFilters as PoolFilters1 } from "./components/features/euclid-pools-list/pools-filters";
+import { TokenFilters as TokenFilters1 } from "./components/features/euclid-tokens-list/tokens-filters";
 export { ButtonSize, ButtonVariant } from "./components/ui/euclid-button/euclid-button";
 export { LiquidityPoolInfo, LiquidityPosition, LiquidityToken } from "./components/features/euclid-liquidity-card/euclid-liquidity-card";
 export { PoolInfo, TokenMetadata } from "./utils/types/api.types";
-export { PoolFilters, PoolToken, UserPoolPosition } from "./components/features/euclid-pools-list/euclid-pools-list";
+export { PoolFilters, UserPoolPosition } from "./components/features/euclid-pools-list/euclid-pools-list";
 export { ChartDataPoint, PoolPosition, PortfolioStats, StakingPosition, TokenBalance, Transaction } from "./components/features/euclid-portfolio-overview/euclid-portfolio-overview";
 export { SwapQuote, SwapSettings, SwapToken } from "./components/features/euclid-swap-card/euclid-swap-card";
 export { TokenInfo } from "./components/ui/euclid-token-content/euclid-token-content";
 export { TokenInfo as TokenInfo1 } from "./components/ui/euclid-token-input/euclid-token-input";
+export { ExtendedTokenInfo, PopularToken, TokenList } from "./components/ui/euclid-token-modal/euclid-token-modal";
+export { TokenInfo as TokenInfo2 } from "./components/ui/euclid-token-input/euclid-token-input";
+export { TokenFilters } from "./components/features/euclid-tokens-list/euclid-tokens-list";
 export { WalletProvider } from "./components/ui/euclid-wallet-content/euclid-wallet-content";
+export { UserPoolPosition as UserPoolPosition1 } from "./components/features/euclid-pools-list/pool-item";
+export { PoolFilters as PoolFilters1 } from "./components/features/euclid-pools-list/pools-filters";
+export { TokenFilters as TokenFilters1 } from "./components/features/euclid-tokens-list/tokens-filters";
 export namespace Components {
     interface EuclidButton {
         /**
@@ -156,31 +168,11 @@ export namespace Components {
          */
         "positions": UserPoolPosition[];
         /**
-          * Whether to show user positions
-          * @default true
-         */
-        "showPositions": boolean;
-        /**
-          * Whether to show staking options
-          * @default true
-         */
-        "showStaking": boolean;
-        /**
-          * Whether to show only verified pools (default: true)
-          * @default true
-         */
-        "showVerifiedOnly": boolean;
-        /**
           * Token metadata for logos and display names (gets from market store automatically)
           * @deprecated Use store instead
           * @default []
          */
         "tokenMetadata": TokenMetadata[];
-        /**
-          * Available tokens for filtering
-          * @default []
-         */
-        "tokens": PoolToken[];
         /**
           * Connected wallet address
           * @default ''
@@ -286,7 +278,8 @@ export namespace Components {
          */
         "showAdvanced": boolean;
         /**
-          * Available tokens for swapping
+          * Available tokens for swapping (gets from market store automatically)
+          * @deprecated Use store instead
           * @default []
          */
         "tokens": SwapToken[];
@@ -349,6 +342,79 @@ export namespace Components {
          */
         "value": string;
     }
+    interface EuclidTokenModal {
+        /**
+          * Error message to display
+         */
+        "error"?: string;
+        /**
+          * Loading state for token lists
+          * @default false
+         */
+        "loading": boolean;
+        /**
+          * Whether the modal is open
+          * @default false
+         */
+        "open": boolean;
+        /**
+          * Popular/featured tokens to show at the top
+          * @default []
+         */
+        "popularTokens": PopularToken[];
+        /**
+          * Placeholder text for search input
+          * @default 'Search tokens...'
+         */
+        "searchPlaceholder": string;
+        /**
+          * Currently selected token (to show as selected)
+         */
+        "selectedToken"?: TokenInfo2;
+        /**
+          * Whether to show balances
+          * @default true
+         */
+        "showBalances": boolean;
+        /**
+          * Whether to show popular tokens section
+          * @default true
+         */
+        "showPopular": boolean;
+        /**
+          * Available token lists
+          * @default []
+         */
+        "tokenLists": TokenList[];
+        /**
+          * User's token balances
+          * @default {}
+         */
+        "userBalances": Record<string, string>;
+    }
+    interface EuclidTokensList {
+        /**
+          * Card title
+          * @default 'Available Tokens'
+         */
+        "cardTitle": string;
+        /**
+          * Items per page for pagination
+          * @default 20
+         */
+        "itemsPerPage": number;
+        /**
+          * Whether the component is in loading state (overrides store loading)
+          * @default false
+         */
+        "loading": boolean;
+        /**
+          * Available tokens data (gets from market store automatically)
+          * @deprecated Use store instead
+          * @default []
+         */
+        "tokens": TokenMetadata[];
+    }
     interface EuclidTxTrackerController {
     }
     interface EuclidUserDataController {
@@ -356,6 +422,69 @@ export namespace Components {
     interface EuclidWalletContent {
     }
     interface EuclidWalletController {
+    }
+    interface PoolItem {
+        "pool": PoolInfo;
+        "position"?: UserPoolPosition1;
+        /**
+          * @default []
+         */
+        "tokens": TokenMetadata[];
+        "walletAddress"?: string;
+    }
+    interface PoolsFilters {
+        "filters": PoolFilters1;
+        /**
+          * @default ''
+         */
+        "walletAddress": string;
+    }
+    interface PoolsLoading {
+        /**
+          * @default 6
+         */
+        "count": number;
+    }
+    interface PoolsStats {
+        /**
+          * @default 0
+         */
+        "filteredPools": number;
+        /**
+          * @default 0
+         */
+        "totalPools": number;
+        /**
+          * @default 0
+         */
+        "totalTvl": number;
+        /**
+          * @default 0
+         */
+        "userPositions": number;
+        "walletAddress"?: string;
+    }
+    interface TokenItem {
+        "token": TokenMetadata;
+    }
+    interface TokensFilters {
+        /**
+          * @default []
+         */
+        "chains": string[];
+        "filters": TokenFilters1;
+    }
+    interface TokensLoading {
+        /**
+          * Number of skeleton cards to show
+          * @default 8
+         */
+        "count": number;
+        /**
+          * Whether to show the loading state
+          * @default true
+         */
+        "show": boolean;
     }
 }
 export interface EuclidLiquidityCardCustomEvent<T> extends CustomEvent<T> {
@@ -382,9 +511,33 @@ export interface EuclidTokenInputCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLEuclidTokenInputElement;
 }
+export interface EuclidTokenModalCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLEuclidTokenModalElement;
+}
+export interface EuclidTokensListCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLEuclidTokensListElement;
+}
 export interface EuclidWalletContentCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLEuclidWalletContentElement;
+}
+export interface PoolItemCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLPoolItemElement;
+}
+export interface PoolsFiltersCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLPoolsFiltersElement;
+}
+export interface TokenItemCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLTokenItemElement;
+}
+export interface TokensFiltersCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLTokensFiltersElement;
 }
 declare global {
     interface HTMLEuclidButtonElement extends Components.EuclidButton, HTMLStencilElement {
@@ -468,7 +621,6 @@ declare global {
         "stakeTokens": { pool: PoolInfo; position?: UserPoolPosition };
         "claimRewards": { pool: PoolInfo; position: UserPoolPosition };
         "filtersChanged": PoolFilters;
-        "verifiedToggleChanged": boolean;
     }
     interface HTMLEuclidPoolsListElement extends Components.EuclidPoolsList, HTMLStencilElement {
         addEventListener<K extends keyof HTMLEuclidPoolsListElementEventMap>(type: K, listener: (this: HTMLEuclidPoolsListElement, ev: EuclidPoolsListCustomEvent<HTMLEuclidPoolsListElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -583,6 +735,45 @@ declare global {
         prototype: HTMLEuclidTokenInputElement;
         new (): HTMLEuclidTokenInputElement;
     };
+    interface HTMLEuclidTokenModalElementEventMap {
+        "tokenSelect": {
+    token: ExtendedTokenInfo;
+    selectorType: 'input' | 'output';
+  };
+        "modalClose": void;
+    }
+    interface HTMLEuclidTokenModalElement extends Components.EuclidTokenModal, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLEuclidTokenModalElementEventMap>(type: K, listener: (this: HTMLEuclidTokenModalElement, ev: EuclidTokenModalCustomEvent<HTMLEuclidTokenModalElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLEuclidTokenModalElementEventMap>(type: K, listener: (this: HTMLEuclidTokenModalElement, ev: EuclidTokenModalCustomEvent<HTMLEuclidTokenModalElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    }
+    var HTMLEuclidTokenModalElement: {
+        prototype: HTMLEuclidTokenModalElement;
+        new (): HTMLEuclidTokenModalElement;
+    };
+    interface HTMLEuclidTokensListElementEventMap {
+        "tokenSelected": TokenMetadata;
+        "filtersChanged": TokenFilters;
+    }
+    interface HTMLEuclidTokensListElement extends Components.EuclidTokensList, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLEuclidTokensListElementEventMap>(type: K, listener: (this: HTMLEuclidTokensListElement, ev: EuclidTokensListCustomEvent<HTMLEuclidTokensListElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLEuclidTokensListElementEventMap>(type: K, listener: (this: HTMLEuclidTokensListElement, ev: EuclidTokensListCustomEvent<HTMLEuclidTokensListElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    }
+    var HTMLEuclidTokensListElement: {
+        prototype: HTMLEuclidTokensListElement;
+        new (): HTMLEuclidTokensListElement;
+    };
     interface HTMLEuclidTxTrackerControllerElement extends Components.EuclidTxTrackerController, HTMLStencilElement {
     }
     var HTMLEuclidTxTrackerControllerElement: {
@@ -618,6 +809,95 @@ declare global {
         prototype: HTMLEuclidWalletControllerElement;
         new (): HTMLEuclidWalletControllerElement;
     };
+    interface HTMLPoolItemElementEventMap {
+        "addLiquidity": PoolInfo;
+        "removeLiquidity": { pool: PoolInfo; position: UserPoolPosition1 };
+        "stakeTokens": { pool: PoolInfo; position?: UserPoolPosition1 };
+        "claimRewards": { pool: PoolInfo; position: UserPoolPosition1 };
+    }
+    interface HTMLPoolItemElement extends Components.PoolItem, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLPoolItemElementEventMap>(type: K, listener: (this: HTMLPoolItemElement, ev: PoolItemCustomEvent<HTMLPoolItemElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLPoolItemElementEventMap>(type: K, listener: (this: HTMLPoolItemElement, ev: PoolItemCustomEvent<HTMLPoolItemElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    }
+    var HTMLPoolItemElement: {
+        prototype: HTMLPoolItemElement;
+        new (): HTMLPoolItemElement;
+    };
+    interface HTMLPoolsFiltersElementEventMap {
+        "filtersChanged": PoolFilters1;
+    }
+    interface HTMLPoolsFiltersElement extends Components.PoolsFilters, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLPoolsFiltersElementEventMap>(type: K, listener: (this: HTMLPoolsFiltersElement, ev: PoolsFiltersCustomEvent<HTMLPoolsFiltersElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLPoolsFiltersElementEventMap>(type: K, listener: (this: HTMLPoolsFiltersElement, ev: PoolsFiltersCustomEvent<HTMLPoolsFiltersElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    }
+    var HTMLPoolsFiltersElement: {
+        prototype: HTMLPoolsFiltersElement;
+        new (): HTMLPoolsFiltersElement;
+    };
+    interface HTMLPoolsLoadingElement extends Components.PoolsLoading, HTMLStencilElement {
+    }
+    var HTMLPoolsLoadingElement: {
+        prototype: HTMLPoolsLoadingElement;
+        new (): HTMLPoolsLoadingElement;
+    };
+    interface HTMLPoolsStatsElement extends Components.PoolsStats, HTMLStencilElement {
+    }
+    var HTMLPoolsStatsElement: {
+        prototype: HTMLPoolsStatsElement;
+        new (): HTMLPoolsStatsElement;
+    };
+    interface HTMLTokenItemElementEventMap {
+        "tokenClick": TokenMetadata;
+    }
+    interface HTMLTokenItemElement extends Components.TokenItem, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLTokenItemElementEventMap>(type: K, listener: (this: HTMLTokenItemElement, ev: TokenItemCustomEvent<HTMLTokenItemElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLTokenItemElementEventMap>(type: K, listener: (this: HTMLTokenItemElement, ev: TokenItemCustomEvent<HTMLTokenItemElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    }
+    var HTMLTokenItemElement: {
+        prototype: HTMLTokenItemElement;
+        new (): HTMLTokenItemElement;
+    };
+    interface HTMLTokensFiltersElementEventMap {
+        "filtersChanged": TokenFilters1;
+    }
+    interface HTMLTokensFiltersElement extends Components.TokensFilters, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLTokensFiltersElementEventMap>(type: K, listener: (this: HTMLTokensFiltersElement, ev: TokensFiltersCustomEvent<HTMLTokensFiltersElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLTokensFiltersElementEventMap>(type: K, listener: (this: HTMLTokensFiltersElement, ev: TokensFiltersCustomEvent<HTMLTokensFiltersElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    }
+    var HTMLTokensFiltersElement: {
+        prototype: HTMLTokensFiltersElement;
+        new (): HTMLTokensFiltersElement;
+    };
+    interface HTMLTokensLoadingElement extends Components.TokensLoading, HTMLStencilElement {
+    }
+    var HTMLTokensLoadingElement: {
+        prototype: HTMLTokensLoadingElement;
+        new (): HTMLTokensLoadingElement;
+    };
     interface HTMLElementTagNameMap {
         "euclid-button": HTMLEuclidButtonElement;
         "euclid-core-provider": HTMLEuclidCoreProviderElement;
@@ -632,10 +912,19 @@ declare global {
         "euclid-swap-controller": HTMLEuclidSwapControllerElement;
         "euclid-token-content": HTMLEuclidTokenContentElement;
         "euclid-token-input": HTMLEuclidTokenInputElement;
+        "euclid-token-modal": HTMLEuclidTokenModalElement;
+        "euclid-tokens-list": HTMLEuclidTokensListElement;
         "euclid-tx-tracker-controller": HTMLEuclidTxTrackerControllerElement;
         "euclid-user-data-controller": HTMLEuclidUserDataControllerElement;
         "euclid-wallet-content": HTMLEuclidWalletContentElement;
         "euclid-wallet-controller": HTMLEuclidWalletControllerElement;
+        "pool-item": HTMLPoolItemElement;
+        "pools-filters": HTMLPoolsFiltersElement;
+        "pools-loading": HTMLPoolsLoadingElement;
+        "pools-stats": HTMLPoolsStatsElement;
+        "token-item": HTMLTokenItemElement;
+        "tokens-filters": HTMLTokensFiltersElement;
+        "tokens-loading": HTMLTokensLoadingElement;
     }
 }
 declare namespace LocalJSX {
@@ -787,7 +1076,6 @@ declare namespace LocalJSX {
         "onPoolSelected"?: (event: EuclidPoolsListCustomEvent<PoolInfo>) => void;
         "onRemoveLiquidity"?: (event: EuclidPoolsListCustomEvent<{ pool: PoolInfo; position: UserPoolPosition }>) => void;
         "onStakeTokens"?: (event: EuclidPoolsListCustomEvent<{ pool: PoolInfo; position?: UserPoolPosition }>) => void;
-        "onVerifiedToggleChanged"?: (event: EuclidPoolsListCustomEvent<boolean>) => void;
         /**
           * Available pools data (gets from market store automatically)
           * @deprecated Use store instead
@@ -800,31 +1088,11 @@ declare namespace LocalJSX {
          */
         "positions"?: UserPoolPosition[];
         /**
-          * Whether to show user positions
-          * @default true
-         */
-        "showPositions"?: boolean;
-        /**
-          * Whether to show staking options
-          * @default true
-         */
-        "showStaking"?: boolean;
-        /**
-          * Whether to show only verified pools (default: true)
-          * @default true
-         */
-        "showVerifiedOnly"?: boolean;
-        /**
           * Token metadata for logos and display names (gets from market store automatically)
           * @deprecated Use store instead
           * @default []
          */
         "tokenMetadata"?: TokenMetadata[];
-        /**
-          * Available tokens for filtering
-          * @default []
-         */
-        "tokens"?: PoolToken[];
         /**
           * Connected wallet address
           * @default ''
@@ -955,7 +1223,8 @@ declare namespace LocalJSX {
          */
         "showAdvanced"?: boolean;
         /**
-          * Available tokens for swapping
+          * Available tokens for swapping (gets from market store automatically)
+          * @deprecated Use store instead
           * @default []
          */
         "tokens"?: SwapToken[];
@@ -1031,6 +1300,92 @@ declare namespace LocalJSX {
          */
         "value"?: string;
     }
+    interface EuclidTokenModal {
+        /**
+          * Error message to display
+         */
+        "error"?: string;
+        /**
+          * Loading state for token lists
+          * @default false
+         */
+        "loading"?: boolean;
+        /**
+          * Emitted when the modal is closed
+         */
+        "onModalClose"?: (event: EuclidTokenModalCustomEvent<void>) => void;
+        /**
+          * Emitted when a token is selected
+         */
+        "onTokenSelect"?: (event: EuclidTokenModalCustomEvent<{
+    token: ExtendedTokenInfo;
+    selectorType: 'input' | 'output';
+  }>) => void;
+        /**
+          * Whether the modal is open
+          * @default false
+         */
+        "open"?: boolean;
+        /**
+          * Popular/featured tokens to show at the top
+          * @default []
+         */
+        "popularTokens"?: PopularToken[];
+        /**
+          * Placeholder text for search input
+          * @default 'Search tokens...'
+         */
+        "searchPlaceholder"?: string;
+        /**
+          * Currently selected token (to show as selected)
+         */
+        "selectedToken"?: TokenInfo2;
+        /**
+          * Whether to show balances
+          * @default true
+         */
+        "showBalances"?: boolean;
+        /**
+          * Whether to show popular tokens section
+          * @default true
+         */
+        "showPopular"?: boolean;
+        /**
+          * Available token lists
+          * @default []
+         */
+        "tokenLists"?: TokenList[];
+        /**
+          * User's token balances
+          * @default {}
+         */
+        "userBalances"?: Record<string, string>;
+    }
+    interface EuclidTokensList {
+        /**
+          * Card title
+          * @default 'Available Tokens'
+         */
+        "cardTitle"?: string;
+        /**
+          * Items per page for pagination
+          * @default 20
+         */
+        "itemsPerPage"?: number;
+        /**
+          * Whether the component is in loading state (overrides store loading)
+          * @default false
+         */
+        "loading"?: boolean;
+        "onFiltersChanged"?: (event: EuclidTokensListCustomEvent<TokenFilters>) => void;
+        "onTokenSelected"?: (event: EuclidTokensListCustomEvent<TokenMetadata>) => void;
+        /**
+          * Available tokens data (gets from market store automatically)
+          * @deprecated Use store instead
+          * @default []
+         */
+        "tokens"?: TokenMetadata[];
+    }
     interface EuclidTxTrackerController {
     }
     interface EuclidUserDataController {
@@ -1039,6 +1394,76 @@ declare namespace LocalJSX {
         "onWalletConnect"?: (event: EuclidWalletContentCustomEvent<WalletProvider>) => void;
     }
     interface EuclidWalletController {
+    }
+    interface PoolItem {
+        "onAddLiquidity"?: (event: PoolItemCustomEvent<PoolInfo>) => void;
+        "onClaimRewards"?: (event: PoolItemCustomEvent<{ pool: PoolInfo; position: UserPoolPosition1 }>) => void;
+        "onRemoveLiquidity"?: (event: PoolItemCustomEvent<{ pool: PoolInfo; position: UserPoolPosition1 }>) => void;
+        "onStakeTokens"?: (event: PoolItemCustomEvent<{ pool: PoolInfo; position?: UserPoolPosition1 }>) => void;
+        "pool": PoolInfo;
+        "position"?: UserPoolPosition1;
+        /**
+          * @default []
+         */
+        "tokens"?: TokenMetadata[];
+        "walletAddress"?: string;
+    }
+    interface PoolsFilters {
+        "filters": PoolFilters1;
+        "onFiltersChanged"?: (event: PoolsFiltersCustomEvent<PoolFilters1>) => void;
+        /**
+          * @default ''
+         */
+        "walletAddress"?: string;
+    }
+    interface PoolsLoading {
+        /**
+          * @default 6
+         */
+        "count"?: number;
+    }
+    interface PoolsStats {
+        /**
+          * @default 0
+         */
+        "filteredPools"?: number;
+        /**
+          * @default 0
+         */
+        "totalPools"?: number;
+        /**
+          * @default 0
+         */
+        "totalTvl"?: number;
+        /**
+          * @default 0
+         */
+        "userPositions"?: number;
+        "walletAddress"?: string;
+    }
+    interface TokenItem {
+        "onTokenClick"?: (event: TokenItemCustomEvent<TokenMetadata>) => void;
+        "token": TokenMetadata;
+    }
+    interface TokensFilters {
+        /**
+          * @default []
+         */
+        "chains"?: string[];
+        "filters": TokenFilters1;
+        "onFiltersChanged"?: (event: TokensFiltersCustomEvent<TokenFilters1>) => void;
+    }
+    interface TokensLoading {
+        /**
+          * Number of skeleton cards to show
+          * @default 8
+         */
+        "count"?: number;
+        /**
+          * Whether to show the loading state
+          * @default true
+         */
+        "show"?: boolean;
     }
     interface IntrinsicElements {
         "euclid-button": EuclidButton;
@@ -1054,10 +1479,19 @@ declare namespace LocalJSX {
         "euclid-swap-controller": EuclidSwapController;
         "euclid-token-content": EuclidTokenContent;
         "euclid-token-input": EuclidTokenInput;
+        "euclid-token-modal": EuclidTokenModal;
+        "euclid-tokens-list": EuclidTokensList;
         "euclid-tx-tracker-controller": EuclidTxTrackerController;
         "euclid-user-data-controller": EuclidUserDataController;
         "euclid-wallet-content": EuclidWalletContent;
         "euclid-wallet-controller": EuclidWalletController;
+        "pool-item": PoolItem;
+        "pools-filters": PoolsFilters;
+        "pools-loading": PoolsLoading;
+        "pools-stats": PoolsStats;
+        "token-item": TokenItem;
+        "tokens-filters": TokensFilters;
+        "tokens-loading": TokensLoading;
     }
 }
 export { LocalJSX as JSX };
@@ -1077,10 +1511,19 @@ declare module "@stencil/core" {
             "euclid-swap-controller": LocalJSX.EuclidSwapController & JSXBase.HTMLAttributes<HTMLEuclidSwapControllerElement>;
             "euclid-token-content": LocalJSX.EuclidTokenContent & JSXBase.HTMLAttributes<HTMLEuclidTokenContentElement>;
             "euclid-token-input": LocalJSX.EuclidTokenInput & JSXBase.HTMLAttributes<HTMLEuclidTokenInputElement>;
+            "euclid-token-modal": LocalJSX.EuclidTokenModal & JSXBase.HTMLAttributes<HTMLEuclidTokenModalElement>;
+            "euclid-tokens-list": LocalJSX.EuclidTokensList & JSXBase.HTMLAttributes<HTMLEuclidTokensListElement>;
             "euclid-tx-tracker-controller": LocalJSX.EuclidTxTrackerController & JSXBase.HTMLAttributes<HTMLEuclidTxTrackerControllerElement>;
             "euclid-user-data-controller": LocalJSX.EuclidUserDataController & JSXBase.HTMLAttributes<HTMLEuclidUserDataControllerElement>;
             "euclid-wallet-content": LocalJSX.EuclidWalletContent & JSXBase.HTMLAttributes<HTMLEuclidWalletContentElement>;
             "euclid-wallet-controller": LocalJSX.EuclidWalletController & JSXBase.HTMLAttributes<HTMLEuclidWalletControllerElement>;
+            "pool-item": LocalJSX.PoolItem & JSXBase.HTMLAttributes<HTMLPoolItemElement>;
+            "pools-filters": LocalJSX.PoolsFilters & JSXBase.HTMLAttributes<HTMLPoolsFiltersElement>;
+            "pools-loading": LocalJSX.PoolsLoading & JSXBase.HTMLAttributes<HTMLPoolsLoadingElement>;
+            "pools-stats": LocalJSX.PoolsStats & JSXBase.HTMLAttributes<HTMLPoolsStatsElement>;
+            "token-item": LocalJSX.TokenItem & JSXBase.HTMLAttributes<HTMLTokenItemElement>;
+            "tokens-filters": LocalJSX.TokensFilters & JSXBase.HTMLAttributes<HTMLTokensFiltersElement>;
+            "tokens-loading": LocalJSX.TokensLoading & JSXBase.HTMLAttributes<HTMLTokensLoadingElement>;
         }
     }
 }

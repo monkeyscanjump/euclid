@@ -2,8 +2,9 @@ import { Component, Prop, h, State, Event, EventEmitter, Listen, Element } from 
 import { walletStore } from '../../../store/wallet.store';
 import { appStore } from '../../../store/app.store';
 import { swapStore } from '../../../store/swap.store';
+import { marketStore } from '../../../store/market.store';
 import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
-import type { TokenInfo } from '../../../utils/types/api.types';
+import type { TokenInfo, TokenMetadata } from '../../../utils/types/api.types';
 
 export interface SwapToken {
   id: string;
@@ -51,9 +52,14 @@ export class EuclidSwapCard {
   @Element() element!: HTMLElement;
 
   /**
-   * Available tokens for swapping
+   * Available tokens for swapping (gets from market store automatically)
+   * @deprecated Use store instead
    */
   @Prop() tokens: SwapToken[] = [];
+
+  // Store data (automatically synced)
+  @State() storeTokens: TokenMetadata[] = [];
+  @State() storeLoading: boolean = false;
 
   /**
    * Currently selected input token
@@ -139,8 +145,79 @@ export class EuclidSwapCard {
   private quoteTimer: NodeJS.Timeout | null = null;
 
   componentDidLoad() {
+    // Connect to market store for automatic token updates
+    this.syncWithStore();
+
+    // Listen for store changes
+    marketStore.onChange('tokens', () => {
+      this.syncWithStore();
+    });
+
     // Auto-quote when inputs change
     this.startQuoteTimer();
+  }
+
+  private syncWithStore() {
+    // Use store data if available, fallback to props
+    this.storeTokens = marketStore.state.tokens.length > 0 ? marketStore.state.tokens : [];
+    this.storeLoading = marketStore.state.loading;
+
+    // Debug logging
+    console.log('🔄 Swap store sync:', {
+      storeTokens: this.storeTokens.length,
+      storeLoading: this.storeLoading,
+      marketStoreTokens: marketStore.state.tokens.length,
+      marketStoreLoading: marketStore.state.loading
+    });
+  }
+
+  /**
+   * Get available tokens for swap selection
+   * Combines store tokens with legacy prop tokens for compatibility
+   */
+  private getAvailableTokens(): SwapToken[] {
+    // Use store tokens if available, fallback to props
+    const sourceTokens = this.storeTokens.length > 0 ? this.storeTokens : this.tokens;
+
+    return sourceTokens.map(token => {
+      // Convert TokenMetadata to SwapToken format
+      if ('token_info' in token) {
+        // Store token format (TokenMetadata)
+        return {
+          id: token.token_info.tokenId,
+          symbol: token.token_info.symbol || token.token_info.displayName.toUpperCase(),
+          name: token.token_info.displayName,
+          address: token.token_info.tokenId,
+          chainUID: token.chain.chain_uid,
+          decimals: token.token_info.coinDecimal,
+          logoUrl: token.token_info.logo || undefined,
+          balance: undefined, // Would need to fetch from wallet
+          price: token.price_usd ? parseFloat(token.price_usd) : undefined,
+        };
+      } else {
+        // Legacy prop format (SwapToken)
+        return token as SwapToken;
+      }
+    });
+  }
+
+  /**
+   * Get unique chains from available tokens
+   */
+  private getAvailableChains() {
+    const tokens = this.getAvailableTokens();
+    const chainMap = new Map();
+
+    tokens.forEach(token => {
+      if (!chainMap.has(token.chainUID)) {
+        chainMap.set(token.chainUID, {
+          chain_uid: token.chainUID,
+          display_name: this.getChainDisplayName(token.chainUID),
+        });
+      }
+    });
+
+    return Array.from(chainMap.values());
   }
 
   disconnectedCallback() {
@@ -159,15 +236,28 @@ export class EuclidSwapCard {
 
   @Listen('tokenSelect')
   handleTokenModalSelect(event: CustomEvent) {
-    // Add null checks to prevent errors when event.detail is null
+    // Handle the new token selection format from the modal
     if (!event.detail || !event.detail.token) {
       console.warn('Token select event received without valid token data:', event.detail);
       return;
     }
 
-    const selectedToken = event.detail.token;
+    const { token, selectorType } = event.detail;
 
-    if (this.tokenSelectorType === 'input') {
+    // Convert TokenInfo to SwapToken format
+    const selectedToken: SwapToken = {
+      id: token.tokenId || token.id,
+      symbol: token.symbol,
+      name: token.name || token.displayName,
+      address: token.address || token.tokenId,
+      chainUID: token.chainUID || token.chain_uid,
+      decimals: token.decimals || token.coinDecimal,
+      logoUrl: token.logoUrl || token.logo,
+      balance: token.balance,
+      price: token.price,
+    };
+
+    if (selectorType === 'input') {
       // Prevent selecting same token for both input and output
       if (this.outputToken && selectedToken.address === this.outputToken.address) {
         this.outputToken = this.inputToken;
@@ -182,7 +272,7 @@ export class EuclidSwapCard {
     }
 
     this.tokenSelect.emit({
-      type: this.tokenSelectorType,
+      type: selectorType,
       token: selectedToken,
     });
 
@@ -266,7 +356,7 @@ export class EuclidSwapCard {
 
   private openTokenSelector = (type: 'input' | 'output') => {
     this.tokenSelectorType = type;
-    appStore.openTokenModal();
+    appStore.openTokenModal(type);
   };
 
   private toggleSettings = () => {

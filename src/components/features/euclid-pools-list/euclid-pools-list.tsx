@@ -1,37 +1,6 @@
-import { Component, Prop, h, State, Event, EventEmitter, Listen, Element, Watch } from '@stencil/core';
+import { Component, Prop, h, State, Event, EventEmitter, Watch } from '@stencil/core';
 import type { PoolInfo, TokenMetadata } from '../../../utils/types/api.types';
 import { marketStore } from '../../../store/market.store';
-
-export interface PoolToken {
-  symbol: string;
-  name: string;
-  address: string;
-  decimals: number;
-  logoUrl?: string;
-}
-
-export interface PoolData {
-  id: string;
-  address: string;
-  tokenA: PoolToken;
-  tokenB: PoolToken;
-  reserveA: string;
-  reserveB: string;
-  totalSupply: string;
-  lpTokenSymbol: string;
-  fee: number; // 0.3 = 0.3%
-  apy: number;
-  apr: number;
-  tvl: number;
-  volume24h: number;
-  volumeWeek: number;
-  fees24h: number;
-  feesWeek: number;
-  priceChange24h: number;
-  totalRewards?: number;
-  isStakable?: boolean;
-  stakingApr?: number;
-}
 
 export interface UserPoolPosition {
   poolId: string;
@@ -47,13 +16,9 @@ export interface UserPoolPosition {
 
 export interface PoolFilters {
   search: string;
-  sortBy: 'apy' | 'tvl' | 'volume' | 'fees' | 'myLiquidity';
+  sortBy: 'apr' | 'tvl' | 'volume' | 'fees' | 'myLiquidity';
   sortOrder: 'asc' | 'desc';
   showMyPools: boolean;
-  showStakablePools: boolean;
-  minTvl: number;
-  maxTvl: number;
-  tokenFilter: string;
 }
 
 @Component({
@@ -62,8 +27,6 @@ export interface PoolFilters {
   shadow: true,
 })
 export class EuclidPoolsList {
-  @Element() element!: HTMLElement;
-
   /**
    * Available pools data (gets from market store automatically)
    * @deprecated Use store instead
@@ -76,20 +39,10 @@ export class EuclidPoolsList {
    */
   @Prop() tokenMetadata: TokenMetadata[] = [];
 
-  // Internal state
-  @State() filteredPools: PoolInfo[] = [];
-  @State() currentPage: number = 1;
-  @State() totalPages: number = 1;
-
   /**
    * User's positions in pools
    */
   @Prop() positions: UserPoolPosition[] = [];
-
-  /**
-   * Available tokens for filtering
-   */
-  @Prop() tokens: PoolToken[] = [];
 
   /**
    * Whether the component is in loading state (overrides store loading)
@@ -101,20 +54,7 @@ export class EuclidPoolsList {
    */
   @Prop() walletAddress: string = '';
 
-  /**
-   * Whether to show user positions
-   */
-  @Prop() showPositions: boolean = true;
 
-  /**
-   * Whether to show staking options
-   */
-  @Prop() showStaking: boolean = true;
-
-  /**
-   * Whether to show only verified pools (default: true)
-   */
-  @Prop() showVerifiedOnly: boolean = true;
 
   /**
    * Items per page for pagination
@@ -125,18 +65,17 @@ export class EuclidPoolsList {
    * Card title
    */
   @Prop() cardTitle: string = 'Liquidity Pools';
+
+  // Internal state
+  @State() filteredPools: PoolInfo[] = [];
+  @State() currentPage: number = 1;
+  @State() totalPages: number = 1;
   @State() filters: PoolFilters = {
     search: '',
-    sortBy: 'apy',
+    sortBy: 'apr',
     sortOrder: 'desc',
     showMyPools: false,
-    showStakablePools: false,
-    minTvl: 0,
-    maxTvl: Infinity,
-    tokenFilter: '',
   };
-  @State() isFilterOpen: boolean = false;
-  @State() selectedPool: PoolInfo | null = null;
 
   // Store data (automatically synced)
   @State() storePools: PoolInfo[] = [];
@@ -150,7 +89,6 @@ export class EuclidPoolsList {
   @Event() stakeTokens: EventEmitter<{ pool: PoolInfo; position?: UserPoolPosition }>;
   @Event() claimRewards: EventEmitter<{ pool: PoolInfo; position: UserPoolPosition }>;
   @Event() filtersChanged: EventEmitter<PoolFilters>;
-  @Event() verifiedToggleChanged: EventEmitter<boolean>;
 
   componentWillLoad() {
     // Connect to market store for automatic data updates
@@ -166,7 +104,7 @@ export class EuclidPoolsList {
       this.syncWithStore();
     });
 
-    // Initialize filters on component load to avoid re-render warnings
+    // Initialize filters
     this.applyFilters();
   }
 
@@ -175,32 +113,26 @@ export class EuclidPoolsList {
     this.storePools = marketStore.state.pools.length > 0 ? marketStore.state.pools : this.pools;
     this.storeTokens = marketStore.state.tokens.length > 0 ? marketStore.state.tokens : this.tokenMetadata;
     this.storeLoading = marketStore.state.loading;
-  }
 
-  componentDidLoad() {
-    // Component is ready, no state changes needed here
-  }
-
-  componentDidUpdate() {
-    // Only apply filters when pools data changes, not when internal state changes
-    // This prevents infinite loops from filteredPools state changes
+    // Debug logging
+    console.log('🔄 Store sync:', {
+      storePools: this.storePools.length,
+      storeTokens: this.storeTokens.length,
+      storeLoading: this.storeLoading,
+      marketStorePools: marketStore.state.pools.length,
+      marketStoreTokens: marketStore.state.tokens.length,
+      marketStoreLoading: marketStore.state.loading
+    });
   }
 
   @Watch('pools')
   watchPoolsChange() {
-    // Only re-apply filters when pools prop actually changes
     this.applyFilters();
   }
 
   @Watch('positions')
   watchPositionsChange() {
-    // Re-apply filters when user positions change
     this.applyFilters();
-  }
-
-  @Listen('resize', { target: 'window' })
-  handleResize() {
-    // Handle responsive changes if needed
   }
 
   private applyFilters() {
@@ -225,31 +157,10 @@ export class EuclidPoolsList {
       });
     }
 
-    // Apply token filter
-    if (this.filters.tokenFilter) {
-      filtered = filtered.filter(pool =>
-        pool.token_1 === this.filters.tokenFilter ||
-        pool.token_2 === this.filters.tokenFilter
-      );
-    }
-
-    // Apply TVL range filter
-    if (this.filters.minTvl > 0) {
-      filtered = filtered.filter(pool => parseFloat(pool.total_liquidity || '0') >= this.filters.minTvl);
-    }
-    if (this.filters.maxTvl < Infinity) {
-      filtered = filtered.filter(pool => parseFloat(pool.total_liquidity || '0') <= this.filters.maxTvl);
-    }
-
     // Apply my pools filter
     if (this.filters.showMyPools && this.walletAddress) {
       const myPoolIds = this.positions.map(pos => pos.poolId);
       filtered = filtered.filter(pool => myPoolIds.includes(pool.pool_id));
-    }
-
-    // Apply stakable pools filter - skip for now since API doesn't provide this info
-    if (this.filters.showStakablePools) {
-      // filtered = filtered.filter(pool => pool.isStakable);
     }
 
     // Apply sorting
@@ -257,9 +168,9 @@ export class EuclidPoolsList {
       let aValue: number, bValue: number;
 
       switch (this.filters.sortBy) {
-        case 'apy':
-          aValue = parseFloat(a.apr || '0');
-          bValue = parseFloat(b.apr || '0');
+        case 'apr':
+          aValue = parseFloat((a.apr || '0%').replace('%', ''));
+          bValue = parseFloat((b.apr || '0%').replace('%', ''));
           break;
         case 'tvl':
           aValue = parseFloat(a.total_liquidity || '0');
@@ -281,8 +192,8 @@ export class EuclidPoolsList {
           break;
         }
         default:
-          aValue = parseFloat(a.apr || '0');
-          bValue = parseFloat(b.apr || '0');
+          aValue = parseFloat((a.apr || '0%').replace('%', ''));
+          bValue = parseFloat((b.apr || '0%').replace('%', ''));
       }
 
       if (this.filters.sortOrder === 'asc') {
@@ -292,8 +203,7 @@ export class EuclidPoolsList {
       }
     });
 
-    // Only update state if the filtered results have actually changed
-    // This prevents infinite loops
+    // Update state only if changed
     const newFilteredLength = filtered.length;
     const currentFilteredLength = this.filteredPools.length;
     const hasChanged = newFilteredLength !== currentFilteredLength ||
@@ -316,43 +226,46 @@ export class EuclidPoolsList {
     this.filtersChanged.emit(this.filters);
   }
 
-  private handleSearchChange = (event: Event) => {
-    const target = event.target as HTMLInputElement;
-    this.filters = { ...this.filters, search: target.value };
-    this.currentPage = 1;
-    this.applyFilters();
-  };
+  private getTokenMetadata(tokenId: string): TokenMetadata | null {
+    const activeTokens = this.storeTokens.length > 0 ? this.storeTokens : this.tokenMetadata;
+    return activeTokens.find(token => token.tokenId === tokenId) || null;
+  }
 
-  private handleSortChange = (sortBy: PoolFilters['sortBy']) => {
-    if (this.filters.sortBy === sortBy) {
-      // Toggle sort order if same column
-      this.filters = {
-        ...this.filters,
-        sortOrder: this.filters.sortOrder === 'asc' ? 'desc' : 'asc',
-      };
-    } else {
-      // Set new sort column with default desc order
-      this.filters = {
-        ...this.filters,
-        sortBy,
-        sortOrder: 'desc',
-      };
-    }
-    this.applyFilters();
-  };
+  private getUserPosition(poolId: string): UserPoolPosition | null {
+    return this.positions.find(pos => pos.poolId === poolId) || null;
+  }
 
-  private handleFilterToggle = (filterKey: keyof PoolFilters, value?: unknown) => {
-    if (typeof this.filters[filterKey] === 'boolean') {
-      this.filters = {
-        ...this.filters,
-        [filterKey]: !this.filters[filterKey],
-      };
-    } else if (value !== undefined) {
-      this.filters = {
-        ...this.filters,
-        [filterKey]: value,
-      };
-    }
+  private getTokensWithPools(): { tokenId: string; displayName: string }[] {
+    const activePools = this.storePools.length > 0 ? this.storePools : this.pools;
+    const activeTokens = this.storeTokens.length > 0 ? this.storeTokens : this.tokenMetadata;
+
+    // Get unique token IDs that appear in pools
+    const tokenIdsInPools = new Set<string>();
+    activePools.forEach(pool => {
+      tokenIdsInPools.add(pool.token_1);
+      tokenIdsInPools.add(pool.token_2);
+    });
+
+    // Return only tokens that have pools, with their metadata
+    return Array.from(tokenIdsInPools)
+      .map(tokenId => {
+        const tokenMeta = activeTokens.find(t => t.tokenId === tokenId);
+        return {
+          tokenId,
+          displayName: tokenMeta?.displayName || tokenId.toUpperCase()
+        };
+      })
+      .sort((a, b) => a.displayName.localeCompare(b.displayName));
+  }
+
+  private getPaginatedPools(): PoolInfo[] {
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = startIndex + this.itemsPerPage;
+    return this.filteredPools.slice(startIndex, endIndex);
+  }
+
+  private handleFiltersChanged = (event: CustomEvent<PoolFilters>) => {
+    this.filters = event.detail;
     this.currentPage = 1;
     this.applyFilters();
   };
@@ -363,427 +276,91 @@ export class EuclidPoolsList {
     }
   };
 
-  private handlePoolSelect = (pool: PoolInfo) => {
-    this.selectedPool = pool;
-    this.poolSelected.emit(pool);
-  };
-
-  private handleAddLiquidity = (pool: PoolInfo) => {
-    this.addLiquidity.emit(pool);
-  };
-
-  private handleRemoveLiquidity = (pool: PoolInfo) => {
-    const position = this.positions.find(pos => pos.poolId === pool.pool_id);
-    if (position) {
-      this.removeLiquidity.emit({ pool, position });
-    }
-  };
-
-  private handleStakeTokens = (pool: PoolInfo) => {
-    const position = this.positions.find(pos => pos.poolId === pool.pool_id);
-    this.stakeTokens.emit({ pool, position });
-  };
-
-  private handleClaimRewards = (pool: PoolInfo) => {
-    const position = this.positions.find(pos => pos.poolId === pool.pool_id);
-    if (position) {
-      this.claimRewards.emit({ pool, position });
-    }
-  };
-
-  private getUserPosition(poolId: string): UserPoolPosition | null {
-    return this.positions.find(pos => pos.poolId === poolId) || null;
-  }
-
-  private getTokenMetadata(tokenId: string): TokenMetadata | null {
-    // Use store data first, fallback to props for backward compatibility
-    const activeTokens = this.storeTokens.length > 0 ? this.storeTokens : this.tokenMetadata;
-    return activeTokens.find(token => token.tokenId === tokenId) || null;
-  }
-
-  private formatNumber(value: number, decimals: number = 2): string {
-    if (value >= 1e9) {
-      return `${(value / 1e9).toFixed(decimals)}B`;
-    } else if (value >= 1e6) {
-      return `${(value / 1e6).toFixed(decimals)}M`;
-    } else if (value >= 1e3) {
-      return `${(value / 1e3).toFixed(decimals)}K`;
-    }
-    return value.toFixed(decimals);
-  }
-
-  private getPaginatedPools(): PoolInfo[] {
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    const endIndex = startIndex + this.itemsPerPage;
-    return this.filteredPools.slice(startIndex, endIndex);
-  }
-
   render() {
+    const activePools = this.storePools.length > 0 ? this.storePools : this.pools;
+    const activeTokens = this.storeTokens.length > 0 ? this.storeTokens : this.tokenMetadata;
+    const isLoading = (this.storeLoading || this.loading) && activePools.length === 0;
     const paginatedPools = this.getPaginatedPools();
+    const totalTvl = activePools.reduce((sum, pool) => sum + parseFloat(pool.total_liquidity || '0'), 0);
+
+    // Debug logging
+    console.log('🎨 Render state:', {
+      activePools: activePools.length,
+      activeTokens: activeTokens.length,
+      filteredPools: this.filteredPools.length,
+      paginatedPools: paginatedPools.length,
+      isLoading,
+      storeLoading: this.storeLoading,
+      loading: this.loading
+    });
 
     return (
       <div class="pools-list">
         {/* Header */}
         <div class="pools-header">
           <h3 class="pools-title">{this.cardTitle}</h3>
-          <button
-            class="filter-toggle"
-            onClick={() => this.isFilterOpen = !this.isFilterOpen}
-            type="button"
-          >
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <path d="M3,2H21V2H21V4H20.92L14,10.92V22.91L10,18.91V10.92L3.09,4H3V2Z"/>
-            </svg>
-            <span>Filters</span>
-          </button>
         </div>
 
-        {/* Filters Panel */}
-        {this.isFilterOpen && (
-          <div class="filters-panel">
-            <div class="filters-row">
-              <div class="filter-group">
-                <label class="filter-label">Search Pools</label>
-                <input
-                  class="search-input"
-                  type="text"
-                  placeholder="Search by token symbol or name..."
-                  value={this.filters.search}
-                  onInput={this.handleSearchChange}
+        {/* Filters */}
+        <pools-filters
+          filters={this.filters}
+          walletAddress={this.walletAddress}
+          onFiltersChanged={this.handleFiltersChanged}
+        />
+
+        {/* Stats */}
+        <pools-stats
+          totalPools={activePools.length}
+          filteredPools={this.filteredPools.length}
+          totalTvl={totalTvl}
+          userPositions={this.positions.length}
+          walletAddress={this.walletAddress}
+        />
+
+        {/* Content */}
+        <div class="pools-content">
+          {isLoading ? (
+            <pools-loading count={6} />
+          ) : paginatedPools.length === 0 ? (
+            <div class="empty-state">
+              <svg viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path d="M31.968,0c-1.9626667,28.448-3.552,29.984-32,32c28.448,1.9626667,29.984,3.552,32,32c1.9626667-28.448,3.552-29.984,32-32C35.52,29.984,33.9306667,28.448,31.968,0z"/>
+              </svg>
+              <span>No pools found matching your criteria</span>
+              <button
+                class="clear-filters-btn"
+                onClick={() => {
+                  this.filters = {
+                    search: '',
+                    sortBy: 'apr',
+                    sortOrder: 'desc',
+                    showMyPools: false,
+                  };
+                  this.currentPage = 1;
+                  this.applyFilters();
+                }}
+                type="button"
+              >
+                Clear Filters
+              </button>
+            </div>
+          ) : (
+            <div class="pools-grid">
+              {paginatedPools.map(pool => (
+                <pool-item
+                  key={pool.pool_id}
+                  pool={pool}
+                  tokens={activeTokens}
+                  position={this.getUserPosition(pool.pool_id)}
+                  walletAddress={this.walletAddress}
+                  onAddLiquidity={(event) => this.addLiquidity.emit(event.detail)}
+                  onRemoveLiquidity={(event) => this.removeLiquidity.emit(event.detail)}
+                  onStakeTokens={(event) => this.stakeTokens.emit(event.detail)}
+                  onClaimRewards={(event) => this.claimRewards.emit(event.detail)}
                 />
-              </div>
-
-              <div class="filter-group">
-                <label class="filter-label">Token</label>
-                <select
-                  class="filter-select"
-                  onChange={(e) => this.handleFilterToggle('tokenFilter', (e.target as HTMLSelectElement).value)}
-                >
-                  <option value="" selected={this.filters.tokenFilter === ''}>All Tokens</option>
-                  {(() => {
-                    const activeTokens = this.storeTokens.length > 0 ? this.storeTokens : this.tokenMetadata;
-                    return activeTokens.map(token => (
-                      <option
-                        key={token.tokenId}
-                        value={token.tokenId}
-                        selected={this.filters.tokenFilter === token.tokenId}
-                      >
-                        {token.displayName}
-                      </option>
-                    ));
-                  })()}
-                </select>
-              </div>
-            </div>
-
-            <div class="filters-row">
-              <div class="filter-toggles">
-                <label class="toggle-label">
-                  <input
-                    type="checkbox"
-                    checked={this.showVerifiedOnly}
-                    onChange={() => {
-                      this.showVerifiedOnly = !this.showVerifiedOnly;
-                      this.verifiedToggleChanged.emit(this.showVerifiedOnly);
-                    }}
-                  />
-                  <span>Verified Pools Only</span>
-                </label>
-
-                <label class="toggle-label">
-                  <input
-                    type="checkbox"
-                    checked={this.filters.showMyPools}
-                    onChange={() => this.handleFilterToggle('showMyPools')}
-                  />
-                  <span>My Pools Only</span>
-                </label>
-
-                <label class="toggle-label">
-                  <input
-                    type="checkbox"
-                    checked={this.filters.showStakablePools}
-                    onChange={() => this.handleFilterToggle('showStakablePools')}
-                  />
-                  <span>Stakable Only</span>
-                </label>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Stats Bar */}
-        <div class="stats-bar">
-          <div class="stat-item">
-            <span class="stat-label">Total Pools</span>
-            <span class="stat-value">{(() => {
-              const activePools = this.storePools.length > 0 ? this.storePools : this.pools;
-              return activePools.length;
-            })()}</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">Filtered</span>
-            <span class="stat-value">{this.filteredPools.length}</span>
-          </div>
-          {this.walletAddress && (
-            <div class="stat-item">
-              <span class="stat-label">My Positions</span>
-              <span class="stat-value">{this.positions.length}</span>
+              ))}
             </div>
           )}
-          <div class="stat-item">
-            <span class="stat-label">Total TVL</span>
-            <span class="stat-value">${(() => {
-              const activePools = this.storePools.length > 0 ? this.storePools : this.pools;
-              return this.formatNumber(activePools.reduce((sum, pool) => sum + parseFloat(pool.total_liquidity || '0'), 0));
-            })()}</span>
-          </div>
-        </div>
-
-        {/* Pools Table */}
-        <div class="pools-table-container">
-          <table class="pools-table">
-            <thead>
-              <tr>
-                <th class="sortable" onClick={() => this.handleSortChange('apy')}>
-                  <span>Pool</span>
-                </th>
-                <th class="sortable" onClick={() => this.handleSortChange('apy')}>
-                  <span>APY</span>
-                  {this.filters.sortBy === 'apy' && (
-                    <svg class={{
-                      'sort-arrow': true,
-                      'sort-arrow--desc': this.filters.sortOrder === 'desc',
-                    }} viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M7 10l5 5 5-5z"/>
-                    </svg>
-                  )}
-                </th>
-                <th class="sortable" onClick={() => this.handleSortChange('tvl')}>
-                  <span>TVL</span>
-                  {this.filters.sortBy === 'tvl' && (
-                    <svg class={{
-                      'sort-arrow': true,
-                      'sort-arrow--desc': this.filters.sortOrder === 'desc',
-                    }} viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M7 10l5 5 5-5z"/>
-                    </svg>
-                  )}
-                </th>
-                <th class="sortable" onClick={() => this.handleSortChange('volume')}>
-                  <span>24h Volume</span>
-                  {this.filters.sortBy === 'volume' && (
-                    <svg class={{
-                      'sort-arrow': true,
-                      'sort-arrow--desc': this.filters.sortOrder === 'desc',
-                    }} viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M7 10l5 5 5-5z"/>
-                    </svg>
-                  )}
-                </th>
-                <th class="sortable" onClick={() => this.handleSortChange('fees')}>
-                  <span>24h Fees</span>
-                  {this.filters.sortBy === 'fees' && (
-                    <svg class={{
-                      'sort-arrow': true,
-                      'sort-arrow--desc': this.filters.sortOrder === 'desc',
-                    }} viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M7 10l5 5 5-5z"/>
-                    </svg>
-                  )}
-                </th>
-                {this.walletAddress && (
-                  <th class="sortable" onClick={() => this.handleSortChange('myLiquidity')}>
-                    <span>My Liquidity</span>
-                    {this.filters.sortBy === 'myLiquidity' && (
-                      <svg class={{
-                        'sort-arrow': true,
-                        'sort-arrow--desc': this.filters.sortOrder === 'desc',
-                      }} viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M7 10l5 5 5-5z"/>
-                      </svg>
-                    )}
-                  </th>
-                )}
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(() => {
-                const isLoading = this.storeLoading || this.loading;
-                return isLoading ? (
-                <tr>
-                  <td colSpan={this.walletAddress ? 7 : 6} class="loading-cell">
-                    <div class="loading-spinner"></div>
-                    <span>Loading pools...</span>
-                  </td>
-                </tr>
-              ) : paginatedPools.length === 0 ? (
-                <tr>
-                  <td colSpan={this.walletAddress ? 7 : 6} class="empty-cell">
-                    <div class="empty-state">
-                      <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,17A1.5,1.5 0 0,0 13.5,15.5A1.5,1.5 0 0,0 12,14A1.5,1.5 0 0,0 10.5,15.5A1.5,1.5 0 0,0 12,17M12,10.5C12.8,10.5 13.5,9.8 13.5,9C13.5,8.2 12.8,7.5 12,7.5C11.2,7.5 10.5,8.2 10.5,9C10.5,9.8 11.2,10.5 12,10.5Z"/>
-                      </svg>
-                      <span>No pools found matching your criteria</span>
-                      <button
-                        class="clear-filters-btn"
-                        onClick={() => {
-                          this.filters = {
-                            search: '',
-                            sortBy: 'apy',
-                            sortOrder: 'desc',
-                            showMyPools: false,
-                            showStakablePools: false,
-                            minTvl: 0,
-                            maxTvl: Infinity,
-                            tokenFilter: '',
-                          };
-                          this.applyFilters();
-                        }}
-                        type="button"
-                      >
-                        Clear Filters
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                paginatedPools.map(pool => {
-                  const position = this.getUserPosition(pool.pool_id);
-                  return (
-                    <tr key={pool.pool_id} class="pool-row">
-                      <td class="pool-cell">
-                        <div class="pool-info">
-                          <div class="token-pair">
-                            <div class="token-logos">
-                              {(() => {
-                                const token1Meta = this.getTokenMetadata(pool.token_1);
-                                const token2Meta = this.getTokenMetadata(pool.token_2);
-                                return (
-                                  <div class="logo-pair">
-                                    <img
-                                      src={token1Meta?.image || '/assets/default-token.svg'}
-                                      alt={token1Meta?.displayName || pool.token_1}
-                                      class="token-logo token-logo-1"
-                                      onError={(e) => {
-                                        (e.target as HTMLImageElement).src = '/assets/default-token.svg';
-                                      }}
-                                    />
-                                    <img
-                                      src={token2Meta?.image || '/assets/default-token.svg'}
-                                      alt={token2Meta?.displayName || pool.token_2}
-                                      class="token-logo token-logo-2"
-                                      onError={(e) => {
-                                        (e.target as HTMLImageElement).src = '/assets/default-token.svg';
-                                      }}
-                                    />
-                                  </div>
-                                );
-                              })()}
-                            </div>
-                          </div>
-                          <div class="pool-details">
-                            <div class="pool-name">
-                              {(() => {
-                                const token1Meta = this.getTokenMetadata(pool.token_1);
-                                const token2Meta = this.getTokenMetadata(pool.token_2);
-                                const token1Name = token1Meta?.displayName || pool.token_1.toUpperCase();
-                                const token2Name = token2Meta?.displayName || pool.token_2.toUpperCase();
-                                return `${token1Name}/${token2Name}`;
-                              })()}
-                            </div>
-                            <div class="pool-fee">0.3% Fee</div>
-                          </div>
-                        </div>
-                      </td>
-
-                      <td class="apy-cell">
-                        <div class="apy-info">
-                          <div class="apy-main">{parseFloat(pool.apr || '0').toFixed(2)}%</div>
-                        </div>
-                      </td>
-
-                      <td class="tvl-cell">
-                        <div class="metric-value">${this.formatNumber(parseFloat(pool.total_liquidity || '0'))}</div>
-                        <div class="metric-change">+0.00%</div>
-                      </td>
-
-                      <td class="volume-cell">
-                        <div class="metric-value">${this.formatNumber(parseFloat(pool.volume_24h || '0'))}</div>
-                      </td>
-
-                      <td class="fees-cell">
-                        <div class="metric-value">${this.formatNumber(parseFloat(pool.fees_24h || '0'))}</div>
-                      </td>
-
-                      {this.walletAddress && (
-                        <td class="position-cell">
-                          {position ? (
-                            <div class="position-info">
-                              <div class="position-value">${this.formatNumber(position.value)}</div>
-                              <div class="position-share">{position.shareOfPool.toFixed(4)}%</div>
-                              {position.unclaimedRewards && position.unclaimedRewards > 0 && (
-                                <div class="unclaimed-rewards">
-                                  ${this.formatNumber(position.unclaimedRewards)} rewards
-                                </div>
-                              )}
-                            </div>
-                          ) : (
-                            <span class="no-position">—</span>
-                          )}
-                        </td>
-                      )}
-
-                      <td class="actions-cell">
-                        <div class="pool-actions">
-                          <euclid-button
-                            variant="primary"
-                            size="sm"
-                            onClick={() => this.handleAddLiquidity(pool)}
-                          >
-                            Add
-                          </euclid-button>
-
-                          {position && (
-                            <euclid-button
-                              variant="secondary"
-                              size="sm"
-                              onClick={() => this.handleRemoveLiquidity(pool)}
-                            >
-                              Remove
-                            </euclid-button>
-                          )}
-
-                          {/* Stakable property not available in PoolInfo API, commenting out */}
-                          {/* {pool.isStakable && position && (
-                            <euclid-button
-                              variant="primary"
-                              size="sm"
-                              onClick={() => this.handleStakeTokens(pool)}
-                            >
-                              Stake
-                            </euclid-button>
-                          )} */}
-
-                          {position && position.unclaimedRewards && position.unclaimedRewards > 0 && (
-                            <euclid-button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => this.handleClaimRewards(pool)}
-                            >
-                              Claim
-                            </euclid-button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              );
-              })()}
-            </tbody>
-          </table>
         </div>
 
         {/* Pagination */}

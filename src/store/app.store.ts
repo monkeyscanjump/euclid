@@ -5,6 +5,7 @@ export interface AppState {
   walletModalOpen: boolean;
   walletModalFilter: string | null;
   tokenModalOpen: boolean;
+  tokenSelectorType: 'input' | 'output' | null;
   isInitialized: boolean;
   theme: 'light' | 'dark' | 'auto';
 }
@@ -13,6 +14,7 @@ const initialState: AppState = {
   walletModalOpen: false,
   walletModalFilter: null,
   tokenModalOpen: false,
+  tokenSelectorType: null,
   isInitialized: false,
   theme: 'auto',
 };
@@ -35,12 +37,14 @@ const actions = {
     state.walletModalFilter = null;
   },
 
-  openTokenModal() {
+  openTokenModal(selectorType: 'input' | 'output' = 'input') {
     state.tokenModalOpen = true;
+    state.tokenSelectorType = selectorType;
   },
 
   closeTokenModal() {
     state.tokenModalOpen = false;
+    state.tokenSelectorType = null;
   },
 
   setTheme(theme: AppState['theme']) {
@@ -57,7 +61,7 @@ export interface AppStore extends BaseStore<AppState> {
   initialize: () => void;
   openWalletModal: (chainFilter?: string) => void;
   closeWalletModal: () => void;
-  openTokenModal: () => void;
+  openTokenModal: (selectorType?: 'input' | 'output') => void;
   closeTokenModal: () => void;
   setTheme: (theme: AppState['theme']) => void;
   clear: () => void;

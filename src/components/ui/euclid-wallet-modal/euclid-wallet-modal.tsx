@@ -39,7 +39,6 @@ export interface WalletProvider {
 })
 export class EuclidWalletModal {
   @Element() el!: HTMLElement;
-  private modalRef?: HTMLElement;
 
   /**
    * Whether the modal is open
@@ -96,7 +95,6 @@ export class EuclidWalletModal {
    */
   @Prop() modalTitle: string = 'Connect Wallet';
 
-  @State() private isAnimating: boolean = false;
   @State() private searchQuery: string = '';
   @State() private selectedWallet?: WalletInfo;
 
@@ -130,60 +128,18 @@ export class EuclidWalletModal {
    */
   @Event() loadChains!: EventEmitter<void>;
 
-  componentDidLoad() {
-    if (this.open) {
-      this.openModal();
-    }
-  }
-
   @Listen('keydown', { target: 'document' })
   handleKeyDown(event: KeyboardEvent) {
     if (!this.open) return;
 
+    // Allow parent/base modal to handle escape key
     switch (event.key) {
-      case 'Escape':
-        event.preventDefault();
-        this.closeModal();
+      case 'ArrowDown':
+      case 'ArrowUp':
+        // Handle keyboard navigation if needed
         break;
     }
   }
-
-  private openModal() {
-    this.isAnimating = true;
-    this.open = true;
-
-    setTimeout(() => {
-      this.isAnimating = false;
-    }, 150);
-
-    // Load data if not available
-    if (!this.walletProviders.length && !this.loading) {
-      this.loadWalletProviders.emit();
-    }
-
-    if (!this.supportedChains.length && !this.loading) {
-      this.loadChains.emit();
-    }
-  }
-
-  private closeModal() {
-    this.isAnimating = true;
-
-    setTimeout(() => {
-      this.open = false;
-      this.isAnimating = false;
-      this.view = 'connect';
-      this.searchQuery = '';
-      this.selectedWallet = undefined;
-      this.modalClose.emit();
-    }, 150);
-  }
-
-  private handleOverlayClick = (event: Event) => {
-    if (event.target === this.modalRef) {
-      this.closeModal();
-    }
-  };
 
   private handleWalletConnect = (provider: WalletProvider) => {
     if (!provider.installed) {
@@ -212,6 +168,18 @@ export class EuclidWalletModal {
   private handleSearchInput = (event: Event) => {
     const target = event.target as HTMLInputElement;
     this.searchQuery = target.value;
+  };
+
+  private handleSearchInputEvent = (event: CustomEvent<string>) => {
+    this.searchQuery = event.detail;
+  };
+
+  private handleModalClose = () => {
+    this.open = false;
+    this.view = 'connect';
+    this.searchQuery = '';
+    this.selectedWallet = undefined;
+    this.modalClose.emit();
   };
 
   private getInstallUrl(walletType: string): string {
@@ -276,22 +244,7 @@ export class EuclidWalletModal {
     const filteredProviders = this.getFilteredWalletProviders();
 
     return (
-      <div class="view-content">
-        <div class="search-section">
-          <div class="search-input-container">
-            <svg class="search-icon" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-            </svg>
-            <input
-              type="text"
-              placeholder="Search wallets..."
-              value={this.searchQuery}
-              onInput={this.handleSearchInput}
-              class="search-input"
-            />
-          </div>
-        </div>
-
+      <div class="connect-view">
         {this.showChains && this.selectedChain && (
           <div class="selected-chain">
             <div class="chain-info">
@@ -364,22 +317,7 @@ export class EuclidWalletModal {
     const filteredWallets = this.getFilteredConnectedWallets();
 
     return (
-      <div class="view-content">
-        <div class="search-section">
-          <div class="search-input-container">
-            <svg class="search-icon" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-            </svg>
-            <input
-              type="text"
-              placeholder="Search connected wallets..."
-              value={this.searchQuery}
-              onInput={this.handleSearchInput}
-              class="search-input"
-            />
-          </div>
-        </div>
-
+      <div class="manage-view">
         <div class="connected-wallets-list">
           {filteredWallets.map(wallet => (
             <div key={wallet.id} class="wallet-item">
@@ -506,43 +444,22 @@ export class EuclidWalletModal {
   }
 
   render() {
-    if (!this.open) {
-      return null;
-    }
-
-    const modalClass = {
-      'modal-overlay': true,
-      'modal-overlay--animating': this.isAnimating,
-    };
-
-    const contentClass = {
-      'modal-content': true,
-      'modal-content--loading': this.loading,
-    };
-
     return (
-      <div
-        class={modalClass}
-        ref={(el) => this.modalRef = el}
-        onClick={this.handleOverlayClick}
+      <euclid-base-modal
+        open={this.open}
+        modal-title={this.modalTitle}
+        show-search={this.view !== 'chains'}
+        search-placeholder={this.view === 'connect' ? "Search wallets..." : "Search connected wallets..."}
+        search-query={this.searchQuery}
+        loading={this.loading}
+        loading-message="Loading wallets..."
+        error={this.error}
+        onModalClose={() => this.handleModalClose()}
+        onSearchInput={(event) => this.handleSearchInputEvent(event)}
+        max-width="520px"
       >
-        <div class={contentClass}>
-          {/* Header */}
-          <div class="modal-header">
-            <h2 class="modal-title">{this.modalTitle}</h2>
-            <button
-              class="close-button"
-              onClick={() => this.closeModal()}
-              type="button"
-              aria-label="Close modal"
-            >
-              <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-              </svg>
-            </button>
-          </div>
-
-          {/* Navigation Tabs */}
+        {/* Navigation Tabs - placed after header */}
+        <div slot="content">
           <div class="nav-tabs">
             <button
               class={{
@@ -582,33 +499,14 @@ export class EuclidWalletModal {
             )}
           </div>
 
-          {/* Error State */}
-          {this.error && (
-            <div class="error-section">
-              <p class="error-message">{this.error}</p>
-            </div>
-          )}
-
-          {/* Loading State */}
-          {this.loading && (
-            <div class="loading-section">
-              <div class="loading-spinner">
-                <div class="spinner"></div>
-              </div>
-              <p class="loading-text">Loading wallets...</p>
-            </div>
-          )}
-
           {/* View Content */}
-          {!this.loading && !this.error && (
-            <div class="modal-body">
-              {this.view === 'connect' && this.renderConnectView()}
-              {this.view === 'manage' && this.renderManageView()}
-              {this.view === 'chains' && this.renderChainsView()}
-            </div>
-          )}
+          <div class="view-content">
+            {this.view === 'connect' && this.renderConnectView()}
+            {this.view === 'manage' && this.renderManageView()}
+            {this.view === 'chains' && this.renderChainsView()}
+          </div>
         </div>
-      </div>
+      </euclid-base-modal>
     );
   }
 }

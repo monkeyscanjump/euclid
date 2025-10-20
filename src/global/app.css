@@ -1,15 +1,15 @@
 /**
  * Euclid Protocol Design System
- * Global CSS Variables for Shadow DOM Penetration
+ * Global CSS Variables for Shadow DOM Penetration & Component Customization
  */
 
-/* Root variables for shadow DOM penetration */
+/* Root variables for shadow DOM penetration - All components inherit these */
 :root,
 :host,
 * {
-  /* === COLORS === */
+  /* === CORE BRAND COLORS === */
 
-  /* Primary Brand Colors */
+  /* Primary Brand Palette */
   --euclid-primary-50: #eff6ff;
   --euclid-primary-100: #dbeafe;
   --euclid-primary-200: #bfdbfe;
@@ -22,7 +22,7 @@
   --euclid-primary-900: #1e3a8a;
   --euclid-primary-950: #172554;
 
-  /* Secondary Colors */
+  /* Secondary Brand Palette */
   --euclid-secondary-50: #f8fafc;
   --euclid-secondary-100: #f1f5f9;
   --euclid-secondary-200: #e2e8f0;
@@ -34,26 +34,52 @@
   --euclid-secondary-800: #1e293b;
   --euclid-secondary-900: #0f172a;
 
-  /* Semantic Colors */
+  /* Semantic Status Colors */
   --euclid-success-50: #f0fdf4;
   --euclid-success-100: #dcfce7;
+  --euclid-success-200: #bbf7d0;
+  --euclid-success-300: #86efac;
+  --euclid-success-400: #4ade80;
   --euclid-success-500: #22c55e;
   --euclid-success-600: #16a34a;
   --euclid-success-700: #15803d;
+  --euclid-success-800: #166534;
+  --euclid-success-900: #14532d;
 
   --euclid-warning-50: #fffbeb;
   --euclid-warning-100: #fef3c7;
+  --euclid-warning-200: #fde68a;
+  --euclid-warning-300: #fcd34d;
+  --euclid-warning-400: #fbbf24;
   --euclid-warning-500: #f59e0b;
   --euclid-warning-600: #d97706;
   --euclid-warning-700: #b45309;
+  --euclid-warning-800: #92400e;
+  --euclid-warning-900: #78350f;
 
   --euclid-danger-50: #fef2f2;
   --euclid-danger-100: #fee2e2;
+  --euclid-danger-200: #fecaca;
+  --euclid-danger-300: #fca5a5;
+  --euclid-danger-400: #f87171;
   --euclid-danger-500: #ef4444;
   --euclid-danger-600: #dc2626;
   --euclid-danger-700: #b91c1c;
+  --euclid-danger-800: #991b1b;
+  --euclid-danger-900: #7f1d1d;
 
-  /* Neutral Grays */
+  --euclid-info-50: #eff6ff;
+  --euclid-info-100: #dbeafe;
+  --euclid-info-200: #bfdbfe;
+  --euclid-info-300: #93c5fd;
+  --euclid-info-400: #60a5fa;
+  --euclid-info-500: #3b82f6;
+  --euclid-info-600: #2563eb;
+  --euclid-info-700: #1d4ed8;
+  --euclid-info-800: #1e40af;
+  --euclid-info-900: #1e3a8a;
+
+  /* Neutral Gray Palette */
   --euclid-gray-50: #fafafa;
   --euclid-gray-100: #f4f4f5;
   --euclid-gray-200: #e4e4e7;
@@ -64,31 +90,59 @@
   --euclid-gray-700: #3f3f46;
   --euclid-gray-800: #27272a;
   --euclid-gray-900: #18181b;
+  --euclid-gray-950: #09090b;
+
+  /* Pure Colors */
+  --euclid-white: #ffffff;
+  --euclid-black: #000000;
 
   /* === SEMANTIC COLOR ASSIGNMENTS === */
 
-  /* Light Theme Defaults */
+  /* Surface & Background Colors */
   --euclid-background: var(--euclid-gray-50);
   --euclid-background-secondary: var(--euclid-gray-100);
-  --euclid-surface: #ffffff;
+  --euclid-surface: var(--euclid-white);
   --euclid-surface-secondary: var(--euclid-gray-50);
+  --euclid-surface-tertiary: var(--euclid-gray-100);
+  --euclid-surface-elevated: var(--euclid-white);
+  --euclid-surface-overlay: rgba(0, 0, 0, 0.75);
+
+  /* Border Colors */
   --euclid-border: var(--euclid-gray-200);
-  --euclid-border-hover: var(--euclid-gray-300);
+  --euclid-border-secondary: var(--euclid-gray-300);
+  --euclid-border-hover: var(--euclid-gray-400);
+  --euclid-border-focus: var(--euclid-primary-500);
+  --euclid-border-error: var(--euclid-danger-500);
+  --euclid-border-success: var(--euclid-success-500);
 
   /* Text Colors */
   --euclid-text-primary: var(--euclid-gray-900);
   --euclid-text-secondary: var(--euclid-gray-600);
-  --euclid-text-muted: var(--euclid-gray-500);
-  --euclid-text-inverse: #ffffff;
+  --euclid-text-tertiary: var(--euclid-gray-500);
+  --euclid-text-muted: var(--euclid-gray-400);
+  --euclid-text-inverse: var(--euclid-white);
+  --euclid-text-link: var(--euclid-primary-600);
+  --euclid-text-link-hover: var(--euclid-primary-700);
 
-  /* Interactive Colors */
+  /* Interactive Element Colors */
   --euclid-interactive-primary: var(--euclid-primary-600);
   --euclid-interactive-primary-hover: var(--euclid-primary-700);
   --euclid-interactive-primary-active: var(--euclid-primary-800);
-  --euclid-interactive-secondary: var(--euclid-secondary-600);
-  --euclid-interactive-secondary-hover: var(--euclid-secondary-700);
+  --euclid-interactive-primary-disabled: var(--euclid-gray-300);
 
-  /* === SPACING === */
+  --euclid-interactive-secondary: var(--euclid-gray-100);
+  --euclid-interactive-secondary-hover: var(--euclid-gray-200);
+  --euclid-interactive-secondary-active: var(--euclid-gray-300);
+
+  --euclid-interactive-danger: var(--euclid-danger-600);
+  --euclid-interactive-danger-hover: var(--euclid-danger-700);
+  --euclid-interactive-danger-active: var(--euclid-danger-800);
+
+  --euclid-interactive-success: var(--euclid-success-600);
+  --euclid-interactive-success-hover: var(--euclid-success-700);
+  --euclid-interactive-success-active: var(--euclid-success-800);
+
+  /* === SPACING SCALE === */
   --euclid-space-0: 0;
   --euclid-space-px: 1px;
   --euclid-space-0_5: 0.125rem; /* 2px */
@@ -105,16 +159,22 @@
   --euclid-space-8: 2rem;       /* 32px */
   --euclid-space-10: 2.5rem;    /* 40px */
   --euclid-space-12: 3rem;      /* 48px */
+  --euclid-space-14: 3.5rem;    /* 56px */
   --euclid-space-16: 4rem;      /* 64px */
   --euclid-space-20: 5rem;      /* 80px */
   --euclid-space-24: 6rem;      /* 96px */
   --euclid-space-32: 8rem;      /* 128px */
+  --euclid-space-40: 10rem;     /* 160px */
+  --euclid-space-48: 12rem;     /* 192px */
+  --euclid-space-56: 14rem;     /* 224px */
+  --euclid-space-64: 16rem;     /* 256px */
 
-  /* === TYPOGRAPHY === */
+  /* === TYPOGRAPHY SYSTEM === */
 
   /* Font Families */
   --euclid-font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, 'Helvetica Neue', Arial, sans-serif;
   --euclid-font-mono: 'SF Mono', Monaco, Inconsolata, 'Roboto Mono', 'Source Code Pro', monospace;
+  --euclid-font-display: var(--euclid-font-sans);
 
   /* Font Sizes */
   --euclid-text-xs: 0.75rem;     /* 12px */
@@ -125,6 +185,8 @@
   --euclid-text-2xl: 1.5rem;     /* 24px */
   --euclid-text-3xl: 1.875rem;   /* 30px */
   --euclid-text-4xl: 2.25rem;    /* 36px */
+  --euclid-text-5xl: 3rem;       /* 48px */
+  --euclid-text-6xl: 3.75rem;    /* 60px */
 
   /* Font Weights */
   --euclid-font-thin: 100;
@@ -133,18 +195,18 @@
   --euclid-font-medium: 500;
   --euclid-font-semibold: 600;
   --euclid-font-bold: 700;
+  --euclid-font-extrabold: 800;
   --euclid-font-black: 900;
 
   /* Line Heights */
+  --euclid-leading-none: 1;
   --euclid-leading-tight: 1.25;
   --euclid-leading-snug: 1.375;
   --euclid-leading-normal: 1.5;
   --euclid-leading-relaxed: 1.625;
   --euclid-leading-loose: 2;
 
-  /* === BORDERS & RADIUS === */
-
-  /* Border Radius */
+  /* === BORDER RADIUS SCALE === */
   --euclid-radius-none: 0;
   --euclid-radius-sm: 0.125rem;   /* 2px */
   --euclid-radius-base: 0.25rem;  /* 4px */
@@ -155,16 +217,91 @@
   --euclid-radius-3xl: 1.5rem;    /* 24px */
   --euclid-radius-full: 9999px;
 
-  /* Border Widths */
+  /* === BORDER WIDTH SCALE === */
   --euclid-border-0: 0;
   --euclid-border-1: 1px;
   --euclid-border-2: 2px;
   --euclid-border-4: 4px;
   --euclid-border-8: 8px;
 
-  /* === SHADOWS === */
+  /* === SHADOW SYSTEM === */
   --euclid-shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --euclid-shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --euclid-shadow-base: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px 0 rgb(0 0 0 / 0.06);
+  --euclid-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -1px rgb(0 0 0 / 0.06);
+  --euclid-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05);
+  --euclid-shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 10px 10px -5px rgb(0 0 0 / 0.04);
+  --euclid-shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  --euclid-shadow-inner: inset 0 2px 4px 0 rgb(0 0 0 / 0.06);
+  --euclid-shadow-focus: 0 0 0 3px rgb(59 130 246 / 0.15);
+  --euclid-shadow-focus-danger: 0 0 0 3px rgb(239 68 68 / 0.15);
+  --euclid-shadow-focus-success: 0 0 0 3px rgb(34 197 94 / 0.15);
+
+  /* === ANIMATION & TRANSITION SYSTEM === */
+  --euclid-duration-75: 75ms;
+  --euclid-duration-100: 100ms;
+  --euclid-duration-150: 150ms;
+  --euclid-duration-200: 200ms;
+  --euclid-duration-300: 300ms;
+  --euclid-duration-500: 500ms;
+  --euclid-duration-700: 700ms;
+  --euclid-duration-1000: 1000ms;
+
+  --euclid-ease-linear: linear;
+  --euclid-ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --euclid-ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --euclid-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --euclid-ease-back: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  --euclid-transition-fast: var(--euclid-duration-150) var(--euclid-ease-out);
+  --euclid-transition-base: var(--euclid-duration-200) var(--euclid-ease-out);
+  --euclid-transition-slow: var(--euclid-duration-300) var(--euclid-ease-out);
+  --euclid-transition-slower: var(--euclid-duration-500) var(--euclid-ease-out);
+
+  /* === Z-INDEX SCALE === */
+  --euclid-z-dropdown: 1000;
+  --euclid-z-sticky: 1020;
+  --euclid-z-fixed: 1030;
+  --euclid-z-modal-backdrop: 1040;
+  --euclid-z-modal: 1050;
+  --euclid-z-popover: 1060;
+  --euclid-z-tooltip: 1070;
+  --euclid-z-toast: 1080;
+
+  /* === COMPONENT-SPECIFIC TOKENS === */
+
+  /* Button Component */
+  --euclid-button-height-sm: var(--euclid-space-8);
+  --euclid-button-height-base: var(--euclid-space-10);
+  --euclid-button-height-lg: var(--euclid-space-12);
+  --euclid-button-padding-x-sm: var(--euclid-space-3);
+  --euclid-button-padding-x-base: var(--euclid-space-4);
+  --euclid-button-padding-x-lg: var(--euclid-space-6);
+
+  /* Input Component */
+  --euclid-input-height-sm: var(--euclid-space-8);
+  --euclid-input-height-base: var(--euclid-space-10);
+  --euclid-input-height-lg: var(--euclid-space-12);
+  --euclid-input-padding-x: var(--euclid-space-3);
+  --euclid-input-padding-y: var(--euclid-space-2);
+
+  /* Modal Component */
+  --euclid-modal-backdrop: var(--euclid-surface-overlay);
+  --euclid-modal-max-width-sm: 28rem;
+  --euclid-modal-max-width-base: 32rem;
+  --euclid-modal-max-width-lg: 42rem;
+  --euclid-modal-max-width-xl: 48rem;
+
+  /* Card Component */
+  --euclid-card-padding: var(--euclid-space-6);
+  --euclid-card-padding-sm: var(--euclid-space-4);
+  --euclid-card-padding-lg: var(--euclid-space-8);
+
+  /* Token Component */
+  --euclid-token-logo-sm: var(--euclid-space-4);
+  --euclid-token-logo-base: var(--euclid-space-6);
+  --euclid-token-logo-lg: var(--euclid-space-8);
+  --euclid-token-logo-xl: var(--euclid-space-10);
   --euclid-shadow-base: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --euclid-shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   --euclid-shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);

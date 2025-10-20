@@ -26,6 +26,86 @@ export { PopularToken, TokenList } from "./components/ui/euclid-token-modal/eucl
 export { TokenInfo as TokenInfo1 } from "./components/ui/euclid-token-input/euclid-token-input";
 export { ChainInfo, WalletInfo, WalletProvider } from "./components/ui/euclid-wallet-modal/euclid-wallet-modal";
 export namespace Components {
+    interface EuclidBaseModal {
+        /**
+          * Whether to auto-focus search input when opened
+          * @default true
+         */
+        "autoFocusSearch": boolean;
+        /**
+          * Whether to show backdrop blur
+          * @default true
+         */
+        "backdropBlur": boolean;
+        /**
+          * Whether clicking overlay closes modal
+          * @default true
+         */
+        "closeOnOverlayClick": boolean;
+        /**
+          * Empty state message
+         */
+        "emptyMessage"?: string;
+        /**
+          * Error message to display
+         */
+        "error"?: string;
+        /**
+          * List selector options
+          * @default []
+         */
+        "listOptions": Array<{ value: string; label: string }>;
+        /**
+          * Loading state
+          * @default false
+         */
+        "loading": boolean;
+        /**
+          * Loading message
+          * @default 'Loading...'
+         */
+        "loadingMessage": string;
+        /**
+          * Maximum width of modal
+          * @default '480px'
+         */
+        "maxWidth": string;
+        /**
+          * Modal title text
+          * @default 'Modal'
+         */
+        "modalTitle": string;
+        /**
+          * Whether the modal is open
+          * @default false
+         */
+        "open": boolean;
+        /**
+          * Search input placeholder
+          * @default 'Search...'
+         */
+        "searchPlaceholder": string;
+        /**
+          * Current search query
+          * @default ''
+         */
+        "searchQuery": string;
+        /**
+          * Selected list option
+          * @default ''
+         */
+        "selectedList": string;
+        /**
+          * Whether to show list selector
+          * @default false
+         */
+        "showListSelector": boolean;
+        /**
+          * Whether to show search input
+          * @default false
+         */
+        "showSearch": boolean;
+    }
     interface EuclidButton {
         /**
           * @default false
@@ -445,6 +525,10 @@ export namespace Components {
         "walletProviders": WalletProvider[];
     }
 }
+export interface EuclidBaseModalCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLEuclidBaseModalElement;
+}
 export interface EuclidLiquidityCardCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLEuclidLiquidityCardElement;
@@ -474,6 +558,26 @@ export interface EuclidWalletModalCustomEvent<T> extends CustomEvent<T> {
     target: HTMLEuclidWalletModalElement;
 }
 declare global {
+    interface HTMLEuclidBaseModalElementEventMap {
+        "modalClose": void;
+        "searchInput": string;
+        "listChange": string;
+        "modalOpen": void;
+    }
+    interface HTMLEuclidBaseModalElement extends Components.EuclidBaseModal, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLEuclidBaseModalElementEventMap>(type: K, listener: (this: HTMLEuclidBaseModalElement, ev: EuclidBaseModalCustomEvent<HTMLEuclidBaseModalElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLEuclidBaseModalElementEventMap>(type: K, listener: (this: HTMLEuclidBaseModalElement, ev: EuclidBaseModalCustomEvent<HTMLEuclidBaseModalElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    }
+    var HTMLEuclidBaseModalElement: {
+        prototype: HTMLEuclidBaseModalElement;
+        new (): HTMLEuclidBaseModalElement;
+    };
     interface HTMLEuclidButtonElement extends Components.EuclidButton, HTMLStencilElement {
     }
     var HTMLEuclidButtonElement: {
@@ -700,6 +804,7 @@ declare global {
         new (): HTMLEuclidWalletModalElement;
     };
     interface HTMLElementTagNameMap {
+        "euclid-base-modal": HTMLEuclidBaseModalElement;
         "euclid-button": HTMLEuclidButtonElement;
         "euclid-core-provider": HTMLEuclidCoreProviderElement;
         "euclid-liquidity-card": HTMLEuclidLiquidityCardElement;
@@ -718,6 +823,102 @@ declare global {
     }
 }
 declare namespace LocalJSX {
+    interface EuclidBaseModal {
+        /**
+          * Whether to auto-focus search input when opened
+          * @default true
+         */
+        "autoFocusSearch"?: boolean;
+        /**
+          * Whether to show backdrop blur
+          * @default true
+         */
+        "backdropBlur"?: boolean;
+        /**
+          * Whether clicking overlay closes modal
+          * @default true
+         */
+        "closeOnOverlayClick"?: boolean;
+        /**
+          * Empty state message
+         */
+        "emptyMessage"?: string;
+        /**
+          * Error message to display
+         */
+        "error"?: string;
+        /**
+          * List selector options
+          * @default []
+         */
+        "listOptions"?: Array<{ value: string; label: string }>;
+        /**
+          * Loading state
+          * @default false
+         */
+        "loading"?: boolean;
+        /**
+          * Loading message
+          * @default 'Loading...'
+         */
+        "loadingMessage"?: string;
+        /**
+          * Maximum width of modal
+          * @default '480px'
+         */
+        "maxWidth"?: string;
+        /**
+          * Modal title text
+          * @default 'Modal'
+         */
+        "modalTitle"?: string;
+        /**
+          * Emitted when list selector changes
+         */
+        "onListChange"?: (event: EuclidBaseModalCustomEvent<string>) => void;
+        /**
+          * Emitted when the modal is closed
+         */
+        "onModalClose"?: (event: EuclidBaseModalCustomEvent<void>) => void;
+        /**
+          * Emitted when modal is opened
+         */
+        "onModalOpen"?: (event: EuclidBaseModalCustomEvent<void>) => void;
+        /**
+          * Emitted when search input changes
+         */
+        "onSearchInput"?: (event: EuclidBaseModalCustomEvent<string>) => void;
+        /**
+          * Whether the modal is open
+          * @default false
+         */
+        "open"?: boolean;
+        /**
+          * Search input placeholder
+          * @default 'Search...'
+         */
+        "searchPlaceholder"?: string;
+        /**
+          * Current search query
+          * @default ''
+         */
+        "searchQuery"?: string;
+        /**
+          * Selected list option
+          * @default ''
+         */
+        "selectedList"?: string;
+        /**
+          * Whether to show list selector
+          * @default false
+         */
+        "showListSelector"?: boolean;
+        /**
+          * Whether to show search input
+          * @default false
+         */
+        "showSearch"?: boolean;
+    }
     interface EuclidButton {
         /**
           * @default false
@@ -1238,6 +1439,7 @@ declare namespace LocalJSX {
         "walletProviders"?: WalletProvider[];
     }
     interface IntrinsicElements {
+        "euclid-base-modal": EuclidBaseModal;
         "euclid-button": EuclidButton;
         "euclid-core-provider": EuclidCoreProvider;
         "euclid-liquidity-card": EuclidLiquidityCard;
@@ -1259,6 +1461,7 @@ export { LocalJSX as JSX };
 declare module "@stencil/core" {
     export namespace JSX {
         interface IntrinsicElements {
+            "euclid-base-modal": LocalJSX.EuclidBaseModal & JSXBase.HTMLAttributes<HTMLEuclidBaseModalElement>;
             "euclid-button": LocalJSX.EuclidButton & JSXBase.HTMLAttributes<HTMLEuclidButtonElement>;
             "euclid-core-provider": LocalJSX.EuclidCoreProvider & JSXBase.HTMLAttributes<HTMLEuclidCoreProviderElement>;
             "euclid-liquidity-card": LocalJSX.EuclidLiquidityCard & JSXBase.HTMLAttributes<HTMLEuclidLiquidityCardElement>;

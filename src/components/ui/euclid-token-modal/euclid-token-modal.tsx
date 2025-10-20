@@ -19,8 +19,6 @@ export interface PopularToken extends TokenInfo {
 })
 export class EuclidTokenModal {
   @Element() el!: HTMLElement;
-  private searchInputRef?: HTMLInputElement;
-  private modalRef?: HTMLElement;
 
   /**
    * Whether the modal is open
@@ -75,7 +73,6 @@ export class EuclidTokenModal {
   @State() private searchQuery: string = '';
   @State() private selectedListIndex: number = 0;
   @State() private filteredTokens: TokenInfo[] = [];
-  @State() private isAnimating: boolean = false;
 
   /**
    * Emitted when a token is selected
@@ -96,21 +93,11 @@ export class EuclidTokenModal {
     this.updateFilteredTokens();
   }
 
-  componentDidLoad() {
-    if (this.open) {
-      this.focusSearchInput();
-    }
-  }
-
   @Listen('keydown', { target: 'document' })
   handleKeyDown(event: KeyboardEvent) {
     if (!this.open) return;
 
     switch (event.key) {
-      case 'Escape':
-        event.preventDefault();
-        this.closeModal();
-        break;
       case 'ArrowDown':
       case 'ArrowUp':
         event.preventDefault();
@@ -164,65 +151,30 @@ export class EuclidTokenModal {
     this.filteredTokens = tokens;
   }
 
-  private handleSearchInput = (event: Event) => {
-    const target = event.target as HTMLInputElement;
-    this.searchQuery = target.value;
+  private handleSearchInput = (event: CustomEvent<string>) => {
+    this.searchQuery = event.detail;
     this.updateFilteredTokens();
   };
 
   private handleTokenClick = (token: TokenInfo) => {
     this.tokenSelect.emit(token);
-    this.closeModal();
+    this.handleModalClose();
   };
 
   private handlePopularTokenClick = (token: PopularToken) => {
     this.tokenSelect.emit(token);
-    this.closeModal();
+    this.handleModalClose();
   };
 
-  private handleListChange = (event: Event) => {
-    const target = event.target as HTMLSelectElement;
-    this.selectedListIndex = parseInt(target.value);
+  private handleListChange = (event: CustomEvent<string>) => {
+    this.selectedListIndex = parseInt(event.detail);
     this.updateFilteredTokens();
   };
 
-  private openModal() {
-    this.isAnimating = true;
-    this.open = true;
-
-    // Focus search input after animation
-    setTimeout(() => {
-      this.focusSearchInput();
-      this.isAnimating = false;
-    }, 150);
-
-    // Load token lists if empty
-    if (!this.tokenLists.length && !this.loading) {
-      this.loadTokenLists.emit();
-    }
-  }
-
-  private closeModal() {
-    this.isAnimating = true;
-
-    setTimeout(() => {
-      this.open = false;
-      this.isAnimating = false;
-      this.searchQuery = '';
-      this.modalClose.emit();
-    }, 150);
-  }
-
-  private focusSearchInput() {
-    if (this.searchInputRef) {
-      this.searchInputRef.focus();
-    }
-  }
-
-  private handleOverlayClick = (event: Event) => {
-    if (event.target === this.modalRef) {
-      this.closeModal();
-    }
+  private handleModalClose = () => {
+    this.open = false;
+    this.searchQuery = '';
+    this.modalClose.emit();
   };
 
   private formatBalance(balance: string): string {
@@ -248,73 +200,30 @@ export class EuclidTokenModal {
   }
 
   render() {
-    if (!this.open) {
-      return null;
-    }
-
-    const modalClass = {
-      'modal-overlay': true,
-      'modal-overlay--animating': this.isAnimating,
-    };
-
-    const contentClass = {
-      'modal-content': true,
-      'modal-content--loading': this.loading,
-    };
+    const listOptions = this.tokenLists.map((list, index) => ({
+      value: index.toString(),
+      label: list.name
+    }));
 
     return (
-      <div
-        class={modalClass}
-        ref={(el) => this.modalRef = el}
-        onClick={this.handleOverlayClick}
+      <euclid-base-modal
+        open={this.open}
+        modal-title="Select Token"
+        show-search={true}
+        search-placeholder={this.searchPlaceholder}
+        search-query={this.searchQuery}
+        show-list-selector={this.tokenLists.length > 1}
+        list-options={listOptions}
+        selected-list={this.selectedListIndex.toString()}
+        loading={this.loading}
+        loading-message="Loading tokens..."
+        error={this.error}
+        empty-message={this.filteredTokens.length === 0 && this.searchQuery ? `No tokens found for "${this.searchQuery}"` : undefined}
+        onModalClose={() => this.handleModalClose()}
+        onSearchInput={(event) => this.handleSearchInput(event)}
+        onListChange={(event) => this.handleListChange(event)}
       >
-        <div class={contentClass}>
-          {/* Header */}
-          <div class="modal-header">
-            <h2 class="modal-title">Select Token</h2>
-            <button
-              class="close-button"
-              onClick={() => this.closeModal()}
-              type="button"
-              aria-label="Close modal"
-            >
-              <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-              </svg>
-            </button>
-          </div>
-
-          {/* Search Section */}
-          <div class="search-section">
-            <div class="search-input-container">
-              <svg class="search-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-              </svg>
-              <input
-                ref={(el) => this.searchInputRef = el}
-                type="text"
-                placeholder={this.searchPlaceholder}
-                value={this.searchQuery}
-                onInput={this.handleSearchInput}
-                class="search-input"
-              />
-            </div>
-
-            {/* Token List Selector */}
-            {this.tokenLists.length > 1 && (
-              <select
-                class="list-selector"
-                onInput={this.handleListChange}
-              >
-                {this.tokenLists.map((list, index) => (
-                  <option key={list.name} value={index.toString()}>
-                    {list.name}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
-
+        <div slot="content">
           {/* Popular Tokens */}
           {this.showPopular && this.popularTokens.length > 0 && !this.searchQuery && (
             <div class="popular-section">
@@ -350,79 +259,50 @@ export class EuclidTokenModal {
             </div>
           )}
 
-          {/* Error State */}
-          {this.error && (
-            <div class="error-section">
-              <p class="error-message">{this.error}</p>
-            </div>
-          )}
-
-          {/* Loading State */}
-          {this.loading && (
-            <div class="loading-section">
-              <div class="loading-spinner">
-                <div class="spinner"></div>
-              </div>
-              <p class="loading-text">Loading tokens...</p>
-            </div>
-          )}
-
           {/* Token List */}
-          {!this.loading && !this.error && (
+          {this.filteredTokens.length > 0 && (
             <div class="token-list-section">
               <h3 class="section-title">
                 {this.searchQuery ? 'Search Results' : 'All Tokens'}
-                {this.filteredTokens.length > 0 && (
-                  <span class="token-count">({this.filteredTokens.length})</span>
-                )}
+                <span class="token-count">({this.filteredTokens.length})</span>
               </h3>
 
-              {this.filteredTokens.length === 0 ? (
-                <div class="empty-state">
-                  <p class="empty-message">
-                    {this.searchQuery
-                      ? `No tokens found for "${this.searchQuery}"`
-                      : 'No tokens available'}
-                  </p>
-                </div>
-              ) : (
-                <div class="token-list">
-                  {this.filteredTokens.map(token => (
-                    <button
-                      key={token.symbol}
-                      class={{
-                        'token-item': true,
-                        'token-item--selected': this.selectedToken?.symbol === token.symbol,
-                        'token-item--has-balance': this.showBalances && parseFloat(token.balance || '0') > 0
-                      }}
-                      onClick={() => this.handleTokenClick(token)}
-                      type="button"
-                    >
-                      <div class="token-item-left">
-                        {token.logoUrl && (
-                          <img src={token.logoUrl} alt={token.symbol} class="token-logo" />
-                        )}
-                        <div class="token-details">
-                          <span class="token-symbol">{token.symbol}</span>
-                          <span class="token-name">{token.name}</span>
-                        </div>
-                      </div>
-
-                      {this.showBalances && token.balance && (
-                        <div class="token-item-right">
-                          <span class="token-balance">
-                            {this.formatBalance(token.balance)}
-                          </span>
-                        </div>
+              <div class="token-list">
+                {this.filteredTokens.map(token => (
+                  <button
+                    key={token.symbol}
+                    class={{
+                      'token-item': true,
+                      'token-item--selected': this.selectedToken?.symbol === token.symbol,
+                      'token-item--has-balance': this.showBalances && parseFloat(token.balance || '0') > 0
+                    }}
+                    onClick={() => this.handleTokenClick(token)}
+                    type="button"
+                  >
+                    <div class="token-item-left">
+                      {token.logoUrl && (
+                        <img src={token.logoUrl} alt={token.symbol} class="token-logo" />
                       )}
-                    </button>
-                  ))}
-                </div>
-              )}
+                      <div class="token-details">
+                        <span class="token-symbol">{token.symbol}</span>
+                        <span class="token-name">{token.name}</span>
+                      </div>
+                    </div>
+
+                    {this.showBalances && token.balance && (
+                      <div class="token-item-right">
+                        <span class="token-balance">
+                          {this.formatBalance(token.balance)}
+                        </span>
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
         </div>
-      </div>
+      </euclid-base-modal>
     );
   }
 }

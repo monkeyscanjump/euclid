@@ -1,0 +1,356 @@
+{
+  "data": {
+    "pool": {
+      "token_pair_with_liquidity": {
+        "results": [
+          {
+            "pair": {
+              "token_1": "euclid",
+              "token_2": "mon"
+            },
+            "vlp": "euclid1wrkyxm3u6qz7n7mnws5235kqeuq6u0httlpl7x8cf93e3r0w96psxjd8cr",
+            "total_liquidity": "71643871720.89527893",
+            "apr": "9.24331%",
+            "tags": [],
+            "created_at": "2025-06-28T23:19:48Z"
+          },
+          {
+            "pair": {
+              "token_1": "stt",
+              "token_2": "euclid"
+            },
+            "vlp": "euclid1pk99xge6q94qtu3568x3qhp68zzv0mx7za4ct008ks36qhx5tvssn5mwtr",
+            "total_liquidity": "22057124884.57003021",
+            "apr": "0.25162%",
+            "tags": [],
+            "created_at": "2025-06-28T23:18:00Z"
+          },
+          {
+            "pair": {
+              "token_1": "euclid",
+              "token_2": "gimo"
+            },
+            "vlp": "euclid13fzmuq0kknhpcgvfppvz307wtvk7htgtpukh0c22mw6l5k4vgghs9zxp0m",
+            "total_liquidity": "10811784883.91898346",
+            "apr": "0.00000%",
+            "tags": [],
+            "created_at": "2025-08-20T06:39:21Z"
+          },
+          {
+            "pair": {
+              "token_1": "euclid",
+              "token_2": "0g"
+            },
+            "vlp": "euclid1xllcm6eprlatxyjvleedhxxpjnfapqwvgdkzhzh5vrkl09rwg5rslg0efl",
+            "total_liquidity": "8514271044.48836708",
+            "apr": "0.00000%",
+            "tags": [],
+            "created_at": "2025-06-28T23:24:25Z"
+          },
+          {
+            "pair": {
+              "token_1": "euclid",
+              "token_2": "eth"
+            },
+            "vlp": "euclid1k463qf8vmdde9ynn42pahr0lgj09evc48q76gy93kg5wl8c2zthqhkcqae",
+            "total_liquidity": "4356754652.96553421",
+            "apr": "6.05524%",
+            "tags": [],
+            "created_at": "2025-06-28T23:15:52Z"
+          },
+          {
+            "pair": {
+              "token_1": "euclid",
+              "token_2": "phrs"
+            },
+            "vlp": "euclid15wng2302rhq5w8ddy3l3jslrhfcpufzfs6wc3zc6cxt8cpwrfp4qgmycql",
+            "total_liquidity": "3197430600.82881451",
+            "apr": "1.52529%",
+            "tags": [],
+            "created_at": "2025-06-30T09:57:20Z"
+          },
+          {
+            "pair": {
+              "token_1": "bnb",
+              "token_2": "euclid"
+            },
+            "vlp": "euclid18y8nhm5hyqj8kexur5nettfxpjmv9x6wq0ruqxte8lrx4ugasewslchfyz",
+            "total_liquidity": "1219964727.86531258",
+            "apr": "0.00000%",
+            "tags": [],
+            "created_at": "2025-09-05T08:32:53Z"
+          },
+          {
+            "pair": {
+              "token_1": "0g",
+              "token_2": "gimo"
+            },
+            "vlp": "euclid1n34y3rd4xw2a4nmdmzhxek9vvqe8ne6kahj4en0gq6nwpjqve4yqptcvf2",
+            "total_liquidity": "678723621.30751646",
+            "apr": "0.00000%",
+            "tags": [],
+            "created_at": "2025-08-20T06:39:21Z"
+          },
+          {
+            "pair": {
+              "token_1": "phrs",
+              "token_2": "usdc.p"
+            },
+            "vlp": "euclid1uylse4qd3nyjm2h9e9v0walpf25e3plcp8ut94ggatk85q44vcusqnknrp",
+            "total_liquidity": "403989968.60807359",
+            "apr": "0.00000%",
+            "tags": [],
+            "created_at": "2025-07-21T13:14:08Z"
+          },
+          {
+            "pair": {
+              "token_1": "euclid",
+              "token_2": "nibi"
+            },
+            "vlp": "euclid17g3a2z7l6zn88m8ymgwghk8hnclh824h5zh88zkw4z4zfa8q5zqqhsw40y",
+            "total_liquidity": "396281259.25577581",
+            "apr": "0.00000%",
+            "tags": [],
+            "created_at": "2025-07-03T08:04:34Z"
+          },
+          {
+            "pair": {
+              "token_1": "ron",
+              "token_2": "euclid"
+            },
+            "vlp": "euclid1gs92kytt8ty3s48czfu2x3scjxjt3cu8av9g9prr2zq357dgajms0tkx55",
+            "total_liquidity": "339704167.85262549",
+            "apr": "0.00008%",
+            "tags": [],
+            "created_at": "2025-07-03T10:56:24Z"
+          },
+          {
+            "pair": {
+              "token_1": "plume",
+              "token_2": "euclid"
+            },
+            "vlp": "euclid1au8wu3ryfa34a8we6daes57ztfw8lqq2ssd0nu6zam99u9xy8sssfjldu6",
+            "total_liquidity": "202950205.78647473",
+            "apr": "0.31218%",
+            "tags": [],
+            "created_at": "2025-07-03T11:01:37Z"
+          },
+          {
+            "pair": {
+              "token_1": "euclid",
+              "token_2": "andr"
+            },
+            "vlp": "euclid1707ccwapsqtkceefqaxtm6hly7jxmytxx3dlejn8kedrqf2rjlnsej62kw",
+            "total_liquidity": "193766018.35180813",
+            "apr": "0.00000%",
+            "tags": [],
+            "created_at": "2025-06-28T22:54:47Z"
+          },
+          {
+            "pair": {
+              "token_1": "euclid",
+              "token_2": "hype"
+            },
+            "vlp": "euclid1xz63mrmdaxs2xk64c0y9hncltjxty4da2lwsqj3zatuw6wm60f5s8wvn9m",
+            "total_liquidity": "156413553.60324141",
+            "apr": "0.00000%",
+            "tags": [],
+            "created_at": "2025-09-05T09:03:07Z"
+          },
+          {
+            "pair": {
+              "token_1": "euclid",
+              "token_2": "inj"
+            },
+            "vlp": "euclid1uzvynexu8yk43njlk2uw9ezywandc4ru8tqyekurxcqwfja8t8kqy7gtll",
+            "total_liquidity": "116615116.42016160",
+            "apr": "0.00000%",
+            "tags": [],
+            "created_at": "2025-06-28T23:09:07Z"
+          },
+          {
+            "pair": {
+              "token_1": "usdc",
+              "token_2": "inj"
+            },
+            "vlp": "euclid1fa7tuuwmd5r3r40ujtrz82xxnxx8l4v2u74x9643v0c9j0h698qs6hx5nz",
+            "total_liquidity": "107724215.03131318",
+            "apr": "0.00000%",
+            "tags": [],
+            "created_at": "2025-06-28T22:56:41Z"
+          },
+          {
+            "pair": {
+              "token_1": "euclid",
+              "token_2": "teth"
+            },
+            "vlp": "euclid196ywx2seau2usdgw98r65lmzkve4pepv0kavvqjl6k9jwykz8pes5csxyh",
+            "total_liquidity": "73731498.97572134",
+            "apr": "0.00000%",
+            "tags": [],
+            "created_at": "2025-07-04T09:10:49Z"
+          },
+          {
+            "pair": {
+              "token_1": "avax",
+              "token_2": "euclid"
+            },
+            "vlp": "euclid1un492yekj0twvjrdqfxfyqn0smauqjs8vk5ushzf9ytmmhg9nc5q6fpygx",
+            "total_liquidity": "59843040.59409678",
+            "apr": "0.00000%",
+            "tags": [],
+            "created_at": "2025-09-05T08:48:38Z"
+          },
+          {
+            "pair": {
+              "token_1": "euclid",
+              "token_2": "sonic"
+            },
+            "vlp": "euclid1y0v5znl0ucc6nsdalr9xeg0r3zyw44yn0uyd8tsgc8gl4j8stjcsqax9xq",
+            "total_liquidity": "54780604.96302590",
+            "apr": "0.00000%",
+            "tags": [],
+            "created_at": "2025-07-07T11:06:07Z"
+          },
+          {
+            "pair": {
+              "token_1": "euclid",
+              "token_2": "const"
+            },
+            "vlp": "euclid1kq2pmqmcuccmjctwx0rqzc9f57lvcnctauyfkhflrts3upwtkzgqlrwdqu",
+            "total_liquidity": "36531595.36692530",
+            "apr": "0.00000%",
+            "tags": [],
+            "created_at": "2025-07-03T08:33:30Z"
+          },
+          {
+            "pair": {
+              "token_1": "stars",
+              "token_2": "euclid"
+            },
+            "vlp": "euclid1pt9u490q0km4lx8h9h48vzu3q20yl9nmq3ulkqjeelrfp5ec7nwsvc2nlc",
+            "total_liquidity": "32015603.10948880",
+            "apr": "0.00000%",
+            "tags": [],
+            "created_at": "2025-07-03T10:11:39Z"
+          },
+          {
+            "pair": {
+              "token_1": "euclid",
+              "token_2": "orai"
+            },
+            "vlp": "euclid1n8amlyt960cxz7myfphhcsptjuhr2wtdm57wfurdgm7hy4eu693qpz7xjt",
+            "total_liquidity": "27754041.62554669",
+            "apr": "0.00000%",
+            "tags": [],
+            "created_at": "2025-07-03T10:13:48Z"
+          },
+          {
+            "pair": {
+              "token_1": "euclid",
+              "token_2": "elys"
+            },
+            "vlp": "euclid1hrvxn66u46r47zxsd45jecvuyr3munl2d5xle9gnltpge3dqh7sqgtgukp",
+            "total_liquidity": "27283440.89123166",
+            "apr": "0.00000%",
+            "tags": [],
+            "created_at": "2025-07-07T20:28:20Z"
+          },
+          {
+            "pair": {
+              "token_1": "ntrn",
+              "token_2": "euclid"
+            },
+            "vlp": "euclid177vjwkg6hqwgccjsvth02cacmwj7d568qs4wxgzg8vt4n70sg9msr6yckv",
+            "total_liquidity": "26410424.47604137",
+            "apr": "0.00000%",
+            "tags": [],
+            "created_at": "2025-07-03T10:10:45Z"
+          },
+          {
+            "pair": {
+              "token_1": "aipe.eucl",
+              "token_2": "euclid"
+            },
+            "vlp": "euclid1n9t5rd76ttnckp9x9xe94pkcxgcfh0lkvtuwansrd27l88amd03qr6235v",
+            "total_liquidity": "17151522.92016037",
+            "apr": "0.00000%",
+            "tags": [],
+            "created_at": "2025-07-16T17:41:05Z"
+          },
+          {
+            "pair": {
+              "token_1": "euclid",
+              "token_2": "kii"
+            },
+            "vlp": "euclid1p8p2ly79hfu36x254pd7snm5gp4gjxf23w2ldtswpvzj3nelrdqsa9xhs7",
+            "total_liquidity": "15193451.24380791",
+            "apr": "0.00000%",
+            "tags": [],
+            "created_at": "2025-07-03T08:37:56Z"
+          },
+          {
+            "pair": {
+              "token_1": "euclid",
+              "token_2": "osmo"
+            },
+            "vlp": "euclid1vpsu45tg2g9t2jej5qs2gkvlyd34f6e7ddxvht7zcs257rqt6ynse7x3r7",
+            "total_liquidity": "12865920.74630594",
+            "apr": "0.00000%",
+            "tags": [],
+            "created_at": "2025-07-03T10:12:48Z"
+          },
+          {
+            "pair": {
+              "token_1": "euclid",
+              "token_2": "usdc"
+            },
+            "vlp": "euclid1c3ndw42kwd3nx37z3qjyxs88xun5j05d6k3huhzsrukdpxlk80ms4z4x7h",
+            "total_liquidity": "7393872.45322766",
+            "apr": "0.00000%",
+            "tags": [],
+            "created_at": "2025-06-28T23:10:14Z"
+          },
+          {
+            "pair": {
+              "token_1": "inj",
+              "token_2": "usdt"
+            },
+            "vlp": "euclid1sr9zm2pq3xrru7l7gz632t2rqs9caet9xulwvapcqagq9pytkcgq58ldyn",
+            "total_liquidity": "6595490.95477200",
+            "apr": "0.00000%",
+            "tags": [],
+            "created_at": "2025-06-28T23:06:17Z"
+          },
+          {
+            "pair": {
+              "token_1": "mnt",
+              "token_2": "euclid"
+            },
+            "vlp": "euclid1ejqzph2ac07wmpmts7ujrhhj46kwdj476628rqajmgkf7wzxelgs8v5a0t",
+            "total_liquidity": "6542068.37173266",
+            "apr": "2.31856%",
+            "tags": [],
+            "created_at": "2025-07-04T08:25:27Z"
+          },
+          {
+            "pair": {
+              "token_1": "testcore",
+              "token_2": "euclid"
+            },
+            "vlp": "euclid1f0q8gjyqk36mnycp0prxjhkn6q05sw780lxzp3cwtrxmas74hwkq7d5qnd",
+            "total_liquidity": "6040315.52763478",
+            "apr": "0.00000%",
+            "tags": [],
+            "created_at": "2025-07-03T08:35:27Z"
+          }
+        ],
+        "pagination": {
+          "total_count": 31,
+          "limit": 1000,
+          "offset": 0
+        }
+      }
+    }
+  }
+}

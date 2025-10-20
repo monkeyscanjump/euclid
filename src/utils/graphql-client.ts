@@ -13,42 +13,6 @@ import type {
 // GraphQL endpoint for Euclid testnet
 const EUCLID_GRAPHQL_ENDPOINT = 'https://testnet.api.euclidprotocol.com/graphql';
 
-// Euclid-specific types based on their API documentation
-interface EuclidPool {
-  pair: {
-    token_1: string;
-    token_2: string;
-  };
-  vlp: string;
-}
-
-interface EuclidFactoryResponse {
-  factory: {
-    all_pools: {
-      pools: EuclidPool[];
-      pagination: {
-        total_count: number;
-        limit: number;
-        offset: number;
-      };
-    };
-  };
-}
-
-interface EuclidVolumeData {
-  pool: {
-    volume: {
-      volume_24hours: string;
-      total_liquidity: string;
-      total_volume: string;
-      volume_breakdown_24hours: Array<{
-        pair: string;
-        volume: string;
-      }>;
-    };
-  };
-}
-
 /**
  * GraphQL client for Euclid Protocol
  * Handles all GraphQL queries to the Euclid API
@@ -193,100 +157,84 @@ export class EuclidGraphQLClient {
   }
 
   /**
-   * Get all liquidity pools from all chains
+   * Get all liquidity pools with proper TVL and APR data
+   * @param chainUid - Optional chain filter (unused for now)
+   * @param onlyVerified - Whether to show only verified pools (default: true)
    */
-  async getAllPools(chainUid?: string): Promise<PoolInfo[]> {
-    // If no chain specified, get pools from all major chains
-    const chainUids = chainUid ? [chainUid] : ['stargaze', 'osmosis', 'archway', 'neutron'];
-    const allPools: PoolInfo[] = [];
-
-    // First get volume data for all pools
-    const volumeData: Record<string, { volume: string; liquidity: string }> = {};
+  async getAllPools(_chainUid?: string, onlyVerified: boolean = true): Promise<PoolInfo[]> {
     try {
-      const volumeQuery = `
-        query Pool {
+      const query = `
+        query Token_pair_with_liquidity($limit: Int, $onlyShowVerified: Boolean) {
           pool {
-            volume {
-              volume_24hours
-              total_liquidity
-              total_volume
-              volume_breakdown_24hours {
-                pair
-                volume
+            token_pair_with_liquidity(limit: $limit, only_show_verified: $onlyShowVerified) {
+              results {
+                pair {
+                  token_1
+                  token_2
+                }
+                vlp
+                total_liquidity
+                apr
+                tags
+                created_at
+              }
+              pagination {
+                total_count
+                limit
+                offset
               }
             }
           }
         }
       `;
 
-      const volumeResult = await this.query<EuclidVolumeData>(volumeQuery);
-      if (volumeResult.success && volumeResult.data?.pool?.volume) {
-        const breakdown = volumeResult.data.pool.volume.volume_breakdown_24hours || [];
-        breakdown.forEach((item: { pair: string; volume: string }) => {
-          volumeData[item.pair] = {
-            volume: item.volume,
-            liquidity: volumeResult.data!.pool.volume.total_liquidity || '0'
+      const result = await this.query<{
+        pool: {
+          token_pair_with_liquidity: {
+            results: Array<{
+              pair: { token_1: string; token_2: string };
+              vlp: string;
+              total_liquidity: string;
+              apr: string;
+              tags: string[] | null;
+              created_at: string;
+            }>;
+            pagination: {
+              total_count: number;
+              limit: number;
+              offset: number;
+            };
           };
-        });
+        };
+      }>(query, {
+        limit: 1000,
+        onlyShowVerified: onlyVerified
+      });
+
+      if (!result.success || !result.data?.pool?.token_pair_with_liquidity?.results) {
+        throw new Error(result.error || 'Failed to fetch pools with liquidity data');
       }
+
+      // Transform the API response to our PoolInfo interface
+      const pools = result.data.pool.token_pair_with_liquidity.results.map((pool) => {
+        return {
+          pool_id: `${pool.pair.token_1}-${pool.pair.token_2}`,
+          token_1: pool.pair.token_1,
+          token_2: pool.pair.token_2,
+          total_liquidity: pool.total_liquidity,
+          volume_24h: '0', // This API doesn't provide volume data
+          fees_24h: '0', // This API doesn't provide fees data
+          apr: pool.apr,
+        } satisfies PoolInfo;
+      });
+
+      console.log(`✅ Loaded ${pools.length} pools with real liquidity and APR data from official API`);
+      return pools;
+
     } catch (error) {
-      console.warn('Failed to fetch volume data:', error);
+      console.error('Failed to fetch pools with liquidity data:', error);
+      return [];
     }
-
-    for (const chain of chainUids) {
-      try {
-        const query = `
-          query Factory($chainUid: String!, $limit: Int, $offset: Int) {
-            factory(chain_uid: $chainUid) {
-              all_pools(limit: $limit, offset: $offset) {
-                pools {
-                  pair {
-                    token_1
-                    token_2
-                  }
-                  vlp
-                }
-                pagination {
-                  total_count
-                  limit
-                  offset
-                }
-              }
-            }
-          }
-        `;
-
-        const result = await this.query<EuclidFactoryResponse>(query, {
-          chainUid: chain,
-          limit: 50,
-          offset: 0
-        });
-
-        if (result.success && result.data?.factory?.all_pools?.pools) {
-          // Transform Euclid pool data to our PoolInfo interface
-          const pools = result.data.factory.all_pools.pools.map((pool: EuclidPool) => {
-            const pairKey = `${pool.pair.token_1}-${pool.pair.token_2}`;
-            const volume = volumeData[pairKey] || { volume: '0', liquidity: '0' };
-
-            return {
-              pool_id: `${chain}-${pool.pair.token_1}-${pool.pair.token_2}`,
-              token_1: pool.pair.token_1,
-              token_2: pool.pair.token_2,
-              total_liquidity: volume.liquidity,
-              volume_24h: volume.volume,
-              fees_24h: '0', // Calculate as % of volume
-              apr: '0', // Will be calculated from fees
-            } satisfies PoolInfo;
-          });
-
-          allPools.push(...pools);
-        }
-      } catch (error) {
-        console.warn(`Failed to fetch pools for chain ${chain}:`, error);
-      }
-    }
-
-    return allPools;
   }  /**
    * Get user balances across all chains
    */

@@ -1,0 +1,328 @@
+{
+  "data": {
+    "chains": {
+      "all_chains": [
+        {
+          "chain_id": "16602",
+          "chain_uid": "0g",
+          "display_name": "0g",
+          "factory_address": "0x171931f5670037173b9db13ab83186adab350cf2",
+          "token_factory_address": "0xcEa5096DAe33D7C284eAbe186E192bC97febA35c",
+          "explorer_url": "https://chainscan-galileo.0g.ai/tx/{{TX}}",
+          "logo": "https://euclid-bucket.s3.ap-south-1.amazonaws.com/chains/0g_logo.png",
+          "type": "evm"
+        },
+        {
+          "chain_id": "galileo-4",
+          "chain_uid": "andromeda",
+          "display_name": "Andromeda",
+          "factory_address": "andr1gtlsy44erw6lm8z7skejx2m02ugdhqumdnnn99t6tx40hra4cf8qsju7jx",
+          "token_factory_address": null,
+          "explorer_url": "https://explorer.testnet.andromedaprotocol.io/galileo-4/tx/{{TX}}",
+          "logo": "https://testnet.api.euclidprotocol.com/files/chains/andromeda.png",
+          "type": "cosmwasm"
+        },
+        {
+          "chain_id": "constantine-3",
+          "chain_uid": "archway",
+          "display_name": "Archway",
+          "factory_address": "archway1p7wukzdarjnt092ed6x4rkxv3k22evd5m36tpq3rcxvln0uzugesxds9tk",
+          "token_factory_address": null,
+          "explorer_url": "https://www.mintscan.io/archway-testnet/tx/{{TX}}",
+          "logo": "https://testnet.api.euclidprotocol.com/files/chains/archway.png",
+          "type": "cosmwasm"
+        },
+        {
+          "chain_id": "43113",
+          "chain_uid": "avalanchefuji",
+          "display_name": "Avalanche Fuji",
+          "factory_address": "0xc8cc907f164aa1c746f8738289bdd43cbad65f8b",
+          "token_factory_address": null,
+          "explorer_url": "https://c.testnet.snowtrace.io/tx/{{TX}}",
+          "logo": "https://euclid-bucket.s3.ap-south-1.amazonaws.com/chains/ava.png",
+          "type": "evm"
+        },
+        {
+          "chain_id": "84532",
+          "chain_uid": "base",
+          "display_name": "Base",
+          "factory_address": "0x00a739e4479c97289801654ec1a52a67077613c0",
+          "token_factory_address": "0xfe4DE0A55601B6f087B3e54Af90DE6f0F2c38D27",
+          "explorer_url": "https://sepolia.basescan.org/tx/{{TX}}",
+          "logo": "https://testnet.api.euclidprotocol.com/files/chains/Base_Network_Logo.svg",
+          "type": "evm"
+        },
+        {
+          "chain_id": "97",
+          "chain_uid": "bsc",
+          "display_name": "Binance Smart Chain",
+          "factory_address": "0x62d8658a3d7c669943c95c781c220469e19beb47",
+          "token_factory_address": null,
+          "explorer_url": "https://testnet.bscscan.com/tx/{{TX}}",
+          "logo": "https://euclid-bucket.s3.ap-south-1.amazonaws.com/chains/bnb-bnb-logo.png",
+          "type": "evm"
+        },
+        {
+          "chain_id": "coreum-testnet-1",
+          "chain_uid": "coreum",
+          "display_name": "Coreum",
+          "factory_address": "testcore1x2mr6lpjdd2xzk8cgsq88lp4xgthnr85e5qeamrmrl8zf3lu522qx3yxsj",
+          "token_factory_address": null,
+          "explorer_url": "https://explorer.testnet-1.coreum.dev/coreum/transactions/{{TX}}",
+          "logo": "https://testnet.api.euclidprotocol.com/files/chains/coreum.png",
+          "type": "cosmwasm"
+        },
+        {
+          "chain_id": "elysicstestnet-1",
+          "chain_uid": "elys",
+          "display_name": "Elys",
+          "factory_address": "elys19g9xuqrvz2frv905v3fc7puryfypluhg383q9zwsmedrlqekfgyswn9al4",
+          "token_factory_address": null,
+          "explorer_url": "https://testnet.ping.pub/elys/tx/{{TX}}",
+          "logo": "https://ping.pub/logos/elys.png",
+          "type": "cosmwasm"
+        },
+        {
+          "chain_id": "998",
+          "chain_uid": "hyperliquid",
+          "display_name": "Hyperliquid",
+          "factory_address": "0x58fb0e7930773a7311e33bbf061ddd7f655f5b41",
+          "token_factory_address": null,
+          "explorer_url": "https://app.hyperliquid-testnet.xyz/explorer/tx/{{TX}}",
+          "logo": "https://euclid-bucket.s3.ap-south-1.amazonaws.com/chains/hyperliquid.png",
+          "type": "evm"
+        },
+        {
+          "chain_id": "injective-888",
+          "chain_uid": "injective",
+          "display_name": "Injective",
+          "factory_address": "inj1mhk96ahzy54hjdw8xu9wug89yeg5y8dgm2g35q",
+          "token_factory_address": null,
+          "explorer_url": "https://testnet.explorer.injective.network/transaction/{{TX}}",
+          "logo": "https://euclid-bucket.s3.ap-south-1.amazonaws.com/chains/injective-inj-logo.png",
+          "type": "cosmwasm"
+        },
+        {
+          "chain_id": "oro_1336-1",
+          "chain_uid": "kiichain",
+          "display_name": "Kii",
+          "factory_address": "kii1hpufl3l8g44aaz3qsqw886sjanhhu73ul6tllxuw3pqlhxzq9e4s8c5cq2",
+          "token_factory_address": null,
+          "explorer_url": "https://explorer.kiichain.io/transaction/{{TX}}",
+          "logo": "https://testnet.api.euclidprotocol.com/files/chains/kiichain_logo.jpeg",
+          "type": "cosmwasm"
+        },
+        {
+          "chain_id": "59141",
+          "chain_uid": "linea",
+          "display_name": "Linea",
+          "factory_address": "0x62d8658a3d7c669943c95c781c220469e19beb47",
+          "token_factory_address": null,
+          "explorer_url": "https://sepolia.lineascan.build/tx/{{TX}}",
+          "logo": "https://testnet.api.euclidprotocol.com/files/chains/linea.png",
+          "type": "evm"
+        },
+        {
+          "chain_id": "3441006",
+          "chain_uid": "manta",
+          "display_name": "Manta",
+          "factory_address": "0x30edc073c7c9ce02cba22895020c7f2f8f897007",
+          "token_factory_address": "0xfe4DE0A55601B6f087B3e54Af90DE6f0F2c38D27",
+          "explorer_url": "https://pacific-explorer.sepolia-testnet.manta.network/tx/{{TX}}",
+          "logo": "https://testnet.api.euclidprotocol.com/files/chains/Manta.png",
+          "type": "evm"
+        },
+        {
+          "chain_id": "5003",
+          "chain_uid": "mantle",
+          "display_name": "Mantle",
+          "factory_address": "0x62d8658a3d7c669943c95c781c220469e19beb47",
+          "token_factory_address": null,
+          "explorer_url": "https://explorer.sepolia.mantle.xyz/tx/{{TX}}",
+          "logo": "https://testnet.api.euclidprotocol.com/files/chains/mantle-mnt-logo.png",
+          "type": "evm"
+        },
+        {
+          "chain_id": "6342",
+          "chain_uid": "megaeth",
+          "display_name": "MegaETH",
+          "factory_address": "0x62d8658a3d7c669943c95c781c220469e19beb47",
+          "token_factory_address": null,
+          "explorer_url": "https://www.megaexplorer.xyz/tx/{{TX}}",
+          "logo": "https://testnet.api.euclidprotocol.com/files/chains/megaeth.jpg",
+          "type": "evm"
+        },
+        {
+          "chain_id": "10143",
+          "chain_uid": "monad",
+          "display_name": "Monad",
+          "factory_address": "0xaaf33b4c343003a5d48c126446799b7f2ba6410c",
+          "token_factory_address": "0x46d320bC755325C4F9d289657D6F80D290eF133E",
+          "explorer_url": "https://testnet.monadexplorer.com/tx/{{TX}}",
+          "logo": "https://euclid-bucket.s3.ap-south-1.amazonaws.com/chains/Monad.png",
+          "type": "evm"
+        },
+        {
+          "chain_id": "neuron-1",
+          "chain_uid": "neuron",
+          "display_name": "Neuron",
+          "factory_address": "euclid1aagn260yt7xtvq0jdecxu265zqzkc6mhc4glql2q2nmdsqwzmyzs8lfhhx",
+          "token_factory_address": null,
+          "explorer_url": "https://staging-explorer.vercel.app/Neuron%20Testnet/tx/{{TX}}",
+          "logo": "https://euclid-bucket.s3.ap-south-1.amazonaws.com/tokens/vsl.webp",
+          "type": "cosmwasm"
+        },
+        {
+          "chain_id": "pion-1",
+          "chain_uid": "neutron",
+          "display_name": "Neutron",
+          "factory_address": "neutron1h3062naq7mctas6ndpdql4wxuhdc0fckmn3u04uj4ytwww6rcp4qcq4f03",
+          "token_factory_address": null,
+          "explorer_url": "https://neutron.celat.one/pion-1/txs/{{TX}}",
+          "logo": "https://testnet.api.euclidprotocol.com/files/chains/neutron.png",
+          "type": "cosmwasm"
+        },
+        {
+          "chain_id": "nibiru-testnet-2",
+          "chain_uid": "nibiru",
+          "display_name": "Nibiru",
+          "factory_address": "nibi1ljsgwzz4zwzuk96f6s20rfemddn6m5lrkmsdyms8at7j5jvk67rqqjl6lq",
+          "token_factory_address": null,
+          "explorer_url": "https://explorer.nibiru.fi/nibiru-testnet-2/tx/{{TX}}",
+          "logo": "https://euclid-bucket.s3.ap-south-1.amazonaws.com/chains/nibi-logomark-profile-pic-circular.CZllM35a.png",
+          "type": "cosmwasm"
+        },
+        {
+          "chain_id": "Oraichain-testnet",
+          "chain_uid": "oraichain",
+          "display_name": "Oraichain",
+          "factory_address": "orai1m48lv5z0s9hrv7n6qmqje9ep8w9uuwndzvgcgjcf3r4pzhppqfgsm3ewyp",
+          "token_factory_address": null,
+          "explorer_url": "https://testnet.scan.orai.io/txs/{{TX}}",
+          "logo": "https://testnet.api.euclidprotocol.com/files/chains/oraichain.png",
+          "type": "cosmwasm"
+        },
+        {
+          "chain_id": "osmo-test-5",
+          "chain_uid": "osmosis",
+          "display_name": "Osmosis",
+          "factory_address": "osmo1jwfn0rqv8gfwez54xdgxf5h8xvugcpdqrwu47dvwug45sy2g3wvqgax2c3",
+          "token_factory_address": null,
+          "explorer_url": "https://celatone.osmosis.zone/osmo-test-5/txs/{{TX}}",
+          "logo": "https://testnet.api.euclidprotocol.com/files/chains/osmosis-osmo-logo.png",
+          "type": "cosmwasm"
+        },
+        {
+          "chain_id": "688688",
+          "chain_uid": "pharos",
+          "display_name": "Pharos",
+          "factory_address": "0x24a19d6203d7002249905987e68d8a143b0e61ff",
+          "token_factory_address": null,
+          "explorer_url": "https://pharos-testnet.socialscan.io/tx/{{TX}}",
+          "logo": "https://testnet.api.euclidprotocol.com/files/chains/Pharos-Logo.png",
+          "type": "evm"
+        },
+        {
+          "chain_id": "98867",
+          "chain_uid": "plume",
+          "display_name": "Plume",
+          "factory_address": "0xf3afb2ac23ae9dacf93116673ebdaf3636ae69bd",
+          "token_factory_address": "0x626Fe295A45Fb1031928eB6dFdaC270a22848b49",
+          "explorer_url": "https://testnet-explorer.plume.org/tx/{{TX}}",
+          "logo": "https://testnet.api.euclidprotocol.com/files/tokens/plume.png",
+          "type": "evm"
+        },
+        {
+          "chain_id": "2021",
+          "chain_uid": "ronin",
+          "display_name": "Ronin",
+          "factory_address": "0x43d4759e0cb8e4d3b2aab1ba6e39a60dce1a8f5b",
+          "token_factory_address": "0x626Fe295A45Fb1031928eB6dFdaC270a22848b49",
+          "explorer_url": "https://saigon-app.roninchain.com/tx/{{TX}}",
+          "logo": "https://testnet.api.euclidprotocol.com/files/chains/ronin-ron-logo.png",
+          "type": "evm"
+        },
+        {
+          "chain_id": "534351",
+          "chain_uid": "scroll",
+          "display_name": "Scroll",
+          "factory_address": "0x3a69ad18152befea8e01da88262761e231d9f8e8",
+          "token_factory_address": "0xfe4DE0A55601B6f087B3e54Af90DE6f0F2c38D27",
+          "explorer_url": "https://sepolia.scrollscan.com/tx/{{TX}}",
+          "logo": "https://testnet.api.euclidprotocol.com/files/chains/scroll.png",
+          "type": "evm"
+        },
+        {
+          "chain_id": "11155111",
+          "chain_uid": "sepolia",
+          "display_name": "Sepolia",
+          "factory_address": "0x7cb512008ecd844fcab522d1f8683aa6a8dd075b",
+          "token_factory_address": "0xcEa5096DAe33D7C284eAbe186E192bC97febA35c",
+          "explorer_url": "https://sepolia.etherscan.io/tx/{{TX}}",
+          "logo": "https://testnet.api.euclidprotocol.com/files/chains/ethereum-eth-logo.png",
+          "type": "evm"
+        },
+        {
+          "chain_id": "50312",
+          "chain_uid": "somnia",
+          "display_name": "Somnia",
+          "factory_address": "0x420f8ab112fa8b14c706e277204c8fc3eb0f4c92",
+          "token_factory_address": "0x72f37b288b028d6fbd738d5ED32855063aCAa1f3",
+          "explorer_url": "https://shannon-explorer.somnia.network/tx/{{TX}}",
+          "logo": "https://euclid-bucket.s3.ap-south-1.amazonaws.com/chains/somnia.png",
+          "type": "evm"
+        },
+        {
+          "chain_id": "1946",
+          "chain_uid": "soneium",
+          "display_name": "Soneium",
+          "factory_address": "0x31eb622974d56dd29c7067cffd1dfa30f116f237",
+          "token_factory_address": "0xfe4DE0A55601B6f087B3e54Af90DE6f0F2c38D27",
+          "explorer_url": "https://soneium-minato.blockscout.com/tx/{{TX}}",
+          "logo": "https://testnet.api.euclidprotocol.com/files/chains/soneium1724423308598.png",
+          "type": "evm"
+        },
+        {
+          "chain_id": "57054",
+          "chain_uid": "sonic",
+          "display_name": "Sonic",
+          "factory_address": "0x7a485f29138d6d7df79115dbbaed6745d3ef4e7c",
+          "token_factory_address": "0xfe4DE0A55601B6f087B3e54Af90DE6f0F2c38D27",
+          "explorer_url": "https://testnet.sonicscan.org/tx/{{TX}}",
+          "logo": "https://testnet.api.euclidprotocol.com/files/chains/sonic.png",
+          "type": "evm"
+        },
+        {
+          "chain_id": "elgafar-1",
+          "chain_uid": "stargaze",
+          "display_name": "Stargaze",
+          "factory_address": "stars1q40ez0chthty6rkwtx549c0zqw9qlkxz832edwk9nv2hq6qze7sqs934sg",
+          "token_factory_address": null,
+          "explorer_url": "https://testnet.ping.pub/stargaze/tx/{{TX}}",
+          "logo": "https://testnet.api.euclidprotocol.com/files/chains/stars.png",
+          "type": "cosmwasm"
+        },
+        {
+          "chain_id": "167009",
+          "chain_uid": "taiko",
+          "display_name": "Taiko",
+          "factory_address": "0xac6360038de19146247525f6a31dc74690233ed7",
+          "token_factory_address": null,
+          "explorer_url": "https://hekla.taikoscan.io/tx/{{TX}}",
+          "logo": "https://testnet.api.euclidprotocol.com/files/chains/taiko.png",
+          "type": "evm"
+        },
+        {
+          "chain_id": "1301",
+          "chain_uid": "unichain",
+          "display_name": "Unichain",
+          "factory_address": "0x27ea23c0d4c3fdc7264e5f0ab42732649f8b5f71",
+          "token_factory_address": "0xfe4DE0A55601B6f087B3e54Af90DE6f0F2c38D27",
+          "explorer_url": "https://sepolia.uniscan.xyz/tx/{{TX}}",
+          "logo": "https://testnet.api.euclidprotocol.com/files/chains/Unichain.png",
+          "type": "evm"
+        }
+      ]
+    }
+  }
+}

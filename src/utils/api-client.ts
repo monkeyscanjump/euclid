@@ -73,10 +73,11 @@ export class EuclidAPIClient {
 
   /**
    * Get all liquidity pools
+   * @param onlyVerified - Whether to show only verified pools (default: true)
    */
-  async getAllPools(): Promise<{ success: boolean; data?: PoolInfo[]; error?: string }> {
+  async getAllPools(onlyVerified: boolean = true): Promise<{ success: boolean; data?: PoolInfo[]; error?: string }> {
     try {
-      const data = await this.graphql.getAllPools();
+      const data = await this.graphql.getAllPools(undefined, onlyVerified);
       return { success: true, data };
     } catch (error) {
       return { success: false, error: error instanceof Error ? error.message : 'Failed to get pools' };

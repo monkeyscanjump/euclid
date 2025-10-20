@@ -155,76 +155,8 @@
             log(`Debug: Attempt ${attempts} - Found ${window.marketStore.state.pools.length} pools`, 'info');
             log(`Debug: Attempt ${attempts} - Found ${window.marketStore.state.tokens.length} tokens`, 'info');
 
-            // Transform PoolInfo[] from API to PoolData[] expected by component
-            const transformedPools = window.marketStore.state.pools.map((apiPool) => {
-              // Get token metadata for token_1 and token_2
-              const tokens = window.marketStore.state.tokens;
-              const tokenA = tokens.find(t =>
-                t.tokenId === apiPool.token_1 ||
-                t.displayName === apiPool.token_1 ||
-                (t.tokenId && t.tokenId.toLowerCase() === apiPool.token_1?.toLowerCase()) ||
-                (t.displayName && t.displayName.toLowerCase() === apiPool.token_1?.toLowerCase())
-              );
-
-              const tokenB = tokens.find(t =>
-                t.tokenId === apiPool.token_2 ||
-                t.displayName === apiPool.token_2 ||
-                (t.tokenId && t.tokenId.toLowerCase() === apiPool.token_2?.toLowerCase()) ||
-                (t.displayName && t.displayName.toLowerCase() === apiPool.token_2?.toLowerCase())
-              );
-
-              // Create fallback token data if not found in token metadata
-              const tokenAData = tokenA || {
-                displayName: apiPool.token_1,
-                tokenId: apiPool.token_1,
-                coinDecimal: 6,
-                image: ''
-              };
-
-              const tokenBData = tokenB || {
-                displayName: apiPool.token_2,
-                tokenId: apiPool.token_2,
-                coinDecimal: 6,
-                image: ''
-              };
-
-              return {
-                id: apiPool.pool_id,
-                address: apiPool.pool_id,
-                tokenA: {
-                  symbol: tokenAData.displayName || apiPool.token_1,
-                  name: tokenAData.displayName || apiPool.token_1,
-                  address: tokenAData.tokenId || apiPool.token_1,
-                  decimals: tokenAData.coinDecimal || 6,
-                  logoUrl: tokenAData.image || ''
-                },
-                tokenB: {
-                  symbol: tokenBData.displayName || apiPool.token_2,
-                  name: tokenBData.displayName || apiPool.token_2,
-                  address: tokenBData.tokenId || apiPool.token_2,
-                  decimals: tokenBData.coinDecimal || 6,
-                  logoUrl: tokenBData.image || ''
-                },
-                reserveA: '0',
-                reserveB: '0',
-                totalSupply: '0',
-                lpTokenSymbol: `${apiPool.token_1}-${apiPool.token_2} LP`,
-                fee: 0.3,
-                apy: parseFloat(apiPool.apr || '0'),
-                apr: parseFloat(apiPool.apr || '0'),
-                tvl: parseFloat(apiPool.total_liquidity || '0'),
-                volume24h: parseFloat(apiPool.volume_24h || '0'),
-                volumeWeek: parseFloat(apiPool.volume_24h || '0') * 7,
-                fees24h: parseFloat(apiPool.fees_24h || '0'),
-                feesWeek: parseFloat(apiPool.fees_24h || '0') * 7,
-                priceChange24h: 0,
-                isStakable: false,
-                stakingApr: 0
-              };
-            });
-
-            poolsList.pools = transformedPools;
-            log(`✅ Successfully loaded ${transformedPools.length} real Euclid pools with token metadata`, 'success');
+            // Component automatically gets data from store - no manual setting needed!
+            log(`✅ Market data loaded! Component will automatically sync with store`, 'success');
             return;
           }
 

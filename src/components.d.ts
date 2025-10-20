@@ -7,8 +7,8 @@
 import { HTMLStencilElement, JSXBase } from "@stencil/core/internal";
 import { ButtonSize, ButtonVariant } from "./components/ui/euclid-button/euclid-button";
 import { LiquidityPoolInfo, LiquidityPosition, LiquidityToken } from "./components/features/euclid-liquidity-card/euclid-liquidity-card";
-import { PoolInfo } from "./utils/types/api.types";
-import { PoolData, PoolFilters, PoolToken, UserPoolPosition } from "./components/features/euclid-pools-list/euclid-pools-list";
+import { PoolInfo, TokenMetadata } from "./utils/types/api.types";
+import { PoolFilters, PoolToken, UserPoolPosition } from "./components/features/euclid-pools-list/euclid-pools-list";
 import { ChartDataPoint, PoolPosition, PortfolioStats, StakingPosition, TokenBalance, Transaction } from "./components/features/euclid-portfolio-overview/euclid-portfolio-overview";
 import { SwapQuote, SwapSettings, SwapToken } from "./components/features/euclid-swap-card/euclid-swap-card";
 import { TokenInfo } from "./components/ui/euclid-token-content/euclid-token-content";
@@ -16,8 +16,8 @@ import { TokenInfo as TokenInfo1 } from "./components/ui/euclid-token-input/eucl
 import { WalletProvider } from "./components/ui/euclid-wallet-content/euclid-wallet-content";
 export { ButtonSize, ButtonVariant } from "./components/ui/euclid-button/euclid-button";
 export { LiquidityPoolInfo, LiquidityPosition, LiquidityToken } from "./components/features/euclid-liquidity-card/euclid-liquidity-card";
-export { PoolInfo } from "./utils/types/api.types";
-export { PoolData, PoolFilters, PoolToken, UserPoolPosition } from "./components/features/euclid-pools-list/euclid-pools-list";
+export { PoolInfo, TokenMetadata } from "./utils/types/api.types";
+export { PoolFilters, PoolToken, UserPoolPosition } from "./components/features/euclid-pools-list/euclid-pools-list";
 export { ChartDataPoint, PoolPosition, PortfolioStats, StakingPosition, TokenBalance, Transaction } from "./components/features/euclid-portfolio-overview/euclid-portfolio-overview";
 export { SwapQuote, SwapSettings, SwapToken } from "./components/features/euclid-swap-card/euclid-swap-card";
 export { TokenInfo } from "./components/ui/euclid-token-content/euclid-token-content";
@@ -140,15 +140,16 @@ export namespace Components {
          */
         "itemsPerPage": number;
         /**
-          * Whether the component is in loading state
+          * Whether the component is in loading state (overrides store loading)
           * @default false
          */
         "loading": boolean;
         /**
-          * Available pools data
+          * Available pools data (gets from market store automatically)
+          * @deprecated Use store instead
           * @default []
          */
-        "pools": PoolData[];
+        "pools": PoolInfo[];
         /**
           * User's positions in pools
           * @default []
@@ -164,6 +165,17 @@ export namespace Components {
           * @default true
          */
         "showStaking": boolean;
+        /**
+          * Whether to show only verified pools (default: true)
+          * @default true
+         */
+        "showVerifiedOnly": boolean;
+        /**
+          * Token metadata for logos and display names (gets from market store automatically)
+          * @deprecated Use store instead
+          * @default []
+         */
+        "tokenMetadata": TokenMetadata[];
         /**
           * Available tokens for filtering
           * @default []
@@ -450,12 +462,13 @@ declare global {
         new (): HTMLEuclidModalElement;
     };
     interface HTMLEuclidPoolsListElementEventMap {
-        "poolSelected": PoolData;
-        "addLiquidity": PoolData;
-        "removeLiquidity": { pool: PoolData; position: UserPoolPosition };
-        "stakeTokens": { pool: PoolData; position?: UserPoolPosition };
-        "claimRewards": { pool: PoolData; position: UserPoolPosition };
+        "poolSelected": PoolInfo;
+        "addLiquidity": PoolInfo;
+        "removeLiquidity": { pool: PoolInfo; position: UserPoolPosition };
+        "stakeTokens": { pool: PoolInfo; position?: UserPoolPosition };
+        "claimRewards": { pool: PoolInfo; position: UserPoolPosition };
         "filtersChanged": PoolFilters;
+        "verifiedToggleChanged": boolean;
     }
     interface HTMLEuclidPoolsListElement extends Components.EuclidPoolsList, HTMLStencilElement {
         addEventListener<K extends keyof HTMLEuclidPoolsListElementEventMap>(type: K, listener: (this: HTMLEuclidPoolsListElement, ev: EuclidPoolsListCustomEvent<HTMLEuclidPoolsListElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -764,21 +777,23 @@ declare namespace LocalJSX {
          */
         "itemsPerPage"?: number;
         /**
-          * Whether the component is in loading state
+          * Whether the component is in loading state (overrides store loading)
           * @default false
          */
         "loading"?: boolean;
-        "onAddLiquidity"?: (event: EuclidPoolsListCustomEvent<PoolData>) => void;
-        "onClaimRewards"?: (event: EuclidPoolsListCustomEvent<{ pool: PoolData; position: UserPoolPosition }>) => void;
+        "onAddLiquidity"?: (event: EuclidPoolsListCustomEvent<PoolInfo>) => void;
+        "onClaimRewards"?: (event: EuclidPoolsListCustomEvent<{ pool: PoolInfo; position: UserPoolPosition }>) => void;
         "onFiltersChanged"?: (event: EuclidPoolsListCustomEvent<PoolFilters>) => void;
-        "onPoolSelected"?: (event: EuclidPoolsListCustomEvent<PoolData>) => void;
-        "onRemoveLiquidity"?: (event: EuclidPoolsListCustomEvent<{ pool: PoolData; position: UserPoolPosition }>) => void;
-        "onStakeTokens"?: (event: EuclidPoolsListCustomEvent<{ pool: PoolData; position?: UserPoolPosition }>) => void;
+        "onPoolSelected"?: (event: EuclidPoolsListCustomEvent<PoolInfo>) => void;
+        "onRemoveLiquidity"?: (event: EuclidPoolsListCustomEvent<{ pool: PoolInfo; position: UserPoolPosition }>) => void;
+        "onStakeTokens"?: (event: EuclidPoolsListCustomEvent<{ pool: PoolInfo; position?: UserPoolPosition }>) => void;
+        "onVerifiedToggleChanged"?: (event: EuclidPoolsListCustomEvent<boolean>) => void;
         /**
-          * Available pools data
+          * Available pools data (gets from market store automatically)
+          * @deprecated Use store instead
           * @default []
          */
-        "pools"?: PoolData[];
+        "pools"?: PoolInfo[];
         /**
           * User's positions in pools
           * @default []
@@ -794,6 +809,17 @@ declare namespace LocalJSX {
           * @default true
          */
         "showStaking"?: boolean;
+        /**
+          * Whether to show only verified pools (default: true)
+          * @default true
+         */
+        "showVerifiedOnly"?: boolean;
+        /**
+          * Token metadata for logos and display names (gets from market store automatically)
+          * @deprecated Use store instead
+          * @default []
+         */
+        "tokenMetadata"?: TokenMetadata[];
         /**
           * Available tokens for filtering
           * @default []

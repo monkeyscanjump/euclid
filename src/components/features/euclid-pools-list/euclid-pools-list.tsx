@@ -1,4 +1,6 @@
 import { Component, Prop, h, State, Event, EventEmitter, Listen, Element, Watch } from '@stencil/core';
+import type { PoolInfo, TokenMetadata } from '../../../utils/types/api.types';
+import { marketStore } from '../../../store/market.store';
 
 export interface PoolToken {
   symbol: string;
@@ -63,9 +65,21 @@ export class EuclidPoolsList {
   @Element() element!: HTMLElement;
 
   /**
-   * Available pools data
+   * Available pools data (gets from market store automatically)
+   * @deprecated Use store instead
    */
-  @Prop() pools: PoolData[] = [];
+  @Prop() pools: PoolInfo[] = [];
+
+  /**
+   * Token metadata for logos and display names (gets from market store automatically)
+   * @deprecated Use store instead
+   */
+  @Prop() tokenMetadata: TokenMetadata[] = [];
+
+  // Internal state
+  @State() filteredPools: PoolInfo[] = [];
+  @State() currentPage: number = 1;
+  @State() totalPages: number = 1;
 
   /**
    * User's positions in pools
@@ -78,7 +92,7 @@ export class EuclidPoolsList {
   @Prop() tokens: PoolToken[] = [];
 
   /**
-   * Whether the component is in loading state
+   * Whether the component is in loading state (overrides store loading)
    */
   @Prop() loading: boolean = false;
 
@@ -98,6 +112,11 @@ export class EuclidPoolsList {
   @Prop() showStaking: boolean = true;
 
   /**
+   * Whether to show only verified pools (default: true)
+   */
+  @Prop() showVerifiedOnly: boolean = true;
+
+  /**
    * Items per page for pagination
    */
   @Prop() itemsPerPage: number = 10;
@@ -106,11 +125,6 @@ export class EuclidPoolsList {
    * Card title
    */
   @Prop() cardTitle: string = 'Liquidity Pools';
-
-  // Internal state
-  @State() filteredPools: PoolData[] = [];
-  @State() currentPage: number = 1;
-  @State() totalPages: number = 1;
   @State() filters: PoolFilters = {
     search: '',
     sortBy: 'apy',
@@ -122,19 +136,45 @@ export class EuclidPoolsList {
     tokenFilter: '',
   };
   @State() isFilterOpen: boolean = false;
-  @State() selectedPool: PoolData | null = null;
+  @State() selectedPool: PoolInfo | null = null;
+
+  // Store data (automatically synced)
+  @State() storePools: PoolInfo[] = [];
+  @State() storeTokens: TokenMetadata[] = [];
+  @State() storeLoading: boolean = false;
 
   // Events
-  @Event() poolSelected: EventEmitter<PoolData>;
-  @Event() addLiquidity: EventEmitter<PoolData>;
-  @Event() removeLiquidity: EventEmitter<{ pool: PoolData; position: UserPoolPosition }>;
-  @Event() stakeTokens: EventEmitter<{ pool: PoolData; position?: UserPoolPosition }>;
-  @Event() claimRewards: EventEmitter<{ pool: PoolData; position: UserPoolPosition }>;
+  @Event() poolSelected: EventEmitter<PoolInfo>;
+  @Event() addLiquidity: EventEmitter<PoolInfo>;
+  @Event() removeLiquidity: EventEmitter<{ pool: PoolInfo; position: UserPoolPosition }>;
+  @Event() stakeTokens: EventEmitter<{ pool: PoolInfo; position?: UserPoolPosition }>;
+  @Event() claimRewards: EventEmitter<{ pool: PoolInfo; position: UserPoolPosition }>;
   @Event() filtersChanged: EventEmitter<PoolFilters>;
+  @Event() verifiedToggleChanged: EventEmitter<boolean>;
 
   componentWillLoad() {
+    // Connect to market store for automatic data updates
+    this.syncWithStore();
+
+    // Listen for store changes
+    marketStore.onChange('pools', () => {
+      this.syncWithStore();
+      this.applyFilters();
+    });
+
+    marketStore.onChange('tokens', () => {
+      this.syncWithStore();
+    });
+
     // Initialize filters on component load to avoid re-render warnings
     this.applyFilters();
+  }
+
+  private syncWithStore() {
+    // Use store data if available, fallback to props
+    this.storePools = marketStore.state.pools.length > 0 ? marketStore.state.pools : this.pools;
+    this.storeTokens = marketStore.state.tokens.length > 0 ? marketStore.state.tokens : this.tokenMetadata;
+    this.storeLoading = marketStore.state.loading;
   }
 
   componentDidLoad() {
@@ -164,45 +204,52 @@ export class EuclidPoolsList {
   }
 
   private applyFilters() {
-    let filtered = [...this.pools];
+    // Use store data first, fallback to props for backward compatibility
+    const activePools = this.storePools.length > 0 ? this.storePools : this.pools;
+    let filtered = [...activePools];
 
     // Apply search filter
     if (this.filters.search) {
       const searchLower = this.filters.search.toLowerCase();
-      filtered = filtered.filter(pool =>
-        pool.tokenA.symbol.toLowerCase().includes(searchLower) ||
-        pool.tokenB.symbol.toLowerCase().includes(searchLower) ||
-        pool.tokenA.name.toLowerCase().includes(searchLower) ||
-        pool.tokenB.name.toLowerCase().includes(searchLower) ||
-        pool.lpTokenSymbol.toLowerCase().includes(searchLower)
-      );
+      filtered = filtered.filter(pool => {
+        const token1Meta = this.getTokenMetadata(pool.token_1);
+        const token2Meta = this.getTokenMetadata(pool.token_2);
+        const token1Name = token1Meta?.displayName || pool.token_1;
+        const token2Name = token2Meta?.displayName || pool.token_2;
+
+        return pool.token_1.toLowerCase().includes(searchLower) ||
+          pool.token_2.toLowerCase().includes(searchLower) ||
+          token1Name.toLowerCase().includes(searchLower) ||
+          token2Name.toLowerCase().includes(searchLower) ||
+          pool.pool_id.toLowerCase().includes(searchLower);
+      });
     }
 
     // Apply token filter
     if (this.filters.tokenFilter) {
       filtered = filtered.filter(pool =>
-        pool.tokenA.symbol === this.filters.tokenFilter ||
-        pool.tokenB.symbol === this.filters.tokenFilter
+        pool.token_1 === this.filters.tokenFilter ||
+        pool.token_2 === this.filters.tokenFilter
       );
     }
 
     // Apply TVL range filter
     if (this.filters.minTvl > 0) {
-      filtered = filtered.filter(pool => pool.tvl >= this.filters.minTvl);
+      filtered = filtered.filter(pool => parseFloat(pool.total_liquidity || '0') >= this.filters.minTvl);
     }
     if (this.filters.maxTvl < Infinity) {
-      filtered = filtered.filter(pool => pool.tvl <= this.filters.maxTvl);
+      filtered = filtered.filter(pool => parseFloat(pool.total_liquidity || '0') <= this.filters.maxTvl);
     }
 
     // Apply my pools filter
     if (this.filters.showMyPools && this.walletAddress) {
       const myPoolIds = this.positions.map(pos => pos.poolId);
-      filtered = filtered.filter(pool => myPoolIds.includes(pool.id));
+      filtered = filtered.filter(pool => myPoolIds.includes(pool.pool_id));
     }
 
-    // Apply stakable pools filter
+    // Apply stakable pools filter - skip for now since API doesn't provide this info
     if (this.filters.showStakablePools) {
-      filtered = filtered.filter(pool => pool.isStakable);
+      // filtered = filtered.filter(pool => pool.isStakable);
     }
 
     // Apply sorting
@@ -211,31 +258,31 @@ export class EuclidPoolsList {
 
       switch (this.filters.sortBy) {
         case 'apy':
-          aValue = a.apy;
-          bValue = b.apy;
+          aValue = parseFloat(a.apr || '0');
+          bValue = parseFloat(b.apr || '0');
           break;
         case 'tvl':
-          aValue = a.tvl;
-          bValue = b.tvl;
+          aValue = parseFloat(a.total_liquidity || '0');
+          bValue = parseFloat(b.total_liquidity || '0');
           break;
         case 'volume':
-          aValue = a.volume24h;
-          bValue = b.volume24h;
+          aValue = parseFloat(a.volume_24h || '0');
+          bValue = parseFloat(b.volume_24h || '0');
           break;
         case 'fees':
-          aValue = a.fees24h;
-          bValue = b.fees24h;
+          aValue = parseFloat(a.fees_24h || '0');
+          bValue = parseFloat(b.fees_24h || '0');
           break;
         case 'myLiquidity': {
-          const aPosition = this.positions.find(pos => pos.poolId === a.id);
-          const bPosition = this.positions.find(pos => pos.poolId === b.id);
+          const aPosition = this.positions.find(pos => pos.poolId === a.pool_id);
+          const bPosition = this.positions.find(pos => pos.poolId === b.pool_id);
           aValue = aPosition ? aPosition.value : 0;
           bValue = bPosition ? bPosition.value : 0;
           break;
         }
         default:
-          aValue = a.apy;
-          bValue = b.apy;
+          aValue = parseFloat(a.apr || '0');
+          bValue = parseFloat(b.apr || '0');
       }
 
       if (this.filters.sortOrder === 'asc') {
@@ -250,7 +297,7 @@ export class EuclidPoolsList {
     const newFilteredLength = filtered.length;
     const currentFilteredLength = this.filteredPools.length;
     const hasChanged = newFilteredLength !== currentFilteredLength ||
-      !filtered.every((pool, index) => this.filteredPools[index]?.id === pool.id);
+      !filtered.every((pool, index) => this.filteredPools[index]?.pool_id === pool.pool_id);
 
     if (hasChanged) {
       this.filteredPools = filtered;
@@ -316,29 +363,29 @@ export class EuclidPoolsList {
     }
   };
 
-  private handlePoolSelect = (pool: PoolData) => {
+  private handlePoolSelect = (pool: PoolInfo) => {
     this.selectedPool = pool;
     this.poolSelected.emit(pool);
   };
 
-  private handleAddLiquidity = (pool: PoolData) => {
+  private handleAddLiquidity = (pool: PoolInfo) => {
     this.addLiquidity.emit(pool);
   };
 
-  private handleRemoveLiquidity = (pool: PoolData) => {
-    const position = this.positions.find(pos => pos.poolId === pool.id);
+  private handleRemoveLiquidity = (pool: PoolInfo) => {
+    const position = this.positions.find(pos => pos.poolId === pool.pool_id);
     if (position) {
       this.removeLiquidity.emit({ pool, position });
     }
   };
 
-  private handleStakeTokens = (pool: PoolData) => {
-    const position = this.positions.find(pos => pos.poolId === pool.id);
+  private handleStakeTokens = (pool: PoolInfo) => {
+    const position = this.positions.find(pos => pos.poolId === pool.pool_id);
     this.stakeTokens.emit({ pool, position });
   };
 
-  private handleClaimRewards = (pool: PoolData) => {
-    const position = this.positions.find(pos => pos.poolId === pool.id);
+  private handleClaimRewards = (pool: PoolInfo) => {
+    const position = this.positions.find(pos => pos.poolId === pool.pool_id);
     if (position) {
       this.claimRewards.emit({ pool, position });
     }
@@ -346,6 +393,12 @@ export class EuclidPoolsList {
 
   private getUserPosition(poolId: string): UserPoolPosition | null {
     return this.positions.find(pos => pos.poolId === poolId) || null;
+  }
+
+  private getTokenMetadata(tokenId: string): TokenMetadata | null {
+    // Use store data first, fallback to props for backward compatibility
+    const activeTokens = this.storeTokens.length > 0 ? this.storeTokens : this.tokenMetadata;
+    return activeTokens.find(token => token.tokenId === tokenId) || null;
   }
 
   private formatNumber(value: number, decimals: number = 2): string {
@@ -359,7 +412,7 @@ export class EuclidPoolsList {
     return value.toFixed(decimals);
   }
 
-  private getPaginatedPools(): PoolData[] {
+  private getPaginatedPools(): PoolInfo[] {
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
     const endIndex = startIndex + this.itemsPerPage;
     return this.filteredPools.slice(startIndex, endIndex);
@@ -407,21 +460,36 @@ export class EuclidPoolsList {
                   onChange={(e) => this.handleFilterToggle('tokenFilter', (e.target as HTMLSelectElement).value)}
                 >
                   <option value="" selected={this.filters.tokenFilter === ''}>All Tokens</option>
-                  {this.tokens.map(token => (
-                    <option
-                      key={token.symbol}
-                      value={token.symbol}
-                      selected={this.filters.tokenFilter === token.symbol}
-                    >
-                      {token.symbol}
-                    </option>
-                  ))}
+                  {(() => {
+                    const activeTokens = this.storeTokens.length > 0 ? this.storeTokens : this.tokenMetadata;
+                    return activeTokens.map(token => (
+                      <option
+                        key={token.tokenId}
+                        value={token.tokenId}
+                        selected={this.filters.tokenFilter === token.tokenId}
+                      >
+                        {token.displayName}
+                      </option>
+                    ));
+                  })()}
                 </select>
               </div>
             </div>
 
             <div class="filters-row">
               <div class="filter-toggles">
+                <label class="toggle-label">
+                  <input
+                    type="checkbox"
+                    checked={this.showVerifiedOnly}
+                    onChange={() => {
+                      this.showVerifiedOnly = !this.showVerifiedOnly;
+                      this.verifiedToggleChanged.emit(this.showVerifiedOnly);
+                    }}
+                  />
+                  <span>Verified Pools Only</span>
+                </label>
+
                 <label class="toggle-label">
                   <input
                     type="checkbox"
@@ -448,7 +516,10 @@ export class EuclidPoolsList {
         <div class="stats-bar">
           <div class="stat-item">
             <span class="stat-label">Total Pools</span>
-            <span class="stat-value">{this.pools.length}</span>
+            <span class="stat-value">{(() => {
+              const activePools = this.storePools.length > 0 ? this.storePools : this.pools;
+              return activePools.length;
+            })()}</span>
           </div>
           <div class="stat-item">
             <span class="stat-label">Filtered</span>
@@ -462,7 +533,10 @@ export class EuclidPoolsList {
           )}
           <div class="stat-item">
             <span class="stat-label">Total TVL</span>
-            <span class="stat-value">${this.formatNumber(this.pools.reduce((sum, pool) => sum + pool.tvl, 0))}</span>
+            <span class="stat-value">${(() => {
+              const activePools = this.storePools.length > 0 ? this.storePools : this.pools;
+              return this.formatNumber(activePools.reduce((sum, pool) => sum + parseFloat(pool.total_liquidity || '0'), 0));
+            })()}</span>
           </div>
         </div>
 
@@ -535,7 +609,9 @@ export class EuclidPoolsList {
               </tr>
             </thead>
             <tbody>
-              {this.loading ? (
+              {(() => {
+                const isLoading = this.storeLoading || this.loading;
+                return isLoading ? (
                 <tr>
                   <td colSpan={this.walletAddress ? 7 : 6} class="loading-cell">
                     <div class="loading-spinner"></div>
@@ -574,53 +650,71 @@ export class EuclidPoolsList {
                 </tr>
               ) : (
                 paginatedPools.map(pool => {
-                  const position = this.getUserPosition(pool.id);
+                  const position = this.getUserPosition(pool.pool_id);
                   return (
-                    <tr key={pool.id} class="pool-row">
+                    <tr key={pool.pool_id} class="pool-row">
                       <td class="pool-cell">
                         <div class="pool-info">
                           <div class="token-pair">
-                            {pool.tokenA.logoUrl && (
-                              <img src={pool.tokenA.logoUrl} alt={pool.tokenA.symbol} class="token-logo" />
-                            )}
-                            {pool.tokenB.logoUrl && (
-                              <img src={pool.tokenB.logoUrl} alt={pool.tokenB.symbol} class="token-logo token-logo--overlap" />
-                            )}
+                            <div class="token-logos">
+                              {(() => {
+                                const token1Meta = this.getTokenMetadata(pool.token_1);
+                                const token2Meta = this.getTokenMetadata(pool.token_2);
+                                return (
+                                  <div class="logo-pair">
+                                    <img
+                                      src={token1Meta?.image || '/assets/default-token.svg'}
+                                      alt={token1Meta?.displayName || pool.token_1}
+                                      class="token-logo token-logo-1"
+                                      onError={(e) => {
+                                        (e.target as HTMLImageElement).src = '/assets/default-token.svg';
+                                      }}
+                                    />
+                                    <img
+                                      src={token2Meta?.image || '/assets/default-token.svg'}
+                                      alt={token2Meta?.displayName || pool.token_2}
+                                      class="token-logo token-logo-2"
+                                      onError={(e) => {
+                                        (e.target as HTMLImageElement).src = '/assets/default-token.svg';
+                                      }}
+                                    />
+                                  </div>
+                                );
+                              })()}
+                            </div>
                           </div>
                           <div class="pool-details">
                             <div class="pool-name">
-                              {pool.tokenA.symbol}/{pool.tokenB.symbol}
+                              {(() => {
+                                const token1Meta = this.getTokenMetadata(pool.token_1);
+                                const token2Meta = this.getTokenMetadata(pool.token_2);
+                                const token1Name = token1Meta?.displayName || pool.token_1.toUpperCase();
+                                const token2Name = token2Meta?.displayName || pool.token_2.toUpperCase();
+                                return `${token1Name}/${token2Name}`;
+                              })()}
                             </div>
-                            <div class="pool-fee">{pool.fee}% Fee</div>
-                            {pool.isStakable && (
-                              <div class="stakable-badge">Stakable</div>
-                            )}
+                            <div class="pool-fee">0.3% Fee</div>
                           </div>
                         </div>
                       </td>
 
                       <td class="apy-cell">
                         <div class="apy-info">
-                          <div class="apy-main">{pool.apy.toFixed(2)}%</div>
-                          {pool.stakingApr && (
-                            <div class="apy-staking">+{pool.stakingApr.toFixed(2)}% staking</div>
-                          )}
+                          <div class="apy-main">{parseFloat(pool.apr || '0').toFixed(2)}%</div>
                         </div>
                       </td>
 
                       <td class="tvl-cell">
-                        <div class="metric-value">${this.formatNumber(pool.tvl)}</div>
-                        <div class="metric-change">
-                          {pool.priceChange24h >= 0 ? '+' : ''}{pool.priceChange24h.toFixed(2)}%
-                        </div>
+                        <div class="metric-value">${this.formatNumber(parseFloat(pool.total_liquidity || '0'))}</div>
+                        <div class="metric-change">+0.00%</div>
                       </td>
 
                       <td class="volume-cell">
-                        <div class="metric-value">${this.formatNumber(pool.volume24h)}</div>
+                        <div class="metric-value">${this.formatNumber(parseFloat(pool.volume_24h || '0'))}</div>
                       </td>
 
                       <td class="fees-cell">
-                        <div class="metric-value">${this.formatNumber(pool.fees24h)}</div>
+                        <div class="metric-value">${this.formatNumber(parseFloat(pool.fees_24h || '0'))}</div>
                       </td>
 
                       {this.walletAddress && (
@@ -661,7 +755,8 @@ export class EuclidPoolsList {
                             </euclid-button>
                           )}
 
-                          {pool.isStakable && position && (
+                          {/* Stakable property not available in PoolInfo API, commenting out */}
+                          {/* {pool.isStakable && position && (
                             <euclid-button
                               variant="primary"
                               size="sm"
@@ -669,7 +764,7 @@ export class EuclidPoolsList {
                             >
                               Stake
                             </euclid-button>
-                          )}
+                          )} */}
 
                           {position && position.unclaimedRewards && position.unclaimedRewards > 0 && (
                             <euclid-button
@@ -685,7 +780,8 @@ export class EuclidPoolsList {
                     </tr>
                   );
                 })
-              )}
+              );
+              })()}
             </tbody>
           </table>
         </div>

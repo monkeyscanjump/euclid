@@ -37,6 +37,12 @@ export const config: Config = {
       dir: 'dist/www',
       serviceWorker: null,
       buildDir: 'build',
+      copy: [
+        {
+          src: 'assets',
+          dest: 'assets'
+        }
+      ]
     },
   ],
   testing: {

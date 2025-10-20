@@ -44,7 +44,22 @@ const actions = {
   },
 };
 
-export const appStore: any = {
+// Proper store type definition
+export interface AppStore {
+  state: AppState;
+  onChange: typeof onChange;
+  reset: typeof reset;
+  dispose: typeof dispose;
+  initialize: () => void;
+  openWalletModal: (chainFilter?: string) => void;
+  closeWalletModal: () => void;
+  openTokenModal: () => void;
+  closeTokenModal: () => void;
+  setTheme: (theme: AppState['theme']) => void;
+  clear: () => void;
+}
+
+export const appStore: AppStore = {
   state,
   onChange,
   reset,

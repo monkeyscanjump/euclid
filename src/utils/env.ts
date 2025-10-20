@@ -62,7 +62,7 @@ function getEnvVar(key: string, defaultValue: string): string;
 function getEnvVar(key: string, defaultValue: number): number;
 function getEnvVar(key: string, defaultValue: boolean): boolean;
 function getEnvVar(key: string, defaultValue: string[]): string[];
-function getEnvVar(key: string, defaultValue: any): any {
+function getEnvVar(key: string, defaultValue: unknown): unknown {
   // In a real Stencil app, we'd use process.env, but for browser compatibility
   // we might need to use build-time replacement or a different approach
 

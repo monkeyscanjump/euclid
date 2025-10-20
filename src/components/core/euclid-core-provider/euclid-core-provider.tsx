@@ -1,8 +1,7 @@
 import { Component, Host, h, State, Listen } from '@stencil/core';
 import { walletStore } from '../../../store/wallet.store';
-import { marketStore } from '../../../store/market.store';
 import { appStore } from '../../../store/app.store';
-import { apiClient } from '../../../utils/api-client';
+import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
 
 @Component({
   tag: 'euclid-core-provider',
@@ -33,50 +32,19 @@ export class EuclidCoreProvider {
   }
 
   private async loadInitialMarketData() {
-    try {
-      marketStore.setLoading(true);
+    console.log('📊 Delegating initial market data loading to Market Data Controller...');
 
-      // Load chains
-      const chainsResponse = await apiClient.getAllChains(false);
-      if (chainsResponse.success && chainsResponse.data) {
-        marketStore.setChains(chainsResponse.data.chains.all_chains);
-        console.log('📡 Loaded chains:', chainsResponse.data.chains.all_chains.length);
-      } else {
-        console.warn('Failed to load chains:', chainsResponse.error);
-      }
-
-      // Load tokens
-      const tokensResponse = await apiClient.getAllTokens();
-      if (tokensResponse.success && tokensResponse.data) {
-        // Convert token strings to TokenInfo objects
-        const tokens = tokensResponse.data.router.all_tokens.tokens.map(tokenId => ({
-          id: tokenId,
-          symbol: tokenId.toUpperCase(),
-          name: tokenId.charAt(0).toUpperCase() + tokenId.slice(1),
-          decimals: 6, // Default, will be updated when we get more detailed info
-          chainUID: 'vsl', // Default Virtual Settlement Layer
-          logo: `/assets/tokens/${tokenId}.png`, // Placeholder
-        }));
-        marketStore.setTokens(tokens);
-        console.log('🪙 Loaded tokens:', tokens.length);
-      } else {
-        console.warn('Failed to load tokens:', tokensResponse.error);
-      }
-
-      marketStore.setLoading(false);
-    } catch (error) {
-      console.error('Failed to load initial market data:', error);
-      marketStore.setLoading(false);
-    }
+    // Delegate to market data controller via events
+    dispatchEuclidEvent(EUCLID_EVENTS.MARKET.LOAD_INITIAL);
   }
 
-  @Listen('euclidWalletConnect', { target: 'window' })
+  @Listen(EUCLID_EVENTS.WALLET.CONNECT_SUCCESS, { target: 'window' })
   handleWalletConnect(event: CustomEvent) {
     console.log('🔗 Wallet connection event received:', event.detail);
     // Handle wallet connection logic here
   }
 
-  @Listen('euclidWalletDisconnect', { target: 'window' })
+  @Listen(EUCLID_EVENTS.WALLET.DISCONNECT_SUCCESS, { target: 'window' })
   handleWalletDisconnect(event: CustomEvent) {
     console.log('🔌 Wallet disconnection event received:', event.detail);
     // Handle wallet disconnection logic here
@@ -92,20 +60,59 @@ export class EuclidCoreProvider {
           </div>
         )}
 
-        <div class="euclid-provider-content" style={{ display: this.isInitialized ? 'block' : 'none' }}>
-          {/* Hidden controllers - these manage data but have no UI */}
-          <euclid-wallet-controller></euclid-wallet-controller>
-          <euclid-market-data-controller></euclid-market-data-controller>
-          <euclid-user-data-controller></euclid-user-data-controller>
+        {/* Core controllers - these manage data and state */}
+        <euclid-wallet-controller />
+        <euclid-market-data-controller />
+        <euclid-user-data-controller />
 
-          {/* Render children (the actual UI components) */}
+        {/* Feature controllers - these handle business logic */}
+        <euclid-swap-controller />
+        <euclid-liquidity-controller />
+        <euclid-tx-tracker-controller />
+
+        {/* Global modals - controlled by appStore */}
+        <euclid-wallet-modal
+          open={appStore.state.walletModalOpen}
+          onModalClose={() => appStore.closeWalletModal()}
+          onWalletConnect={(e) => this.handleWalletConnectFromModal(e)}
+        />
+        <euclid-token-modal
+          open={appStore.state.tokenModalOpen}
+          onModalClose={() => appStore.closeTokenModal()}
+          onTokenSelect={(e) => this.handleTokenSelectFromModal(e)}
+        />
+
+        {/* Slot for application content */}
+        <div class="euclid-provider-content">
           <slot></slot>
         </div>
-
-        {/* Global modals */}
-        <euclid-wallet-modal></euclid-wallet-modal>
-        <euclid-token-modal></euclid-token-modal>
       </Host>
     );
   }
+
+  private handleWalletConnectFromModal = (event: CustomEvent) => {
+    const { provider, chainId } = event.detail;
+    console.log('🔗 Wallet connection request from modal:', provider.type, chainId);
+
+    // Dispatch wallet connection request
+    dispatchEuclidEvent(EUCLID_EVENTS.WALLET.CONNECT_REQUEST, {
+      chainUID: chainId || 'ethereum',
+      walletType: provider.type
+    });
+
+    appStore.closeWalletModal();
+  };
+
+  private handleTokenSelectFromModal = (event: CustomEvent) => {
+    const { token } = event.detail;
+    console.log('🪙 Token selection from modal:', token.symbol);
+
+    // Emit token selection for consuming components
+    dispatchEuclidEvent(EUCLID_EVENTS.UI.TOKEN_SELECTED, {
+      tokenId: token.id,
+      data: token
+    });
+
+    appStore.closeTokenModal();
+  };
 }

@@ -106,7 +106,28 @@ const getters = {
   },
 };
 
-export const swapStore: any = {
+// Proper store type definition
+export interface SwapStore {
+  state: SwapState;
+  onChange: typeof onChange;
+  reset: typeof reset;
+  dispose: typeof dispose;
+  setFromToken: (token: TokenInfo) => void;
+  setToToken: (token: TokenInfo) => void;
+  setFromAmount: (amount: string) => void;
+  setToAmount: (amount: string) => void;
+  setRoutes: (routes: SwapRoute[]) => void;
+  setSelectedRoute: (route: SwapRoute) => void;
+  setLoadingRoutes: (loading: boolean) => void;
+  setSlippage: (slippage: number) => void;
+  setSwapping: (swapping: boolean) => void;
+  swapTokens: () => void;
+  clear: () => void;
+  canSwap: () => boolean;
+  isRoutesStale: (maxAge?: number) => boolean;
+}
+
+export const swapStore: SwapStore = {
   state,
   onChange,
   reset,

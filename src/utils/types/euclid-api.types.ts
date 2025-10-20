@@ -25,7 +25,7 @@ export interface CrossChainUserWithLimit {
 export type TokenType =
   | { native: { denom: string } }
   | { smart: { contract_address: string } }
-  | { voucher: {} };
+  | { voucher: Record<string, never> };
 
 export interface TokenWithDenom {
   token: string;
@@ -147,7 +147,7 @@ export interface MyPoolInfo {
 // Transaction Response Types
 export interface CosmWasmMessage {
   contractAddress: string;
-  msg: any;
+  msg: Record<string, unknown>;
   funds: Array<{ denom: string; amount: string }>;
 }
 

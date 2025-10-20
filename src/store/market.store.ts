@@ -73,7 +73,28 @@ const getters = {
   },
 };
 
-export const marketStore: any = {
+// Proper store type definition
+export interface MarketStore {
+  state: MarketState;
+  onChange: typeof onChange;
+  reset: typeof reset;
+  dispose: typeof dispose;
+  setLoading: (loading: boolean) => void;
+  setChains: (chains: ChainConfig[]) => void;
+  setTokens: (tokens: TokenInfo[]) => void;
+  setPools: (pools: PoolInfo[]) => void;
+  addToken: (token: TokenInfo) => void;
+  updateToken: (tokenId: string, updates: Partial<TokenInfo>) => void;
+  clear: () => void;
+  getChain: (chainUID: string) => ChainConfig | undefined;
+  getToken: (tokenId: string) => TokenInfo | undefined;
+  getTokensByChain: (chainUID: string) => TokenInfo[];
+  getPool: (poolId: string) => PoolInfo | undefined;
+  getPoolsForTokenPair: (token1Id: string, token2Id: string) => PoolInfo[];
+  isDataStale: (maxAge?: number) => boolean;
+}
+
+export const marketStore: MarketStore = {
   state,
   onChange,
   reset,

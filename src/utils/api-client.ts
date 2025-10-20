@@ -4,8 +4,6 @@ import type {
   TokensResponse,
   TokenDenomsGraphQLResponse,
   EscrowsResponse,
-  SimulateSwapGraphQLResponse,
-  MyPoolsResponse,
   RouteResponse,
   TransactionResponse
 } from './types';
@@ -33,9 +31,64 @@ export class ApiClient {
     };
   }
 
-  private async request<T = any>(
+  private async request<T = unknown>(
     endpoint: string,
     options: RequestInit = {}
+  ): Promise<ApiResponse<T>> {
+    return this.requestWithRetry(endpoint, options);
+  }
+
+  private async requestWithRetry<T = unknown>(
+    endpoint: string,
+    options: RequestInit = {},
+    maxRetries: number = 3
+  ): Promise<ApiResponse<T>> {
+    let lastError: Error;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const result = await this.executeRequest<T>(endpoint, options, attempt);
+        if (result.success) {
+          return result;
+        }
+
+        // If it's a client error (4xx), don't retry
+        if (result.error && result.error.includes('HTTP 4')) {
+          return result;
+        }
+
+        lastError = new Error(result.error || 'Request failed');
+      } catch (error) {
+        lastError = error as Error;
+
+        // Don't retry client errors
+        if (error.name === 'AbortError' || error.message.includes('4')) {
+          break;
+        }
+
+        if (attempt === maxRetries) break;
+
+        // Exponential backoff with jitter
+        const baseDelay = Math.pow(2, attempt) * 1000;
+        const jitter = Math.random() * 0.1 * baseDelay;
+        const delay = baseDelay + jitter;
+
+        console.log(`🔄 Retrying API request (${attempt}/${maxRetries}) after ${Math.round(delay)}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+
+    console.error(`❌ API request failed after ${maxRetries} attempts:`, lastError.message);
+    return {
+      success: false,
+      error: `Failed after ${maxRetries} attempts: ${lastError.message}`
+    };
+  }
+
+  private async executeRequest<T = unknown>(
+    endpoint: string,
+    options: RequestInit = {},
+    attempt: number = 1
   ): Promise<ApiResponse<T>> {
     const url = `${this.config.baseUrl}${endpoint}`;
     const controller = new AbortController();
@@ -47,6 +100,8 @@ export class ApiClient {
       const response = await fetch(url, {
         ...options,
         headers: {
+          'X-Request-Attempt': attempt.toString(),
+          'X-Request-ID': this.generateRequestId(),
           ...this.config.headers,
           ...options.headers,
         },
@@ -60,6 +115,7 @@ export class ApiClient {
 
       if (!response.ok) {
         const errorData = isJson ? await response.json() : { message: response.statusText };
+        console.warn(`⚠️ API ${options.method || 'GET'} ${endpoint} - ${response.status} [attempt ${attempt}]`);
         return {
           success: false,
           error: errorData.message || `HTTP ${response.status}`,
@@ -67,6 +123,7 @@ export class ApiClient {
       }
 
       const data = isJson ? await response.json() : await response.text();
+      console.log(`✅ API ${options.method || 'GET'} ${endpoint} - ${response.status} [attempt ${attempt}]`);
 
       return {
         success: true,
@@ -77,11 +134,22 @@ export class ApiClient {
 
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
+          console.error(`⏱️ API timeout: ${endpoint} [attempt ${attempt}]`);
           return {
             success: false,
             error: 'Request timeout',
           };
         }
+
+        if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+          console.error(`🌐 Network error: ${endpoint} [attempt ${attempt}]`);
+          return {
+            success: false,
+            error: 'Network connection failed - please check your internet connection',
+          };
+        }
+
+        console.error(`❌ API error: ${endpoint} [attempt ${attempt}]:`, error.message);
         return {
           success: false,
           error: error.message,
@@ -95,7 +163,11 @@ export class ApiClient {
     }
   }
 
-  async get<T = any>(endpoint: string, params?: Record<string, any>): Promise<ApiResponse<T>> {
+  private generateRequestId(): string {
+    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+  }
+
+  async get<T = unknown>(endpoint: string, params?: Record<string, unknown>): Promise<ApiResponse<T>> {
     const url = new URL(endpoint, this.config.baseUrl);
 
     if (params) {
@@ -109,28 +181,28 @@ export class ApiClient {
     return this.request<T>(url.pathname + url.search);
   }
 
-  async post<T = any>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
+  async post<T = unknown>(endpoint: string, data?: unknown): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, {
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined,
     });
   }
 
-  async put<T = any>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
+  async put<T = unknown>(endpoint: string, data?: unknown): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, {
       method: 'PUT',
       body: data ? JSON.stringify(data) : undefined,
     });
   }
 
-  async delete<T = any>(endpoint: string): Promise<ApiResponse<T>> {
+  async delete<T = unknown>(endpoint: string): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, {
       method: 'DELETE',
     });
   }
 
   // GraphQL support for Euclid Protocol
-  async graphql<T = any>(query: string, variables?: Record<string, any>): Promise<ApiResponse<T>> {
+  async graphql<T = unknown>(query: string, variables?: Record<string, unknown>): Promise<ApiResponse<T>> {
     const url = this.config.graphqlEndpoint;
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
@@ -336,22 +408,22 @@ export class ApiClient {
   }
 
   // Generate swap transaction
-  async createSwapTransaction(params: any): Promise<ApiResponse<TransactionResponse>> {
+  async createSwapTransaction(params: Record<string, unknown>): Promise<ApiResponse<TransactionResponse>> {
     return this.post('/execute/swap', params);
   }
 
   // Generate add liquidity transaction
-  async createAddLiquidityTransaction(params: any) {
+  async createAddLiquidityTransaction(params: Record<string, unknown>) {
     return this.post('/execute/liquidity/add', params);
   }
 
   // Generate remove liquidity transaction
-  async createRemoveLiquidityTransaction(params: any) {
+  async createRemoveLiquidityTransaction(params: Record<string, unknown>) {
     return this.post('/execute/liquidity/remove', params);
   }
 
   // Get user balance
-  async getBalance(address: string, chainUID?: string): Promise<ApiResponse<any>> {
+  async getBalance(address: string, _chainUID?: string): Promise<ApiResponse<unknown>> {
     return this.graphql(`
       query GetBalance($address: String!) {
         balance(user_address: $address) {
@@ -365,7 +437,7 @@ export class ApiClient {
   }
 
   // Get user pools/liquidity positions
-  async getUserPools(address: string): Promise<ApiResponse<any>> {
+  async getUserPools(address: string): Promise<ApiResponse<unknown>> {
     return this.graphql(`
       query GetUserPools($address: String!) {
         factory {
@@ -379,6 +451,22 @@ export class ApiClient {
         }
       }
     `, { address });
+  }
+
+  // Track transaction status
+  async trackTransaction(txHash: string, chainUID?: string): Promise<ApiResponse<{ status: string; blockHeight?: number }>> {
+    // Stub implementation - in a real app this would call the blockchain explorer API
+    console.log(`Tracking transaction ${txHash} on chain ${chainUID}`);
+
+    // Simulate successful tracking
+    return {
+      success: true,
+      data: {
+        status: Math.random() > 0.5 ? 'confirmed' : 'pending',
+        blockHeight: Math.floor(Math.random() * 1000000)
+      },
+      error: null
+    };
   }
 }
 

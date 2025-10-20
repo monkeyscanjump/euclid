@@ -1,0 +1,8 @@
+/**
+ * Euclid Transaction Tracker Controller Component Styles
+ * This is a headless controller with no visual output
+ */
+
+:host {
+  display: none;
+}

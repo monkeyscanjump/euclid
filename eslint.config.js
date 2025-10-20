@@ -34,14 +34,19 @@ export default [
       }
     },
     rules: {
-      '@typescript-eslint/no-unused-vars': 'error',
-      '@typescript-eslint/no-explicit-any': 'off', // Allow any types for flexibility
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          varsIgnorePattern: '^h$|^Fragment$',
+          argsIgnorePattern: '^_'
+        }
+      ],
+      '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-empty-function': 'off',
       '@typescript-eslint/ban-ts-comment': 'off',
-      '@typescript-eslint/no-non-null-assertion': 'off',
-      '@typescript-eslint/no-require-imports': 'off'
+      '@typescript-eslint/no-non-null-assertion': 'off'
     }
   },
 
@@ -53,9 +58,7 @@ export default [
       '.stencil/',
       'node_modules/',
       '**/*.d.ts',
-      'stencil.config.ts',
-      'build-sw.mjs',
-      'workbox-config.js'
+      'stencil.config.ts'
     ]
   }
 ];

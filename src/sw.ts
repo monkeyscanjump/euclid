@@ -5,7 +5,7 @@ import { ExpirationPlugin } from 'workbox-expiration';
 
 // Declare the Workbox manifest type for TypeScript
 declare const self: ServiceWorkerGlobalScope & {
-  __WB_MANIFEST: any;
+  __WB_MANIFEST: unknown;
 };
 
 // Clean up any previous precached files

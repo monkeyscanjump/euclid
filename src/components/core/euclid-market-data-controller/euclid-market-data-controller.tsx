@@ -2,6 +2,8 @@ import { Component, h, State, Listen } from '@stencil/core';
 import { marketStore } from '../../../store/market.store';
 import { apiClient } from '../../../utils/api-client';
 import { DEFAULTS } from '../../../utils/constants';
+import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
+import type { ChainInfo } from '../../../utils/types/euclid-api.types';
 
 @Component({
   tag: 'euclid-market-data-controller',
@@ -27,6 +29,63 @@ export class EuclidMarketDataController {
 
     this.isInitialized = true;
     console.log('📊 Market Data Controller initialized');
+  }
+
+  private async loadInitialData() {
+    try {
+      marketStore.setLoading(true);
+
+      console.log('📊 Loading initial market data...');
+
+      // Load chains
+      const chainsResponse = await apiClient.getAllChains(false);
+      if (chainsResponse.success && chainsResponse.data) {
+        // Convert ChainInfo[] to ChainConfig[]
+        const chainConfigs = chainsResponse.data.chains.all_chains.map((chain: ChainInfo) => ({
+          chainId: chain.chain_id,
+          chainUID: chain.chain_uid,
+          name: chain.display_name,
+          displayName: chain.display_name,
+          type: chain.type.toLowerCase() === 'evm' ? 'evm' : 'cosmos' as 'cosmos' | 'evm',
+          rpcUrl: '', // API doesn't provide this, would need to be configured separately
+          nativeCurrency: {
+            name: 'Unknown', // Would need to be configured per chain
+            symbol: 'TBD',
+            decimals: 18
+          },
+          explorer: chain.explorer_url,
+          logo: chain.logo
+        }));
+
+        marketStore.setChains(chainConfigs);
+        console.log('📡 Loaded chains:', chainConfigs.length);
+      } else {
+        console.warn('Failed to load chains:', chainsResponse.error);
+      }
+
+      // Load tokens
+      const tokensResponse = await apiClient.getAllTokens();
+      if (tokensResponse.success && tokensResponse.data) {
+        // Convert token strings to TokenInfo objects
+        const tokens = tokensResponse.data.router.all_tokens.tokens.map(tokenId => ({
+          id: tokenId,
+          symbol: tokenId.toUpperCase(),
+          name: tokenId.charAt(0).toUpperCase() + tokenId.slice(1),
+          decimals: 6, // Default, will be updated when we get more detailed info
+          chainUID: 'vsl', // Default Virtual Settlement Layer
+          logo: `/assets/tokens/${tokenId}.png`, // Placeholder
+        }));
+        marketStore.setTokens(tokens);
+        console.log('🪙 Loaded tokens:', tokens.length);
+      } else {
+        console.warn('Failed to load tokens:', tokensResponse.error);
+      }
+
+    } catch (error) {
+      console.error('Failed to load initial market data:', error);
+    } finally {
+      marketStore.setLoading(false);
+    }
   }
 
   private setupPeriodicRefresh() {
@@ -71,13 +130,19 @@ export class EuclidMarketDataController {
     }
   }
 
-  @Listen('euclidRefreshMarketData', { target: 'window' })
+  @Listen(EUCLID_EVENTS.MARKET.LOAD_INITIAL, { target: 'window' })
+  async handleInitialDataLoad() {
+    console.log('📊 Loading initial market data...');
+    await this.loadInitialData();
+  }
+
+  @Listen(EUCLID_EVENTS.MARKET.REFRESH_DATA, { target: 'window' })
   async handleRefreshRequest() {
     console.log('🔄 Manual market data refresh requested');
     await this.refreshMarketData();
   }
 
-  @Listen('euclidLoadTokenDetails', { target: 'window' })
+  @Listen(EUCLID_EVENTS.MARKET.TOKEN_DETAILS_REQUEST, { target: 'window' })
   async handleTokenDetailsRequest(event: CustomEvent<{ tokenId: string }>) {
     const { tokenId } = event.detail;
     console.log('📋 Loading token details for:', tokenId);
@@ -89,9 +154,10 @@ export class EuclidMarketDataController {
         const denoms = denomsResponse.data.router.token_denoms.denoms;
 
         // Emit token details loaded event
-        window.dispatchEvent(new CustomEvent('euclidTokenDetailsLoaded', {
-          detail: { tokenId, denoms }
-        }));
+        dispatchEuclidEvent(EUCLID_EVENTS.MARKET.TOKEN_DETAILS_SUCCESS, {
+          tokenId,
+          data: { denoms }
+        });
       }
 
       // Get escrow information
@@ -100,20 +166,22 @@ export class EuclidMarketDataController {
         const escrows = escrowsResponse.data.router.escrows;
 
         // Emit escrow info loaded event
-        window.dispatchEvent(new CustomEvent('euclidEscrowsLoaded', {
-          detail: { tokenId, escrows }
-        }));
+        dispatchEuclidEvent(EUCLID_EVENTS.MARKET.ESCROWS_LOADED, {
+          tokenId,
+          data: { escrows }
+        });
       }
     } catch (error) {
       console.error('Failed to load token details:', error);
 
-      window.dispatchEvent(new CustomEvent('euclidTokenDetailsError', {
-        detail: { tokenId, error: error.message }
-      }));
+      dispatchEuclidEvent(EUCLID_EVENTS.MARKET.TOKEN_DETAILS_FAILED, {
+        tokenId,
+        error: error.message
+      });
     }
   }
 
-  @Listen('euclidLoadChainDetails', { target: 'window' })
+  @Listen(EUCLID_EVENTS.MARKET.CHAIN_DETAILS_REQUEST, { target: 'window' })
   async handleChainDetailsRequest(event: CustomEvent<{ chainUID: string }>) {
     const { chainUID } = event.detail;
     console.log('🔗 Loading chain details for:', chainUID);
@@ -123,9 +191,10 @@ export class EuclidMarketDataController {
       const chain = marketStore.getChain(chainUID);
       if (chain) {
         // Emit chain details loaded event
-        window.dispatchEvent(new CustomEvent('euclidChainDetailsLoaded', {
-          detail: { chainUID, chain }
-        }));
+        dispatchEuclidEvent(EUCLID_EVENTS.MARKET.CHAIN_DETAILS_SUCCESS, {
+          chainUID,
+          data: { chain }
+        });
       } else {
         // Refresh chains if not found
         await this.refreshMarketData();
@@ -133,9 +202,10 @@ export class EuclidMarketDataController {
     } catch (error) {
       console.error('Failed to load chain details:', error);
 
-      window.dispatchEvent(new CustomEvent('euclidChainDetailsError', {
-        detail: { chainUID, error: error.message }
-      }));
+      dispatchEuclidEvent(EUCLID_EVENTS.MARKET.CHAIN_DETAILS_FAILED, {
+        chainUID,
+        error: error.message
+      });
     }
   }
 

@@ -115,7 +115,31 @@ const getters = {
   },
 };
 
-export const liquidityStore: any = {
+// Proper store type definition
+export interface LiquidityStore {
+  state: LiquidityState;
+  onChange: typeof onChange;
+  reset: typeof reset;
+  dispose: typeof dispose;
+  setPositions: (positions: LiquidityPosition[]) => void;
+  addPosition: (position: LiquidityPosition) => void;
+  updatePosition: (poolId: string, updates: Partial<LiquidityPosition>) => void;
+  removePosition: (poolId: string) => void;
+  setSelectedPool: (pool: PoolInfo) => void;
+  setToken1: (token: TokenInfo) => void;
+  setToken2: (token: TokenInfo) => void;
+  setToken1Amount: (amount: string) => void;
+  setToken2Amount: (amount: string) => void;
+  setAddingLiquidity: (adding: boolean) => void;
+  setRemovingLiquidity: (removing: boolean) => void;
+  clear: () => void;
+  getPosition: (poolId: string) => LiquidityPosition | undefined;
+  canAddLiquidity: () => boolean;
+  canRemoveLiquidity: (poolId: string) => boolean;
+  getTotalValueLocked: () => number;
+}
+
+export const liquidityStore: LiquidityStore = {
   state,
   onChange,
   reset,

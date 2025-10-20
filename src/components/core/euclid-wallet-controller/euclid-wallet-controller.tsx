@@ -1,14 +1,8 @@
 import { Component, h, State, Listen } from '@stencil/core';
 import { walletStore } from '../../../store/wallet.store';
-import { appStore } from '../../../store/app.store';
-
-declare global {
-  interface Window {
-    keplr?: any;
-    ethereum?: any;
-    cosmostation?: any;
-  }
-}
+import { marketStore } from '../../../store/market.store';
+import { WalletAdapterFactory } from '../../../utils/wallet-adapter';
+import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
 
 @Component({
   tag: 'euclid-wallet-controller',
@@ -22,6 +16,8 @@ export class EuclidWalletController {
   }
 
   private async initialize() {
+    console.log('🔗 Initializing Wallet Controller...');
+
     // Check for available wallets on page load
     await this.detectAvailableWallets();
 
@@ -29,7 +25,7 @@ export class EuclidWalletController {
     this.setupWalletEventListeners();
 
     this.isInitialized = true;
-    console.log('🔗 Wallet Controller initialized');
+    console.log('✅ Wallet Controller initialized');
   }
 
   private async detectAvailableWallets() {
@@ -57,15 +53,22 @@ export class EuclidWalletController {
   private setupWalletEventListeners() {
     // Listen for MetaMask account changes
     if (window.ethereum) {
-      window.ethereum.on?.('accountsChanged', (accounts: string[]) => {
-        console.log('MetaMask accounts changed:', accounts);
-        this.handleEvmAccountChange(accounts);
-      });
+      // MetaMask's ethereum object has event emitter methods not defined in our interface
+      const ethProvider = window.ethereum as typeof window.ethereum & {
+        on?: (event: string, callback: (...args: unknown[]) => void) => void;
+      };
 
-      window.ethereum.on?.('chainChanged', (chainId: string) => {
-        console.log('MetaMask chain changed:', chainId);
-        this.handleEvmChainChange(chainId);
-      });
+      if (ethProvider.on) {
+        ethProvider.on('accountsChanged', (accounts: string[]) => {
+          console.log('MetaMask accounts changed:', accounts);
+          this.handleEvmAccountChange(accounts);
+        });
+
+        ethProvider.on('chainChanged', (chainId: string) => {
+          console.log('MetaMask chain changed:', chainId);
+          this.handleEvmChainChange(chainId);
+        });
+      }
     }
 
     // Listen for Keplr events
@@ -104,7 +107,7 @@ export class EuclidWalletController {
     });
   }
 
-  @Listen('euclidConnectWallet', { target: 'window' })
+  @Listen(EUCLID_EVENTS.WALLET.CONNECT_REQUEST, { target: 'window' })
   async handleWalletConnectionRequest(event: CustomEvent<{ chainUID: string; walletType: string }>) {
     const { chainUID, walletType } = event.detail;
     console.log('🔗 Wallet connection requested:', { chainUID, walletType });
@@ -114,13 +117,15 @@ export class EuclidWalletController {
     } catch (error) {
       console.error('Failed to connect wallet:', error);
       // Emit connection failure event
-      window.dispatchEvent(new CustomEvent('euclidWalletConnectionFailed', {
-        detail: { chainUID, walletType, error: error.message }
-      }));
+      dispatchEuclidEvent(EUCLID_EVENTS.WALLET.CONNECT_FAILED, {
+        chainUID,
+        walletType,
+        error: error.message
+      });
     }
   }
 
-  @Listen('euclidDisconnectWallet', { target: 'window' })
+  @Listen(EUCLID_EVENTS.WALLET.DISCONNECT_REQUEST, { target: 'window' })
   handleWalletDisconnectionRequest(event: CustomEvent<{ chainUID: string }>) {
     const { chainUID } = event.detail;
     console.log('🔌 Wallet disconnection requested:', chainUID);
@@ -128,82 +133,44 @@ export class EuclidWalletController {
     walletStore.disconnectWallet(chainUID);
 
     // Emit disconnection success event
-    window.dispatchEvent(new CustomEvent('euclidWalletDisconnected', {
-      detail: { chainUID }
-    }));
+    dispatchEuclidEvent(EUCLID_EVENTS.WALLET.DISCONNECT_SUCCESS, { chainUID });
   }
 
   private async connectWallet(chainUID: string, walletType: string) {
-    if (walletType === 'keplr' || walletType === 'cosmostation') {
-      await this.connectCosmosWallet(chainUID, walletType);
-    } else if (walletType === 'metamask') {
-      await this.connectEvmWallet(chainUID, walletType);
-    } else {
+    // Get chain configuration
+    const chainConfig = marketStore.getChain(chainUID);
+    if (!chainConfig) {
+      throw new Error(`Chain configuration not found for ${chainUID}`);
+    }
+
+    // Validate wallet type
+    const validWalletTypes = ['keplr', 'metamask', 'cosmostation', 'walletconnect'];
+    if (!validWalletTypes.includes(walletType)) {
       throw new Error(`Unsupported wallet type: ${walletType}`);
     }
-  }
 
-  private async connectCosmosWallet(chainUID: string, walletType: 'keplr' | 'cosmostation') {
-    const wallet = walletType === 'keplr' ? window.keplr : window.cosmostation;
+    // Use the wallet adapter factory for proper separation of concerns
+    const result = await WalletAdapterFactory.connectWallet(walletType as 'keplr' | 'metamask' | 'cosmostation' | 'walletconnect', chainConfig);
 
-    if (!wallet) {
-      throw new Error(`${walletType} not installed`);
-    }
+    if (result.success && result.address) {
+      // Add wallet to store
+      walletStore.addWallet(chainUID, {
+        address: result.address,
+        chainUID,
+        name: walletType,
+        type: walletType as 'keplr' | 'metamask' | 'walletconnect' | 'other',
+        isConnected: true,
+        balances: []
+      });
 
-    try {
-      // Enable the chain
-      if (walletType === 'keplr') {
-        await wallet.enable(chainUID);
-        const offlineSigner = wallet.getOfflineSigner(chainUID);
-        const accounts = await offlineSigner.getAccounts();
-
-        if (accounts.length > 0) {
-          walletStore.addWallet(chainUID, {
-            address: accounts[0].address,
-            chainUID,
-            name: walletType,
-            type: walletType,
-            isConnected: true,
-            balances: []
-          });
-
-          // Emit connection success event
-          window.dispatchEvent(new CustomEvent('euclidWalletConnected', {
-            detail: { chainUID, walletType, address: accounts[0].address }
-          }));
-        }
-      }
-    } catch (error) {
-      throw new Error(`Failed to connect ${walletType}: ${error.message}`);
-    }
-  }
-
-  private async connectEvmWallet(chainUID: string, walletType: 'metamask') {
-    if (!window.ethereum) {
-      throw new Error('No Ethereum wallet found');
-    }
-
-    try {
-      // Request account access
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-
-      if (accounts.length > 0) {
-        walletStore.addWallet(chainUID, {
-          address: accounts[0],
-          chainUID,
-          name: walletType,
-          type: walletType,
-          isConnected: true,
-          balances: []
-        });
-
-        // Emit connection success event
-        window.dispatchEvent(new CustomEvent('euclidWalletConnected', {
-          detail: { chainUID, walletType, address: accounts[0] }
-        }));
-      }
-    } catch (error) {
-      throw new Error(`Failed to connect MetaMask: ${error.message}`);
+      // Emit connection success event
+      dispatchEuclidEvent(EUCLID_EVENTS.WALLET.CONNECT_SUCCESS, {
+        chainUID,
+        walletType,
+        address: result.address
+      });
+    } else {
+      throw new Error(result.error || 'Failed to connect wallet');
     }
   }
 

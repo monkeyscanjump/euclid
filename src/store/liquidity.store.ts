@@ -1,5 +1,6 @@
 import { createStore } from '@stencil/store';
 import type { LiquidityState, LiquidityPosition, PoolInfo, TokenInfo } from '../utils/types';
+import type { BaseStore } from './types';
 
 const initialState: LiquidityState = {
   positions: [],
@@ -115,12 +116,8 @@ const getters = {
   },
 };
 
-// Proper store type definition
-export interface LiquidityStore {
-  state: LiquidityState;
-  onChange: unknown; // Stencil store onChange type - using unknown for portability
-  reset: () => void;
-  dispose: () => void;
+// Proper store type definition extending BaseStore
+export interface LiquidityStore extends BaseStore<LiquidityState> {
   setPositions: (positions: LiquidityPosition[]) => void;
   addPosition: (position: LiquidityPosition) => void;
   updatePosition: (poolId: string, updates: Partial<LiquidityPosition>) => void;

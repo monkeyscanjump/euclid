@@ -1,5 +1,6 @@
 import { createStore } from '@stencil/store';
 import type { MarketState, ChainConfig, TokenInfo, PoolInfo } from '../utils/types';
+import type { BaseStore } from './types';
 
 const initialState: MarketState = {
   chains: [],
@@ -73,12 +74,8 @@ const getters = {
   },
 };
 
-// Proper store type definition
-export interface MarketStore {
-  state: MarketState;
-  onChange: unknown; // Stencil store onChange type - using unknown for portability
-  reset: () => void;
-  dispose: () => void;
+// Proper store type definition extending BaseStore
+export interface MarketStore extends BaseStore<MarketState> {
   setLoading: (loading: boolean) => void;
   setChains: (chains: ChainConfig[]) => void;
   setTokens: (tokens: TokenInfo[]) => void;

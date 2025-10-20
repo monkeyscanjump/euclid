@@ -1,5 +1,6 @@
 import { createStore } from '@stencil/store';
 import type { AppState } from '../utils/types';
+import type { BaseStore } from './types';
 
 const initialState: AppState = {
   walletModalOpen: false,
@@ -44,12 +45,8 @@ const actions = {
   },
 };
 
-// Proper store type definition
-export interface AppStore {
-  state: AppState;
-  onChange: unknown; // Stencil store onChange type - using unknown for portability
-  reset: () => void;
-  dispose: () => void;
+// Proper store type definition extending BaseStore
+export interface AppStore extends BaseStore<AppState> {
   initialize: () => void;
   openWalletModal: (chainFilter?: string) => void;
   closeWalletModal: () => void;

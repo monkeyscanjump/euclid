@@ -29,12 +29,9 @@ export class EuclidSwapController {
     console.log('🔄 Initializing Swap Controller...');
 
     // Subscribe to swap store changes for smart polling
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (swapStore.onChange as any)('fromToken', () => this.handleTokenChange());
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (swapStore.onChange as any)('toToken', () => this.handleTokenChange());
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (swapStore.onChange as any)('fromAmount', () => this.handleAmountChange());
+    swapStore.onChange('fromToken', () => this.handleTokenChange());
+    swapStore.onChange('toToken', () => this.handleTokenChange());
+    swapStore.onChange('fromAmount', () => this.handleAmountChange());
 
     this.isInitialized = true;
     console.log('✅ Swap Controller initialized');

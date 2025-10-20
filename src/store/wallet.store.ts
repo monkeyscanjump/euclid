@@ -5,6 +5,7 @@ import type {
   UserTransaction,
   LiquidityPosition
 } from '../utils/types';
+import type { BaseStore } from './types';
 
 // Enhanced wallet state for Address Book pattern
 export interface EnhancedWalletState {
@@ -234,12 +235,8 @@ const getters = {
   },
 };
 
-// Proper store type definition
-export interface WalletStore {
-  state: EnhancedWalletState;
-  onChange: unknown; // Stencil store onChange type - using unknown for portability
-  reset: () => void;
-  dispose: () => void;
+// Proper store type definition extending BaseStore
+export interface WalletStore extends BaseStore<EnhancedWalletState> {
   initialize: () => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;

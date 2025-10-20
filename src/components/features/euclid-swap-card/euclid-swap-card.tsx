@@ -103,7 +103,6 @@ export class EuclidSwapCard {
   // Internal state
   @State() outputAmount: string = '';
   @State() isSettingsOpen: boolean = false;
-  @State() isTokenSelectorOpen: boolean = false;
   @State() tokenSelectorType: 'input' | 'output' = 'input';
   @State() currentQuote: SwapQuote | null = null;
   @State() isQuoting: boolean = false;
@@ -181,13 +180,7 @@ export class EuclidSwapCard {
       token: selectedToken,
     });
 
-    this.isTokenSelectorOpen = false;
     this.startQuoteTimer();
-  }
-
-  @Listen('modalClose')
-  handleModalClose() {
-    this.isTokenSelectorOpen = false;
   }
 
   private startQuoteTimer() {
@@ -267,7 +260,7 @@ export class EuclidSwapCard {
 
   private openTokenSelector = (type: 'input' | 'output') => {
     this.tokenSelectorType = type;
-    this.isTokenSelectorOpen = true;
+    appStore.openTokenModal();
   };
 
   private toggleSettings = () => {
@@ -600,20 +593,6 @@ export class EuclidSwapCard {
         >
           {this.getSwapButtonText()}
         </euclid-button>
-
-        {/* Token Selection Modal */}
-        <euclid-token-modal
-          open={this.isTokenSelectorOpen}
-          popularTokens={this.tokens.map(token => ({
-            symbol: token.symbol,
-            name: token.name,
-            decimals: token.decimals,
-            logoUrl: token.logoUrl,
-            balance: token.balance,
-          }))}
-          showBalances={!!this.walletAddress}
-          showPopular={true}
-        />
       </div>
     );
   }

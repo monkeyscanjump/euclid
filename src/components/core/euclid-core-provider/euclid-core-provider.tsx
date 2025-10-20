@@ -70,17 +70,8 @@ export class EuclidCoreProvider {
         <euclid-liquidity-controller />
         <euclid-tx-tracker-controller />
 
-        {/* Global modals - controlled by appStore */}
-        <euclid-wallet-modal
-          open={appStore.state.walletModalOpen}
-          onModalClose={() => appStore.closeWalletModal()}
-          onWalletConnect={(e) => this.handleWalletConnectFromModal(e)}
-        />
-        <euclid-token-modal
-          open={appStore.state.tokenModalOpen}
-          onModalClose={() => appStore.closeTokenModal()}
-          onTokenSelect={(e) => this.handleTokenSelectFromModal(e)}
-        />
+        {/* Global modal - controlled by appStore */}
+        <euclid-modal />
 
         {/* Slot for application content */}
         <div class="euclid-provider-content">

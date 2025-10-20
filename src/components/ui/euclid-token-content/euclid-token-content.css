@@ -1,0 +1,113 @@
+:host {
+  display: block;
+}
+
+.token-content {
+  width: 100%;
+}
+
+.search-section {
+  margin-bottom: var(--euclid-spacing-4);
+}
+
+.search-input {
+  width: 100%;
+  padding: var(--euclid-spacing-3) var(--euclid-spacing-4);
+  border: 2px solid var(--euclid-border);
+  border-radius: var(--euclid-radius-lg);
+  background: var(--euclid-surface);
+  color: var(--euclid-text-primary);
+  font-size: var(--euclid-text-size-base);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--euclid-border-focus);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.search-input::placeholder {
+  color: var(--euclid-text-muted);
+}
+
+.token-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--euclid-spacing-1);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.token-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--euclid-spacing-3) var(--euclid-spacing-4);
+  border: none;
+  border-radius: var(--euclid-radius-lg);
+  background: transparent;
+  color: var(--euclid-text-primary);
+  cursor: pointer;
+  transition: all var(--euclid-transition-duration-fast);
+  text-align: left;
+  width: 100%;
+}
+
+.token-item:hover {
+  background: var(--euclid-surface-secondary);
+}
+
+.token-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--euclid-spacing-1);
+}
+
+.token-symbol {
+  font-size: var(--euclid-text-size-base);
+  font-weight: var(--euclid-font-weight-semibold);
+  color: var(--euclid-text-primary);
+}
+
+.token-name {
+  font-size: var(--euclid-text-size-sm);
+  color: var(--euclid-text-secondary);
+}
+
+.token-balance {
+  font-size: var(--euclid-text-size-sm);
+  font-weight: var(--euclid-font-weight-medium);
+  color: var(--euclid-text-primary);
+}
+
+.empty-state {
+  text-align: center;
+  padding: var(--euclid-spacing-8) var(--euclid-spacing-4);
+  color: var(--euclid-text-muted);
+}
+
+/* Focus visible support */
+.search-input:focus-visible,
+.token-item:focus-visible {
+  outline: 2px solid var(--euclid-border-focus);
+  outline-offset: 2px;
+}
+
+/* Scrollbar styling */
+.token-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.token-list::-webkit-scrollbar-track {
+  background: var(--euclid-surface-secondary);
+  border-radius: var(--euclid-radius-sm);
+}
+
+.token-list::-webkit-scrollbar-thumb {
+  background: var(--euclid-border);
+  border-radius: var(--euclid-radius-sm);
+}
+
+.token-list::-webkit-scrollbar-thumb:hover {
+  background: var(--euclid-border-hover);
+}

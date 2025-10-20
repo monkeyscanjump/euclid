@@ -131,7 +131,6 @@ export class EuclidLiquidityCard {
 
   // Internal state
   @State() isPoolSelectorOpen: boolean = false;
-  @State() isTokenSelectorOpen: boolean = false;
   @State() tokenSelectorType: 'tokenA' | 'tokenB' = 'tokenA';
   @State() currentQuote: LiquidityQuote | null = null;
   @State() removeQuote: RemoveLiquidityQuote | null = null;
@@ -207,14 +206,12 @@ export class EuclidLiquidityCard {
       this.selectedPool = this.findPoolWithToken(this.selectedPool?.tokenA, selectedToken);
     }
 
-    this.isTokenSelectorOpen = false;
     this.resetAmounts();
     this.startQuoteTimer();
   }
 
   @Listen('modalClose')
   handleModalClose() {
-    this.isTokenSelectorOpen = false;
     this.isPoolSelectorOpen = false;
   }
 
@@ -385,7 +382,7 @@ export class EuclidLiquidityCard {
 
   private openTokenSelector = (type: 'tokenA' | 'tokenB') => {
     this.tokenSelectorType = type;
-    this.isTokenSelectorOpen = true;
+    appStore.openTokenModal();
   };
 
   private openPoolSelector = () => {
@@ -797,20 +794,6 @@ export class EuclidLiquidityCard {
         >
           {this.getButtonText()}
         </euclid-button>
-
-        {/* Token Selection Modal */}
-        <euclid-token-modal
-          open={this.isTokenSelectorOpen}
-          popularTokens={this.tokens.map(token => ({
-            symbol: token.symbol,
-            name: token.name,
-            decimals: token.decimals,
-            logoUrl: token.logoUrl,
-            balance: token.balance,
-          }))}
-          showBalances={!!this.walletAddress}
-          showPopular={true}
-        />
       </div>
     );
   }

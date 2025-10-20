@@ -11,101 +11,19 @@ import { PoolInfo } from "./utils/types/api.types";
 import { PoolData, PoolFilters, PoolToken, UserPoolPosition } from "./components/features/euclid-pools-list/euclid-pools-list";
 import { ChartDataPoint, PoolPosition, PortfolioStats, StakingPosition, TokenBalance, Transaction } from "./components/features/euclid-portfolio-overview/euclid-portfolio-overview";
 import { SwapQuote, SwapSettings, SwapToken } from "./components/features/euclid-swap-card/euclid-swap-card";
-import { TokenInfo } from "./components/ui/euclid-token-input/euclid-token-input";
-import { PopularToken, TokenList } from "./components/ui/euclid-token-modal/euclid-token-modal";
+import { TokenInfo } from "./components/ui/euclid-token-content/euclid-token-content";
 import { TokenInfo as TokenInfo1 } from "./components/ui/euclid-token-input/euclid-token-input";
-import { ChainInfo, WalletInfo, WalletProvider } from "./components/ui/euclid-wallet-modal/euclid-wallet-modal";
+import { WalletProvider } from "./components/ui/euclid-wallet-content/euclid-wallet-content";
 export { ButtonSize, ButtonVariant } from "./components/ui/euclid-button/euclid-button";
 export { LiquidityPoolInfo, LiquidityPosition, LiquidityToken } from "./components/features/euclid-liquidity-card/euclid-liquidity-card";
 export { PoolInfo } from "./utils/types/api.types";
 export { PoolData, PoolFilters, PoolToken, UserPoolPosition } from "./components/features/euclid-pools-list/euclid-pools-list";
 export { ChartDataPoint, PoolPosition, PortfolioStats, StakingPosition, TokenBalance, Transaction } from "./components/features/euclid-portfolio-overview/euclid-portfolio-overview";
 export { SwapQuote, SwapSettings, SwapToken } from "./components/features/euclid-swap-card/euclid-swap-card";
-export { TokenInfo } from "./components/ui/euclid-token-input/euclid-token-input";
-export { PopularToken, TokenList } from "./components/ui/euclid-token-modal/euclid-token-modal";
+export { TokenInfo } from "./components/ui/euclid-token-content/euclid-token-content";
 export { TokenInfo as TokenInfo1 } from "./components/ui/euclid-token-input/euclid-token-input";
-export { ChainInfo, WalletInfo, WalletProvider } from "./components/ui/euclid-wallet-modal/euclid-wallet-modal";
+export { WalletProvider } from "./components/ui/euclid-wallet-content/euclid-wallet-content";
 export namespace Components {
-    interface EuclidBaseModal {
-        /**
-          * Whether to auto-focus search input when opened
-          * @default true
-         */
-        "autoFocusSearch": boolean;
-        /**
-          * Whether to show backdrop blur
-          * @default true
-         */
-        "backdropBlur": boolean;
-        /**
-          * Whether clicking overlay closes modal
-          * @default true
-         */
-        "closeOnOverlayClick": boolean;
-        /**
-          * Empty state message
-         */
-        "emptyMessage"?: string;
-        /**
-          * Error message to display
-         */
-        "error"?: string;
-        /**
-          * List selector options
-          * @default []
-         */
-        "listOptions": Array<{ value: string; label: string }>;
-        /**
-          * Loading state
-          * @default false
-         */
-        "loading": boolean;
-        /**
-          * Loading message
-          * @default 'Loading...'
-         */
-        "loadingMessage": string;
-        /**
-          * Maximum width of modal
-          * @default '480px'
-         */
-        "maxWidth": string;
-        /**
-          * Modal title text
-          * @default 'Modal'
-         */
-        "modalTitle": string;
-        /**
-          * Whether the modal is open
-          * @default false
-         */
-        "open": boolean;
-        /**
-          * Search input placeholder
-          * @default 'Search...'
-         */
-        "searchPlaceholder": string;
-        /**
-          * Current search query
-          * @default ''
-         */
-        "searchQuery": string;
-        /**
-          * Selected list option
-          * @default ''
-         */
-        "selectedList": string;
-        /**
-          * Whether to show list selector
-          * @default false
-         */
-        "showListSelector": boolean;
-        /**
-          * Whether to show search input
-          * @default false
-         */
-        "showSearch": boolean;
-    }
     interface EuclidButton {
         /**
           * @default false
@@ -134,6 +52,8 @@ export namespace Components {
         "variant": ButtonVariant;
     }
     interface EuclidCoreProvider {
+    }
+    interface EuclidDemoButtons {
     }
     interface EuclidLiquidityCard {
         /**
@@ -205,6 +125,8 @@ export namespace Components {
     interface EuclidLiquidityController {
     }
     interface EuclidMarketDataController {
+    }
+    interface EuclidModal {
     }
     interface EuclidPoolsList {
         /**
@@ -364,6 +286,8 @@ export namespace Components {
     }
     interface EuclidSwapController {
     }
+    interface EuclidTokenContent {
+    }
     interface EuclidTokenInput {
         /**
           * Whether the input is disabled
@@ -401,7 +325,7 @@ export namespace Components {
         /**
           * The current token selection
          */
-        "token"?: TokenInfo;
+        "token"?: TokenInfo1;
         /**
           * Whether the token selector is clickable
           * @default true
@@ -413,121 +337,14 @@ export namespace Components {
          */
         "value": string;
     }
-    interface EuclidTokenModal {
-        /**
-          * Error message to display
-         */
-        "error"?: string;
-        /**
-          * Loading state for token lists
-          * @default false
-         */
-        "loading": boolean;
-        /**
-          * Whether the modal is open
-          * @default false
-         */
-        "open": boolean;
-        /**
-          * Popular/featured tokens to show at the top
-          * @default []
-         */
-        "popularTokens": PopularToken[];
-        /**
-          * Placeholder text for search input
-          * @default 'Search tokens...'
-         */
-        "searchPlaceholder": string;
-        /**
-          * Currently selected token (to show as selected)
-         */
-        "selectedToken"?: TokenInfo1;
-        /**
-          * Whether to show balances
-          * @default true
-         */
-        "showBalances": boolean;
-        /**
-          * Whether to show popular tokens section
-          * @default true
-         */
-        "showPopular": boolean;
-        /**
-          * Available token lists
-          * @default []
-         */
-        "tokenLists": TokenList[];
-        /**
-          * User's token balances
-          * @default {}
-         */
-        "userBalances": Record<string, string>;
-    }
     interface EuclidTxTrackerController {
     }
     interface EuclidUserDataController {
     }
+    interface EuclidWalletContent {
+    }
     interface EuclidWalletController {
     }
-    interface EuclidWalletModal {
-        /**
-          * Connected wallets
-          * @default []
-         */
-        "connectedWallets": WalletInfo[];
-        /**
-          * Error message to display
-         */
-        "error"?: string;
-        /**
-          * Loading state
-          * @default false
-         */
-        "loading": boolean;
-        /**
-          * Title for the modal
-          * @default 'Connect Wallet'
-         */
-        "modalTitle": string;
-        /**
-          * Whether the modal is open
-          * @default false
-         */
-        "open": boolean;
-        /**
-          * Currently selected chain
-         */
-        "selectedChain"?: ChainInfo;
-        /**
-          * Whether to show chain selector
-          * @default true
-         */
-        "showChains": boolean;
-        /**
-          * Whether to show wallet management
-          * @default true
-         */
-        "showManagement": boolean;
-        /**
-          * Supported chains
-          * @default []
-         */
-        "supportedChains": ChainInfo[];
-        /**
-          * Current view mode: 'connect' | 'manage' | 'chains'
-          * @default 'connect'
-         */
-        "view": 'connect' | 'manage' | 'chains';
-        /**
-          * Available wallet providers
-          * @default []
-         */
-        "walletProviders": WalletProvider[];
-    }
-}
-export interface EuclidBaseModalCustomEvent<T> extends CustomEvent<T> {
-    detail: T;
-    target: HTMLEuclidBaseModalElement;
 }
 export interface EuclidLiquidityCardCustomEvent<T> extends CustomEvent<T> {
     detail: T;
@@ -545,39 +362,19 @@ export interface EuclidSwapCardCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLEuclidSwapCardElement;
 }
+export interface EuclidTokenContentCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLEuclidTokenContentElement;
+}
 export interface EuclidTokenInputCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLEuclidTokenInputElement;
 }
-export interface EuclidTokenModalCustomEvent<T> extends CustomEvent<T> {
+export interface EuclidWalletContentCustomEvent<T> extends CustomEvent<T> {
     detail: T;
-    target: HTMLEuclidTokenModalElement;
-}
-export interface EuclidWalletModalCustomEvent<T> extends CustomEvent<T> {
-    detail: T;
-    target: HTMLEuclidWalletModalElement;
+    target: HTMLEuclidWalletContentElement;
 }
 declare global {
-    interface HTMLEuclidBaseModalElementEventMap {
-        "modalClose": void;
-        "searchInput": string;
-        "listChange": string;
-        "modalOpen": void;
-    }
-    interface HTMLEuclidBaseModalElement extends Components.EuclidBaseModal, HTMLStencilElement {
-        addEventListener<K extends keyof HTMLEuclidBaseModalElementEventMap>(type: K, listener: (this: HTMLEuclidBaseModalElement, ev: EuclidBaseModalCustomEvent<HTMLEuclidBaseModalElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
-        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
-        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
-        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
-        removeEventListener<K extends keyof HTMLEuclidBaseModalElementEventMap>(type: K, listener: (this: HTMLEuclidBaseModalElement, ev: EuclidBaseModalCustomEvent<HTMLEuclidBaseModalElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
-        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
-        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
-        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
-    }
-    var HTMLEuclidBaseModalElement: {
-        prototype: HTMLEuclidBaseModalElement;
-        new (): HTMLEuclidBaseModalElement;
-    };
     interface HTMLEuclidButtonElement extends Components.EuclidButton, HTMLStencilElement {
     }
     var HTMLEuclidButtonElement: {
@@ -589,6 +386,12 @@ declare global {
     var HTMLEuclidCoreProviderElement: {
         prototype: HTMLEuclidCoreProviderElement;
         new (): HTMLEuclidCoreProviderElement;
+    };
+    interface HTMLEuclidDemoButtonsElement extends Components.EuclidDemoButtons, HTMLStencilElement {
+    }
+    var HTMLEuclidDemoButtonsElement: {
+        prototype: HTMLEuclidDemoButtonsElement;
+        new (): HTMLEuclidDemoButtonsElement;
     };
     interface HTMLEuclidLiquidityCardElementEventMap {
         "liquidityAdded": {
@@ -639,6 +442,12 @@ declare global {
     var HTMLEuclidMarketDataControllerElement: {
         prototype: HTMLEuclidMarketDataControllerElement;
         new (): HTMLEuclidMarketDataControllerElement;
+    };
+    interface HTMLEuclidModalElement extends Components.EuclidModal, HTMLStencilElement {
+    }
+    var HTMLEuclidModalElement: {
+        prototype: HTMLEuclidModalElement;
+        new (): HTMLEuclidModalElement;
     };
     interface HTMLEuclidPoolsListElementEventMap {
         "poolSelected": PoolData;
@@ -725,6 +534,23 @@ declare global {
         prototype: HTMLEuclidSwapControllerElement;
         new (): HTMLEuclidSwapControllerElement;
     };
+    interface HTMLEuclidTokenContentElementEventMap {
+        "tokenSelect": TokenInfo;
+    }
+    interface HTMLEuclidTokenContentElement extends Components.EuclidTokenContent, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLEuclidTokenContentElementEventMap>(type: K, listener: (this: HTMLEuclidTokenContentElement, ev: EuclidTokenContentCustomEvent<HTMLEuclidTokenContentElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLEuclidTokenContentElementEventMap>(type: K, listener: (this: HTMLEuclidTokenContentElement, ev: EuclidTokenContentCustomEvent<HTMLEuclidTokenContentElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    }
+    var HTMLEuclidTokenContentElement: {
+        prototype: HTMLEuclidTokenContentElement;
+        new (): HTMLEuclidTokenContentElement;
+    };
     interface HTMLEuclidTokenInputElementEventMap {
         "valueChange": string;
         "tokenSelect": void;
@@ -744,25 +570,6 @@ declare global {
         prototype: HTMLEuclidTokenInputElement;
         new (): HTMLEuclidTokenInputElement;
     };
-    interface HTMLEuclidTokenModalElementEventMap {
-        "tokenSelect": TokenInfo1;
-        "modalClose": void;
-        "loadTokenLists": void;
-    }
-    interface HTMLEuclidTokenModalElement extends Components.EuclidTokenModal, HTMLStencilElement {
-        addEventListener<K extends keyof HTMLEuclidTokenModalElementEventMap>(type: K, listener: (this: HTMLEuclidTokenModalElement, ev: EuclidTokenModalCustomEvent<HTMLEuclidTokenModalElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
-        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
-        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
-        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
-        removeEventListener<K extends keyof HTMLEuclidTokenModalElementEventMap>(type: K, listener: (this: HTMLEuclidTokenModalElement, ev: EuclidTokenModalCustomEvent<HTMLEuclidTokenModalElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
-        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
-        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
-        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
-    }
-    var HTMLEuclidTokenModalElement: {
-        prototype: HTMLEuclidTokenModalElement;
-        new (): HTMLEuclidTokenModalElement;
-    };
     interface HTMLEuclidTxTrackerControllerElement extends Components.EuclidTxTrackerController, HTMLStencilElement {
     }
     var HTMLEuclidTxTrackerControllerElement: {
@@ -775,150 +582,50 @@ declare global {
         prototype: HTMLEuclidUserDataControllerElement;
         new (): HTMLEuclidUserDataControllerElement;
     };
+    interface HTMLEuclidWalletContentElementEventMap {
+        "walletConnect": WalletProvider;
+    }
+    interface HTMLEuclidWalletContentElement extends Components.EuclidWalletContent, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLEuclidWalletContentElementEventMap>(type: K, listener: (this: HTMLEuclidWalletContentElement, ev: EuclidWalletContentCustomEvent<HTMLEuclidWalletContentElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLEuclidWalletContentElementEventMap>(type: K, listener: (this: HTMLEuclidWalletContentElement, ev: EuclidWalletContentCustomEvent<HTMLEuclidWalletContentElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    }
+    var HTMLEuclidWalletContentElement: {
+        prototype: HTMLEuclidWalletContentElement;
+        new (): HTMLEuclidWalletContentElement;
+    };
     interface HTMLEuclidWalletControllerElement extends Components.EuclidWalletController, HTMLStencilElement {
     }
     var HTMLEuclidWalletControllerElement: {
         prototype: HTMLEuclidWalletControllerElement;
         new (): HTMLEuclidWalletControllerElement;
     };
-    interface HTMLEuclidWalletModalElementEventMap {
-        "walletConnect": { provider: WalletProvider; chainId?: string };
-        "walletDisconnect": WalletInfo;
-        "chainSelect": ChainInfo;
-        "modalClose": void;
-        "loadWalletProviders": void;
-        "loadChains": void;
-    }
-    interface HTMLEuclidWalletModalElement extends Components.EuclidWalletModal, HTMLStencilElement {
-        addEventListener<K extends keyof HTMLEuclidWalletModalElementEventMap>(type: K, listener: (this: HTMLEuclidWalletModalElement, ev: EuclidWalletModalCustomEvent<HTMLEuclidWalletModalElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
-        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
-        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
-        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
-        removeEventListener<K extends keyof HTMLEuclidWalletModalElementEventMap>(type: K, listener: (this: HTMLEuclidWalletModalElement, ev: EuclidWalletModalCustomEvent<HTMLEuclidWalletModalElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
-        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
-        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
-        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
-    }
-    var HTMLEuclidWalletModalElement: {
-        prototype: HTMLEuclidWalletModalElement;
-        new (): HTMLEuclidWalletModalElement;
-    };
     interface HTMLElementTagNameMap {
-        "euclid-base-modal": HTMLEuclidBaseModalElement;
         "euclid-button": HTMLEuclidButtonElement;
         "euclid-core-provider": HTMLEuclidCoreProviderElement;
+        "euclid-demo-buttons": HTMLEuclidDemoButtonsElement;
         "euclid-liquidity-card": HTMLEuclidLiquidityCardElement;
         "euclid-liquidity-controller": HTMLEuclidLiquidityControllerElement;
         "euclid-market-data-controller": HTMLEuclidMarketDataControllerElement;
+        "euclid-modal": HTMLEuclidModalElement;
         "euclid-pools-list": HTMLEuclidPoolsListElement;
         "euclid-portfolio-overview": HTMLEuclidPortfolioOverviewElement;
         "euclid-swap-card": HTMLEuclidSwapCardElement;
         "euclid-swap-controller": HTMLEuclidSwapControllerElement;
+        "euclid-token-content": HTMLEuclidTokenContentElement;
         "euclid-token-input": HTMLEuclidTokenInputElement;
-        "euclid-token-modal": HTMLEuclidTokenModalElement;
         "euclid-tx-tracker-controller": HTMLEuclidTxTrackerControllerElement;
         "euclid-user-data-controller": HTMLEuclidUserDataControllerElement;
+        "euclid-wallet-content": HTMLEuclidWalletContentElement;
         "euclid-wallet-controller": HTMLEuclidWalletControllerElement;
-        "euclid-wallet-modal": HTMLEuclidWalletModalElement;
     }
 }
 declare namespace LocalJSX {
-    interface EuclidBaseModal {
-        /**
-          * Whether to auto-focus search input when opened
-          * @default true
-         */
-        "autoFocusSearch"?: boolean;
-        /**
-          * Whether to show backdrop blur
-          * @default true
-         */
-        "backdropBlur"?: boolean;
-        /**
-          * Whether clicking overlay closes modal
-          * @default true
-         */
-        "closeOnOverlayClick"?: boolean;
-        /**
-          * Empty state message
-         */
-        "emptyMessage"?: string;
-        /**
-          * Error message to display
-         */
-        "error"?: string;
-        /**
-          * List selector options
-          * @default []
-         */
-        "listOptions"?: Array<{ value: string; label: string }>;
-        /**
-          * Loading state
-          * @default false
-         */
-        "loading"?: boolean;
-        /**
-          * Loading message
-          * @default 'Loading...'
-         */
-        "loadingMessage"?: string;
-        /**
-          * Maximum width of modal
-          * @default '480px'
-         */
-        "maxWidth"?: string;
-        /**
-          * Modal title text
-          * @default 'Modal'
-         */
-        "modalTitle"?: string;
-        /**
-          * Emitted when list selector changes
-         */
-        "onListChange"?: (event: EuclidBaseModalCustomEvent<string>) => void;
-        /**
-          * Emitted when the modal is closed
-         */
-        "onModalClose"?: (event: EuclidBaseModalCustomEvent<void>) => void;
-        /**
-          * Emitted when modal is opened
-         */
-        "onModalOpen"?: (event: EuclidBaseModalCustomEvent<void>) => void;
-        /**
-          * Emitted when search input changes
-         */
-        "onSearchInput"?: (event: EuclidBaseModalCustomEvent<string>) => void;
-        /**
-          * Whether the modal is open
-          * @default false
-         */
-        "open"?: boolean;
-        /**
-          * Search input placeholder
-          * @default 'Search...'
-         */
-        "searchPlaceholder"?: string;
-        /**
-          * Current search query
-          * @default ''
-         */
-        "searchQuery"?: string;
-        /**
-          * Selected list option
-          * @default ''
-         */
-        "selectedList"?: string;
-        /**
-          * Whether to show list selector
-          * @default false
-         */
-        "showListSelector"?: boolean;
-        /**
-          * Whether to show search input
-          * @default false
-         */
-        "showSearch"?: boolean;
-    }
     interface EuclidButton {
         /**
           * @default false
@@ -947,6 +654,8 @@ declare namespace LocalJSX {
         "variant"?: ButtonVariant;
     }
     interface EuclidCoreProvider {
+    }
+    interface EuclidDemoButtons {
     }
     interface EuclidLiquidityCard {
         /**
@@ -1040,6 +749,8 @@ declare namespace LocalJSX {
     interface EuclidLiquidityController {
     }
     interface EuclidMarketDataController {
+    }
+    interface EuclidModal {
     }
     interface EuclidPoolsList {
         /**
@@ -1230,6 +941,9 @@ declare namespace LocalJSX {
     }
     interface EuclidSwapController {
     }
+    interface EuclidTokenContent {
+        "onTokenSelect"?: (event: EuclidTokenContentCustomEvent<TokenInfo>) => void;
+    }
     interface EuclidTokenInput {
         /**
           * Whether the input is disabled
@@ -1279,7 +993,7 @@ declare namespace LocalJSX {
         /**
           * The current token selection
          */
-        "token"?: TokenInfo;
+        "token"?: TokenInfo1;
         /**
           * Whether the token selector is clickable
           * @default true
@@ -1291,192 +1005,56 @@ declare namespace LocalJSX {
          */
         "value"?: string;
     }
-    interface EuclidTokenModal {
-        /**
-          * Error message to display
-         */
-        "error"?: string;
-        /**
-          * Loading state for token lists
-          * @default false
-         */
-        "loading"?: boolean;
-        /**
-          * Emitted when token lists need to be loaded
-         */
-        "onLoadTokenLists"?: (event: EuclidTokenModalCustomEvent<void>) => void;
-        /**
-          * Emitted when the modal is closed
-         */
-        "onModalClose"?: (event: EuclidTokenModalCustomEvent<void>) => void;
-        /**
-          * Emitted when a token is selected
-         */
-        "onTokenSelect"?: (event: EuclidTokenModalCustomEvent<TokenInfo1>) => void;
-        /**
-          * Whether the modal is open
-          * @default false
-         */
-        "open"?: boolean;
-        /**
-          * Popular/featured tokens to show at the top
-          * @default []
-         */
-        "popularTokens"?: PopularToken[];
-        /**
-          * Placeholder text for search input
-          * @default 'Search tokens...'
-         */
-        "searchPlaceholder"?: string;
-        /**
-          * Currently selected token (to show as selected)
-         */
-        "selectedToken"?: TokenInfo1;
-        /**
-          * Whether to show balances
-          * @default true
-         */
-        "showBalances"?: boolean;
-        /**
-          * Whether to show popular tokens section
-          * @default true
-         */
-        "showPopular"?: boolean;
-        /**
-          * Available token lists
-          * @default []
-         */
-        "tokenLists"?: TokenList[];
-        /**
-          * User's token balances
-          * @default {}
-         */
-        "userBalances"?: Record<string, string>;
-    }
     interface EuclidTxTrackerController {
     }
     interface EuclidUserDataController {
     }
+    interface EuclidWalletContent {
+        "onWalletConnect"?: (event: EuclidWalletContentCustomEvent<WalletProvider>) => void;
+    }
     interface EuclidWalletController {
     }
-    interface EuclidWalletModal {
-        /**
-          * Connected wallets
-          * @default []
-         */
-        "connectedWallets"?: WalletInfo[];
-        /**
-          * Error message to display
-         */
-        "error"?: string;
-        /**
-          * Loading state
-          * @default false
-         */
-        "loading"?: boolean;
-        /**
-          * Title for the modal
-          * @default 'Connect Wallet'
-         */
-        "modalTitle"?: string;
-        /**
-          * Emitted when a chain is selected
-         */
-        "onChainSelect"?: (event: EuclidWalletModalCustomEvent<ChainInfo>) => void;
-        /**
-          * Emitted when chains need to be loaded
-         */
-        "onLoadChains"?: (event: EuclidWalletModalCustomEvent<void>) => void;
-        /**
-          * Emitted when wallet providers need to be loaded
-         */
-        "onLoadWalletProviders"?: (event: EuclidWalletModalCustomEvent<void>) => void;
-        /**
-          * Emitted when the modal is closed
-         */
-        "onModalClose"?: (event: EuclidWalletModalCustomEvent<void>) => void;
-        /**
-          * Emitted when a wallet provider is selected for connection
-         */
-        "onWalletConnect"?: (event: EuclidWalletModalCustomEvent<{ provider: WalletProvider; chainId?: string }>) => void;
-        /**
-          * Emitted when a wallet is disconnected
-         */
-        "onWalletDisconnect"?: (event: EuclidWalletModalCustomEvent<WalletInfo>) => void;
-        /**
-          * Whether the modal is open
-          * @default false
-         */
-        "open"?: boolean;
-        /**
-          * Currently selected chain
-         */
-        "selectedChain"?: ChainInfo;
-        /**
-          * Whether to show chain selector
-          * @default true
-         */
-        "showChains"?: boolean;
-        /**
-          * Whether to show wallet management
-          * @default true
-         */
-        "showManagement"?: boolean;
-        /**
-          * Supported chains
-          * @default []
-         */
-        "supportedChains"?: ChainInfo[];
-        /**
-          * Current view mode: 'connect' | 'manage' | 'chains'
-          * @default 'connect'
-         */
-        "view"?: 'connect' | 'manage' | 'chains';
-        /**
-          * Available wallet providers
-          * @default []
-         */
-        "walletProviders"?: WalletProvider[];
-    }
     interface IntrinsicElements {
-        "euclid-base-modal": EuclidBaseModal;
         "euclid-button": EuclidButton;
         "euclid-core-provider": EuclidCoreProvider;
+        "euclid-demo-buttons": EuclidDemoButtons;
         "euclid-liquidity-card": EuclidLiquidityCard;
         "euclid-liquidity-controller": EuclidLiquidityController;
         "euclid-market-data-controller": EuclidMarketDataController;
+        "euclid-modal": EuclidModal;
         "euclid-pools-list": EuclidPoolsList;
         "euclid-portfolio-overview": EuclidPortfolioOverview;
         "euclid-swap-card": EuclidSwapCard;
         "euclid-swap-controller": EuclidSwapController;
+        "euclid-token-content": EuclidTokenContent;
         "euclid-token-input": EuclidTokenInput;
-        "euclid-token-modal": EuclidTokenModal;
         "euclid-tx-tracker-controller": EuclidTxTrackerController;
         "euclid-user-data-controller": EuclidUserDataController;
+        "euclid-wallet-content": EuclidWalletContent;
         "euclid-wallet-controller": EuclidWalletController;
-        "euclid-wallet-modal": EuclidWalletModal;
     }
 }
 export { LocalJSX as JSX };
 declare module "@stencil/core" {
     export namespace JSX {
         interface IntrinsicElements {
-            "euclid-base-modal": LocalJSX.EuclidBaseModal & JSXBase.HTMLAttributes<HTMLEuclidBaseModalElement>;
             "euclid-button": LocalJSX.EuclidButton & JSXBase.HTMLAttributes<HTMLEuclidButtonElement>;
             "euclid-core-provider": LocalJSX.EuclidCoreProvider & JSXBase.HTMLAttributes<HTMLEuclidCoreProviderElement>;
+            "euclid-demo-buttons": LocalJSX.EuclidDemoButtons & JSXBase.HTMLAttributes<HTMLEuclidDemoButtonsElement>;
             "euclid-liquidity-card": LocalJSX.EuclidLiquidityCard & JSXBase.HTMLAttributes<HTMLEuclidLiquidityCardElement>;
             "euclid-liquidity-controller": LocalJSX.EuclidLiquidityController & JSXBase.HTMLAttributes<HTMLEuclidLiquidityControllerElement>;
             "euclid-market-data-controller": LocalJSX.EuclidMarketDataController & JSXBase.HTMLAttributes<HTMLEuclidMarketDataControllerElement>;
+            "euclid-modal": LocalJSX.EuclidModal & JSXBase.HTMLAttributes<HTMLEuclidModalElement>;
             "euclid-pools-list": LocalJSX.EuclidPoolsList & JSXBase.HTMLAttributes<HTMLEuclidPoolsListElement>;
             "euclid-portfolio-overview": LocalJSX.EuclidPortfolioOverview & JSXBase.HTMLAttributes<HTMLEuclidPortfolioOverviewElement>;
             "euclid-swap-card": LocalJSX.EuclidSwapCard & JSXBase.HTMLAttributes<HTMLEuclidSwapCardElement>;
             "euclid-swap-controller": LocalJSX.EuclidSwapController & JSXBase.HTMLAttributes<HTMLEuclidSwapControllerElement>;
+            "euclid-token-content": LocalJSX.EuclidTokenContent & JSXBase.HTMLAttributes<HTMLEuclidTokenContentElement>;
             "euclid-token-input": LocalJSX.EuclidTokenInput & JSXBase.HTMLAttributes<HTMLEuclidTokenInputElement>;
-            "euclid-token-modal": LocalJSX.EuclidTokenModal & JSXBase.HTMLAttributes<HTMLEuclidTokenModalElement>;
             "euclid-tx-tracker-controller": LocalJSX.EuclidTxTrackerController & JSXBase.HTMLAttributes<HTMLEuclidTxTrackerControllerElement>;
             "euclid-user-data-controller": LocalJSX.EuclidUserDataController & JSXBase.HTMLAttributes<HTMLEuclidUserDataControllerElement>;
+            "euclid-wallet-content": LocalJSX.EuclidWalletContent & JSXBase.HTMLAttributes<HTMLEuclidWalletContentElement>;
             "euclid-wallet-controller": LocalJSX.EuclidWalletController & JSXBase.HTMLAttributes<HTMLEuclidWalletControllerElement>;
-            "euclid-wallet-modal": LocalJSX.EuclidWalletModal & JSXBase.HTMLAttributes<HTMLEuclidWalletModalElement>;
         }
     }
 }

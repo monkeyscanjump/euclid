@@ -1,104 +1,226 @@
 
-# Euclid: A StencilJS Component Library for the Euclid Protocol
+# Euclid: Open Source StencilJS Components for the Euclid Protocol
 
-[](https://www.google.com/search?q=LICENSE)
+**An independent, framework-agnostic component library** for building applications that interact with the [Euclid Protocol](https://euclid.xyz) - a cross-chain automated market maker (AMM) and liquidity protocol.
 
-This repository ([https://github.com/monkeyscanjump/euclid](https://www.google.com/search?q=httpss://github.com/monkeyscanjump/euclid)) contains a framework-agnostic, modular component library for interacting with the Euclid Protocol, built with StencilJS.
+> **Note**: This is an **independent open-source project** built by framework-agnostic developers. We are **not affiliated** with the official Euclid Protocol team. Our goal is to provide high-quality, reusable Web Components that make it easier for developers to build applications using Euclid's public APIs.
 
-This project is not a web application. It is a set of compiled, standards-based **Web Components** designed to run in *any* frontend framework (React, Angular, Vue, Svelte, or plain HTML).
+## What is the Euclid Protocol?
 
-## Our Philosophy: Infrastructure, Not a Monolithic App
+**Euclid Protocol** is a **cross-chain DeFi protocol** that enables seamless token swaps, liquidity provision, and yield farming across multiple blockchain networks without the traditional complexity and friction of bridging assets.
 
-The Euclid Protocol is a multi-chain, open standard. The tools to interact with it should be, too.
+### The Problem Euclid Solves
 
-Modern web development has converged on a stack (React/Next.js, Zustand/TanStack Query, Tailwind CSS) that prioritizes developer convenience for building a *single application* over the long-term, open, and performant infrastructure a *protocol* deserves.
+**Traditional DeFi is fragmented and painful:**
+- Want to swap USDC on Ethereum for ATOM on Cosmos? You need to bridge, wait, pay multiple fees, and use different interfaces
+- Liquidity is scattered across dozens of chains, making markets inefficient
+- Users need multiple wallets, multiple gas tokens, and deep technical knowledge
+- Developers building multi-chain apps face a nightmare of different APIs, wallet integrations, and protocols
 
-This is a stack of compromises, "noise," and "slop." We reject it.
+### Euclid's Solution: "Virtual Settlement"
 
-We are building clean, fast, and reusable infrastructure based on web standards.
+Euclid creates a **unified liquidity layer** that connects all major blockchains through:
+
+1. **Cross-Chain Liquidity Pools**: Add USDC from Ethereum and ATOM from Cosmos to the same pool
+2. **Instant Cross-Chain Swaps**: Swap ETH for SOL directly, no bridging required
+3. **Unified Account Management**: One interface, multiple chains, seamless UX
+4. **Smart Routing**: Automatically finds the best rates across all connected chains
+
+**Example User Flow:**
+- User wants to swap 1000 USDC (on Ethereum) for ATOM (on Cosmos)
+- Instead of bridging USDC to Cosmos first, Euclid instantly settles this as:
+  - User's Ethereum wallet sends USDC to Euclid's Ethereum escrow
+  - User's Cosmos wallet instantly receives ATOM from Euclid's Cosmos liquidity
+  - Settlement happens through Euclid's cross-chain messaging protocol
+- **Result**: Instant cross-chain swap with optimal rates and minimal fees
+
+## Why This Component Library Exists
+
+Building front-end applications for cross-chain protocols like Euclid is **exponentially more complex** than building for single-chain protocols. Developers face:
+
+- **Multiple Wallet Integrations**: MetaMask for Ethereum, Keplr for Cosmos, Phantom for Solana, etc.
+- **Complex State Management**: Track balances, transactions, and liquidity across 10+ chains simultaneously
+- **Cross-Chain UX**: Users shouldn't need to understand bridging, gas tokens, or technical complexity
+- **API Integration**: Properly implementing Euclid's GraphQL and REST APIs across all supported chains
+
+### Our Solution: Framework-Agnostic Web Components
+
+This **independent open-source library** provides **plug-and-play components** that properly implement Euclid's public APIs and handle all the cross-chain complexity:```html
+<!-- This ONE component handles cross-chain swapping across all supported chains -->
+<euclid-swap-card></euclid-swap-card>
+
+<!-- This component manages liquidity across multiple chains in one interface -->
+<euclid-liquidity-card></euclid-liquidity-card>
+
+<!-- This shows cross-chain portfolio (ETH, COSMOS, SOLANA balances in one view) -->
+<euclid-portfolio-overview></euclid-portfolio-overview>
+```
+
+**What happens under the hood:**
+- Automatic wallet detection and connection (MetaMask, Keplr, Phantom, etc.)
+- Real-time cross-chain balance fetching and caching
+- Intelligent routing across chains for optimal swap rates
+- Cross-chain transaction tracking and settlement
+- Unified UX that abstracts away the multi-chain complexity
+
+**For any framework**: These components work in React, Vue, Angular, Svelte, or plain HTML because they're compiled to Web Components.
+
+## Our Philosophy: Framework-Agnostic Infrastructure
+
+**Euclid Protocol is multi-chain and open. The tools to build on it should be too.**
+
+We are **independent builders** focused on creating reusable, standards-based infrastructure that works everywhere. Modern web development has converged on framework-specific stacks that lock developers into single ecosystems. This is wrong for protocol infrastructure.
+
+### 1\. Our Answer to Framework Lock-in
+
+Building protocol infrastructure with framework-specific tools (React/Next.js) locks entire ecosystems into single frameworks.
+
+  * **Our Solution**: We use **StencilJS** to compile our components to standards-based Web Components. Build once, run everywhere - React, Vue, Angular, Svelte, or plain HTML.
+
+### 2\. Our Answer to External Dependencies
+
+Framework-specific apps require importing stacks of external libraries just to solve problems the framework creates.
+
+  * **Our Solution**: We are self-contained. Our library includes built-in state management with **`@stencil/store`** and headless controller components that properly implement Euclid's APIs without external dependencies.
+
+### 3\. Our Answer to CSS Framework "Slop"
+
+Utility-first CSS frameworks create bloated, unreadable markup and force users to download massive CSS bundles.
+
+  * **Our Solution**: We build a **proper design system** using Stencil's scoped CSS. Each component is encapsulated, performant, and maintainable.
 
 -----
 
-### 1\. Our Answer to Framework Lock-in (React, Next.js)
+## Core Architecture: Solving Cross-Chain Complexity
 
-Choosing a framework like Next.js to build *protocol infrastructure* is a critical error. It locks the entire ecosystem into a single framework.
+### 1\. The "Address Book" Pattern (Multi-Chain Wallet Management)
 
-  * **Our Solution:** We use **StencilJS**. It compiles our components to standards-based Web Components. We build *one* component (e.g., `<euclid-swap-card>`) and it runs natively in **all** frameworks. This is the only way to build open infrastructure.
+Traditional DeFi UX assumes users have one wallet on one chain. **This is broken for cross-chain protocols.**
 
-### 2\. Our Answer to Framework "Noise" (Zustand, TanStack Query)
+Euclid uses a **multi-chain "Address Book"** approach:
+- Users can connect multiple wallets simultaneously (MetaMask for Ethereum, Keplr for Cosmos, Phantom for Solana)
+- Our `wallet.store` maintains a `Map<ChainUID, WalletInfo>` - one entry per chain
+- Components intelligently prompt for the **specific wallet they need** instead of forcing a "universal login"
 
-Framework-locked apps force the import of a stack of "noise" libraries (like Zustand or TanStack Query) just to solve problems that the framework itself creates.
+**Example**: User wants to swap USDC (Ethereum) → ATOM (Cosmos):
+1. Component checks if Ethereum wallet is connected
+2. If not: "Connect Ethereum Wallet" (opens MetaMask)
+3. Component checks if Cosmos wallet is connected
+4. If not: "Connect Cosmos Wallet" (opens Keplr)
+5. Once both connected: "Swap USDC → ATOM"
 
-  * **Our Solution:** We are self-contained. Our library includes its own headless **"Controller" components** and a minimal **`@stencil/store`**.
-      * **Caching:** Our `<euclid-market-data-controller>` handles it.
-      * **Polling:** Our `<euclid-swap-controller>` handles its *own* "smart poll" for routes.
-      * **State:** Our `wallet.store` is the "Address Book." It's built-in, not an external dependency.
+**Result**: Contextual, just-in-time wallet connections instead of upfront complexity.
 
-We don't import noise. We write clean logic.
+### 2\. Intelligent Cross-Chain Components
 
-### 3\. Our Answer to Utility-First "Slop" (Tailwind CSS)
+Our components are **contextually aware** of cross-chain requirements:
 
-Utility-first CSS frameworks are an **abomination** for large-scale, performant applications. They are an excuse for not building a proper design system.
+**`<euclid-swap-card>`**:
+- Detects which chains are needed based on selected tokens
+- Automatically connects required wallets
+- Routes through Euclid's cross-chain pools for optimal rates
+- Handles cross-chain settlement and transaction tracking
 
-They prioritize developer convenience while forcing the user to suffer. The result is HTML "slop"—bloated, unreadable markup polluted with thousands of class strings, increasing download size and render times.
+**`<euclid-liquidity-card>`**:
+- Allows adding liquidity with tokens from different chains
+- Manages cross-chain liquidity positions
+- Tracks yields and rewards across multiple chains
 
-  * **Our Solution:** We are building a **real, performant design system**. We use Stencil's **scoped CSS** (`shadow: true`) for every component.
-      * **Clean DOM:** Our components are minimal (e.g., `<euclid-swap-card>`). The HTML is semantic and free of class-string pollution.
-      * **High Performance:** The user downloads a single, small, optimized CSS bundle. Component styles are encapsulated.
-      * **Maintainable:** We write clean, consistent, component-scoped CSS. This is how you build fast, reactive applications, not slop.
+**`<euclid-portfolio-overview>`**:
+- Shows unified balance across all connected chains
+- Displays cross-chain liquidity positions
+- Tracks cross-chain transaction history
+
+### 3\. Unified State Management for Multi-Chain Data
+
+Cross-chain apps need to manage exponentially more state than single-chain apps:
+
+**`wallet.store`**: Multi-chain address book and balances
+**`market.store`**: Token prices, pool data, and chain configs across all networks
+**`swap.store`**: Cross-chain routing, settlement tracking
+**`liquidity.store`**: Multi-chain liquidity positions and yields
+
+All components connect to these stores automatically - no manual state management required.
+
+### 4\. Simplified Modal System
+
+Complex cross-chain interactions require lots of user input (token selection, wallet connections, chain switching). Instead of component-specific modals, we use:
+
+- **One global modal** (`<euclid-modal>`) controlled by app state
+- **Simple API**: `appStore.openTokenModal()` or `appStore.openWalletModal()`
+- **Smart content**: Modal renders appropriate content based on context (which chains, which tokens, etc.)
+- **No prop drilling**: Store-driven, not component-driven
 
 -----
 
-## Core Architecture & Multi-Chain Logic
+## How to Use This Library
 
-### 1\. The "Address Book" (Not a "Login")
+### Quick Start: Cross-Chain Swap Interface
 
-We have no concept of a single "logged-in" wallet. A single-chain login is a broken UX pattern for a multi-chain protocol.
+Building a cross-chain DEX interface is now as simple as:
 
-Instead, we use a central global store (`wallet.store`) that functions as an **"Address Book"**. This store holds a `Map<ChainUID, WalletInfo>` for *every* wallet the user has connected. This is the single source of truth for all signers.
+```javascript
+// 1. Wrap your app with the provider
+import '@monkeyscanjump/euclid';
 
-### 2\. The Provider Pattern (`<euclid-core-provider>`)
+function App() {
+  return (
+    <euclid-core-provider>
+      <euclid-swap-card></euclid-swap-card>
+    </euclid-core-provider>
+  );
+}
+```
 
-To make this library modular, a developer **must** wrap their application in the `<euclid-core-provider>`. This single component is the "brain" that renders all headless controllers and initializes the global state.
+**That's it.** This gives you:
+- ✅ Multi-chain wallet connections (MetaMask, Keplr, Phantom, etc.)
+- ✅ Token selection across all supported chains
+- ✅ Cross-chain routing and optimal pricing
+- ✅ Transaction settlement and tracking
+- ✅ Responsive, accessible UI with proper error handling
 
-### 3\. Contextual Actions (No More Forced Logins)
+### Real-World Example: Cross-Chain DeFi Dashboard
 
-Our UI components are "dumb." The action buttons (like "Swap") are intelligent and contextual.
+```javascript
+import '@monkeyscanjump/euclid';
 
-1.  A user selects a "From" token (e.g., USDC on Ethereum).
-2.  The `<euclid-swap-card>` component checks the `wallet.store` (Address Book) for an Ethereum wallet.
-3.  **If no signer is found:** The button displays "Connect Ethereum Wallet."
-4.  **If a signer is found:** The button displays "Swap."
+function DeFiDashboard() {
+  return (
+    <euclid-core-provider>
+      {/* User's cross-chain portfolio overview */}
+      <euclid-portfolio-overview />
 
-The user is only prompted to connect the *specific* wallet they *need*, exactly when they need it.
+      {/* Cross-chain swapping interface */}
+      <euclid-swap-card />
 
-### 4\. The Intelligent Wallet Modal (`<euclid-wallet-modal>`)
+      {/* Multi-chain liquidity management */}
+      <euclid-liquidity-card />
 
-We have **one single, intelligent modal** for managing wallets. Its behavior is controlled by the `app.store.walletModalFilter` state, which is set by *what* component calls it.
+      {/* Browse all cross-chain pools */}
+      <euclid-pools-list />
+    </euclid-core-provider>
+  );
+}
+```
 
-1.  **Manager Mode:** When opened by a *general* component (like the optional `<euclid-wallet-manager-button>` in a header), the filter is set to `null`. The modal reacts by showing the full Address Book.
-2.  **Filtered Mode:** When opened by an *action* (like the `<euclid-swap-card>`), the filter is set to the required chain (e.g., `'ethereum'`). The modal reacts by showing only options for that specific chain.
-
------
-
-## How to Use (For Developers)
-
-This library is designed to be plug-and-play.
+**What you get automatically:**
+- **Multi-chain balances**: ETH, USDC, ATOM, SOL, etc. all in one view
+- **Cross-chain swaps**: Direct ETH → ATOM swaps without manual bridging
+- **Unified liquidity**: Add ETH + ATOM to the same pool, earn yield on both
+- **Smart wallet management**: Connect only the wallets you need, when you need them
 
 ### 1\. Installation
 
 ```bash
-# This package will be published to NPM, e.g.:
 npm install @monkeyscanjump/euclid
 ```
 
-### 2\. Step 1: Wrap Your App (Example in Next.js `layout.tsx`)
+### 2\. Basic Setup
 
-You **must** wrap your application in the `<euclid-core-provider>`.
+**Required**: Wrap your application in `<euclid-core-provider>`:
 
 ```javascript
-// In your main layout file (e.g., layout.tsx, _app.tsx, index.html)
-// Import the library (this registers all components)
+// In your main layout file (layout.tsx, _app.tsx, index.html)
 import '@monkeyscanjump/euclid';
 
 export default function RootLayout({ children }) {
@@ -106,7 +228,6 @@ export default function RootLayout({ children }) {
     <html>
       <body>
         <euclid-core-provider>
-          {/* All your application's routes and components go here */}
           {children}
         </euclid-core-provider>
       </body>
@@ -115,98 +236,35 @@ export default function RootLayout({ children }) {
 }
 ```
 
-### 3\. Step 2: Use Feature Components (Example in a `/swap` page)
-
-Use any feature component. It will automatically connect to the provider and work.
+### 3\. Advanced: Programmatic Control
 
 ```javascript
-// In your swap page (e.g., /pages/swap.tsx)
-// No other imports are needed.
+import { appStore, walletStore, swapStore } from '@monkeyscanjump/euclid/store';
 
-export default function SwapPage() {
-  return (
-    <div>
-      <h1>My Custom Swap Page</h1>
-      <euclid-swap-card></euclid-swap-card>
-    </div>
-  );
-}
+// Open modals programmatically
+appStore.openTokenModal();
+appStore.openWalletModal();
+
+// Access cross-chain wallet data
+const ethereumWallet = walletStore.getWallet('ethereum');
+const cosmosWallet = walletStore.getWallet('cosmos');
+
+// Check cross-chain balances
+const allBalances = walletStore.getAllBalances();
+
+// Get optimal cross-chain routes
+const routes = swapStore.getRoutes('USDC', 'ATOM');
 ```
 
 -----
 
-## Project Structure
+### Key Architecture Decisions
 
-This repository contains both the StencilJS component library (`/src`) and the official Euclid Protocol documentation (`/docs`).
+**Simple Modal System:** Instead of complex, prop-heavy modals, we use a single `<euclid-modal>` that renders different content based on app store state.
 
-```
-/euclid
-|
-|-- /docs                   // <-- Official Euclid Protocol documentation
-|
-|-- /src
-|   |
-|   |-- /store                // Global State ("Model")
-|   |   |-- wallet.store.ts     // CORE: The "Address Book" (Wallets, Balances)
-|   |   |-- market.store.ts     // CORE: Cached Public Data (Chains, Tokens, Pools)
-|   |   |-- app.store.ts        // CORE: UI State (Modals, walletModalFilter)
-|   |   |-- swap.store.ts       // FEATURE: State for swap logic
-|   |   |-- liquidity.store.ts  // FEATURE: State for liquidity logic
-|   |   |-- index.ts
-|   |
-|   |-- /components
-|   |   |
-|   |   |-- /core               // **CORE SERVICES (Mandatory)**
-|   |   |   |-- /euclid-core-provider/
-|   |   |   |   |-- euclid-core-provider.tsx // **REQUIRED: The top-level provider**
-|   |   |   |-- /euclid-wallet-controller/
-|   |   |   |   |-- euclid-wallet-controller.tsx  // (Internal) Manages wallet.store
-|   |   |   |-- /euclid-market-data-controller/
-|   |   |   |   |-- euclid-market-data-controller.tsx // (Internal) Manages market.store
-|   |   |   |-- /euclid-user-data-controller/
-|   |   |       |-- euclid-user-data-controller.tsx // (Internal) Manages user balances
-|   |   |
-|   |   |-- /features           // **FEATURE COMPONENTS (A-la-carte)**
-|   |   |   |-- /swap/
-|   |   |   |   |-- euclid-swap-card.tsx      // VIEW: The full-featured swap UI
-|   |   |   |   |-- euclid-swap-controller.tsx  // LOGIC: (Internal) Polls routes
-|   |   |   |-- /liquidity/
-|   |   |   |   |-- euclid-liquidity-card.tsx // VIEW: The add/remove liquidity UI
-|   |   |   |   |-- euclid-liquidity-controller.tsx // LOGIC: (Internal) Executes txs
-|   |   |   |-- /pools/
-|   |   |   |   |-- euclid-pools-list.tsx     // VIEW: UI to show all pools
-|   |   |   |   |-- euclid-my-pools-list.tsx  // VIEW: UI to show user's pools
-|   |   |
-|   |   |-- /ui                 // **SHARED UI (Dumb, reusable pieces)**
-|   |   |   |-- /euclid-wallet-manager-button/
-|   |   |   |   |-- euclid-wallet-manager-button.tsx // Optional header button (sets filter to null)
-|   |   |   |-- /euclid-wallet-modal/
-|   |   |   |   |-- euclid-wallet-modal.tsx    // The intelligent "Address Book" modal
-|   |   |   |-- /euclid-token-modal/
-|   |   |   |   |-- euclid-token-modal.tsx    // Reusable modal for selecting tokens
-|   |   |   |-- /euclid-token-input/
-|   |   |   |   |-- euclid-token-input.tsx    // Reusable token input box
-|   |   |   |-- /euclid-button/
-|   |   |       |-- euclid-button.tsx
-|   |
-|   |-- /utils
-|   |   |-- /types/
-|   |   |   |-- api.types.ts
-|   |   |   |-- state.types.ts
-|   |   |-- api-client.ts       // Base 'fetch' wrapper
-|   |   |-- wallet-adapter.ts   // Logic to connect (Keplr, MetaMask, etc.)
-|   |   |-- constants.ts
-|   |
-|   |-- /global/
-|   |   |-- app.css             // **Global design system tokens (CSS variables)**
-|   |
-|   |-- index.html              // **Development Sandbox**
-|
-|-- stencil.config.ts         // Build configuration
-|-- package.json
-|-- tsconfig.json
-|-- LICENSE                   // CC0 1.0 Universal License
-```
+**Store-Driven UI:** Components don't manage their own modal state. They simply call `appStore.openTokenModal()` or `appStore.openWalletModal()`.
+
+**Clean Separation:** Modal logic is separate from content. Content components (`euclid-token-content`, `euclid-wallet-content`) are simple, reusable, and focused.
 
 -----
 
@@ -226,14 +284,45 @@ This project includes an `index.html` file that serves as a development sandbox 
     npm start
     ```
 
-3.  Open [http://localhost:3333](https://www.google.com/search?q=http://localhost:3333) in your browser. The `index.html` file will load, which should contain an instance of `<euclid-core-provider>` wrapping all feature components for testing.
+3.  Open [http://localhost:3333](https://www.google.com/search?q=http://localhost:3333) in your browser. The `index.html` file will load with the `<euclid-core-provider>` wrapping demo components.
 
-## Documentation
+## Current Implementation Status
 
-This repository includes the official Euclid Protocol documentation. All API calls (GQL and REST) are based on these files.
+✅ **Core Architecture Complete:**
+- Store-driven modal system with `<euclid-modal>`
+- "Address Book" wallet management (`wallet.store`)
+- Component architecture with core/features/ui separation
+- Clean CSS design system with `--euclid-` variables
 
-You can find the full documentation in the `/docs` folder.
+✅ **Available Components:**
+- Core: `euclid-core-provider` + all controllers
+- Features: `euclid-swap-card`, `euclid-liquidity-card`, `euclid-pools-list`
+- UI: `euclid-modal`, `euclid-token-content`, `euclid-wallet-content`, `euclid-button`
+
+🚧 **In Development:**
+- Wallet adapter integrations (MetaMask, Keplr, etc.)
+- API client for Euclid Protocol endpoints
+- Additional feature components (portfolio, analytics)
+
+## Documentation & API Reference
+
+This repository includes **comprehensive documentation** from the Euclid Protocol to ensure our components properly implement all available APIs and features.
+
+**Important**: We are an **independent project**. The `/docs` folder contains reference documentation to help us build accurate implementations of Euclid's public APIs. This is **not official documentation** - for the latest official docs, visit [euclid.xyz](https://euclid.xyz).
+
+**What's included:**
+- **GraphQL API Reference**: Complete schema for querying chain data, pools, tokens, and user balances
+- **REST API Reference**: Transaction endpoints for swaps, liquidity operations, and more
+- **Smart Contract Integration**: How to interact with Euclid's CosmWasm and Solidity contracts
+- **Architecture Overview**: Understanding Euclid's cross-chain settlement and routing
+
+**Our implementation status:**
+- ✅ **Core Architecture**: Multi-chain wallet management, store-driven UI
+- ✅ **Component Foundation**: Reusable modal system, token/wallet selection
+- 🚧 **API Integration**: Currently implementing GraphQL/REST clients
+- 🚧 **Wallet Adapters**: MetaMask, Keplr, Phantom integration
+- 🚧 **Transaction Handling**: Cross-chain swap and liquidity operations
 
 ## License
 
-This project is licensed under the **CC0 1.0 Universal** public domain dedication. See the [LICENSE](https://www.google.com/search?q=LICENSE) file for the full text.
+This project is licensed under the **CC0 1.0 Universal** public domain dedication - completely open source for the community.

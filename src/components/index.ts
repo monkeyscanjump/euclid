@@ -13,8 +13,9 @@ export { EuclidTxTrackerController } from './core/euclid-tx-tracker-controller/e
 // UI Components
 export { EuclidButton } from './ui/euclid-button/euclid-button';
 export { EuclidTokenInput } from './ui/euclid-token-input/euclid-token-input';
-export { EuclidTokenModal } from './ui/euclid-token-modal/euclid-token-modal';
-export { EuclidWalletModal } from './ui/euclid-wallet-modal/euclid-wallet-modal';
+export { EuclidModal } from './ui/euclid-modal/euclid-modal';
+export { EuclidTokenContent } from './ui/euclid-token-content/euclid-token-content';
+export { EuclidWalletContent } from './ui/euclid-wallet-content/euclid-wallet-content';
 
 // Feature Components
 export { EuclidSwapCard } from './features/euclid-swap-card/euclid-swap-card';

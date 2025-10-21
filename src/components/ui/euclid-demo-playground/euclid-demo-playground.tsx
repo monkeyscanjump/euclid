@@ -346,18 +346,77 @@ export class EuclidDemoPlayground {
   @Watch('selectedDemo')
   onSelectedDemoChange(newDemo: string) {
     this.activeTab = newDemo;
+    this.saveActiveTabToStorage();
     this.initializeProps();
   }
 
   componentWillLoad() {
-    this.activeTab = this.selectedDemo;
+    // Load saved active tab or use default
+    this.activeTab = this.loadActiveTabFromStorage();
     this.initializeProps();
+  }
+
+  private getStorageKey(demoId: string): string {
+    return `euclid-demo-props-${demoId}`;
+  }
+
+  private getActiveTabStorageKey(): string {
+    return 'euclid-demo-active-tab';
+  }
+
+  private saveActiveTabToStorage() {
+    try {
+      localStorage.setItem(this.getActiveTabStorageKey(), this.activeTab);
+    } catch (error) {
+      console.warn('Failed to save active tab to localStorage:', error);
+    }
+  }
+
+  private loadActiveTabFromStorage(): string {
+    try {
+      const savedTab = localStorage.getItem(this.getActiveTabStorageKey());
+      if (savedTab && this.componentDemos.find(d => d.id === savedTab)) {
+        return savedTab;
+      }
+    } catch (error) {
+      console.warn('Failed to load active tab from localStorage:', error);
+    }
+
+    // Fallback to prop or first demo
+    return this.selectedDemo || this.componentDemos[0]?.id || 'data-list-tokens';
+  }
+
+  private savePropsToStorage() {
+    try {
+      const storageKey = this.getStorageKey(this.activeTab);
+      localStorage.setItem(storageKey, JSON.stringify(this.currentProps));
+    } catch (error) {
+      console.warn('Failed to save props to localStorage:', error);
+    }
+  }
+
+  private loadPropsFromStorage(demo: ComponentDemo): Record<string, PropValue> {
+    try {
+      const storageKey = this.getStorageKey(demo.id);
+      const savedProps = localStorage.getItem(storageKey);
+
+      if (savedProps) {
+        const parsedProps = JSON.parse(savedProps);
+        // Merge with defaults to ensure all required props exist
+        return { ...demo.defaultProps, ...parsedProps };
+      }
+    } catch (error) {
+      console.warn('Failed to load props from localStorage:', error);
+    }
+
+    // Fallback to defaults
+    return { ...demo.defaultProps };
   }
 
   private initializeProps() {
     const demo = this.componentDemos.find(d => d.id === this.activeTab);
     if (demo) {
-      this.currentProps = { ...demo.defaultProps };
+      this.currentProps = this.loadPropsFromStorage(demo);
     }
   }
 
@@ -370,6 +429,17 @@ export class EuclidDemoPlayground {
       ...this.currentProps,
       [propName]: value
     };
+
+    // Save to localStorage immediately after updating
+    this.savePropsToStorage();
+  }
+
+  private resetToDefaults() {
+    const demo = this.getCurrentDemo();
+    if (demo) {
+      this.currentProps = { ...demo.defaultProps };
+      this.savePropsToStorage();
+    }
   }
 
   private generateComponentCode(): string {
@@ -403,6 +473,7 @@ export class EuclidDemoPlayground {
               class="component-dropdown"
               onChange={(e) => {
                 this.activeTab = (e.target as HTMLSelectElement).value;
+                this.saveActiveTabToStorage();
                 this.initializeProps();
               }}
             >
@@ -417,12 +488,26 @@ export class EuclidDemoPlayground {
 
         <div class="controls-header">
           <h3>Component Properties</h3>
-          <button
-            class={`code-toggle ${this.showCode ? 'active' : ''}`}
-            onClick={() => this.showCode = !this.showCode}
-          >
-            {this.showCode ? 'Hide Code' : 'Show Code'}
-          </button>
+          <div class="controls-actions">
+            <button
+              class="reset-button"
+              onClick={() => this.resetToDefaults()}
+              title="Reset to default values"
+            >
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+              </svg>
+            </button>
+            <button
+              class={`code-toggle ${this.showCode ? 'active' : ''}`}
+              onClick={() => this.showCode = !this.showCode}
+              title={this.showCode ? 'Hide Code' : 'Show Code'}
+            >
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0L19.2 12l-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/>
+              </svg>
+            </button>
+          </div>
         </div>
 
         {this.showCode && (
@@ -433,6 +518,16 @@ export class EuclidDemoPlayground {
 
         <div class="controls-grid">
           {demo.propDefinitions.map(prop => this.renderControl(prop))}
+        </div>
+
+        {/* GitHub Link */}
+        <div class="github-link">
+          <a href="https://github.com/monkeyscanjump/euclid" target="_blank" rel="noopener noreferrer" class="github-link-anchor">
+            <svg class="github-icon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0C5.374 0 0 5.373 0 12 0 17.302 3.438 21.8 8.207 23.387c.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+            </svg>
+            <span class="github-text">/ monkeyscanjump/euclid</span>
+          </a>
         </div>
       </div>
     );
@@ -451,9 +546,11 @@ export class EuclidDemoPlayground {
                 checked={Boolean(value)}
                 onChange={(e) => this.updateProp(prop.name, (e.target as HTMLInputElement).checked)}
               />
-              <span class="control-name">{prop.name}</span>
+              <div class="control-text">
+                <span class="control-name">{prop.name}</span>
+                {prop.description && <div class="control-description">{prop.description}</div>}
+              </div>
             </label>
-            {prop.description && <div class="control-description">{prop.description}</div>}
           </div>
         );
 
@@ -588,13 +685,7 @@ export class EuclidDemoPlayground {
         componentElement = <div>Component not found</div>;
     }
 
-    return (
-      <div class="demo-preview">
-        <div class="demo-content">
-          {componentElement}
-        </div>
-      </div>
-    );
+    return componentElement;
   }
 
   render() {

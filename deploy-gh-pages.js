@@ -78,6 +78,25 @@ html = html.replace(/data-resources-url="\/build\/"/g, 'data-resources-url="./bu
 fs.writeFileSync(indexDest, html);
 console.log('✅ Fixed GitHub Pages paths in index.html');
 
+// 5. Fix asset paths in JavaScript files
+console.log('🔧 Fixing asset paths in JavaScript files...');
+essentialFiles.forEach(file => {
+  if (file.endsWith('.js')) {
+    const filePath = path.join(docsBuildPath, file);
+    let jsContent = fs.readFileSync(filePath, 'utf8');
+
+    // Replace absolute asset paths with relative paths
+    const originalContent = jsContent;
+    jsContent = jsContent.replace(/["']\/assets\//g, '"./assets/');
+
+    if (jsContent !== originalContent) {
+      fs.writeFileSync(filePath, jsContent);
+      console.log(`   ✓ Fixed asset paths in ${file}`);
+    }
+  }
+});
+console.log('✅ Fixed asset paths in JavaScript files');
+
 // Summary
 const totalSize = essentialFiles.reduce((size, file) => {
   const filePath = path.join(distBuildPath, file);

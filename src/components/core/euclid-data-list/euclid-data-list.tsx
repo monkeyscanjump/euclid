@@ -109,6 +109,7 @@ export class EuclidDataList {
 
   /**
    * Enable worker-based processing for better performance with large datasets
+   * Note: Worker is automatically enabled when infiniteScroll is true
    */
   @Prop() enableWorker: boolean = false;
 
@@ -185,7 +186,9 @@ export class EuclidDataList {
   }
 
   private get useWorkerProcessing(): boolean {
-    return this.enableWorker && this.workerManager?.isWorkerAvailable() || false;
+    // Auto-enable worker when infinite scroll is enabled, or when explicitly enabled
+    const autoEnableForInfiniteScroll = this.infiniteScroll;
+    return (autoEnableForInfiniteScroll || this.enableWorker) && this.workerManager?.isWorkerAvailable() || false;
   }
 
   componentWillLoad() {
@@ -275,12 +278,13 @@ export class EuclidDataList {
   }
 
   private initializeWorker() {
-    if (this.enableWorker) {
+    // Auto-initialize worker when infinite scroll is enabled, or when explicitly enabled
+    if (this.enableWorker || this.infiniteScroll) {
       this.workerManager = new DataListWorkerManager({
         batchSize: this.itemsPerPage,
         debounceTime: 200
       });
-      console.log('🚀 Worker manager initialized');
+      console.log('🚀 Worker manager initialized', this.infiniteScroll ? '(auto-enabled for infinite scroll)' : '(explicitly enabled)');
     }
   }
 
@@ -294,8 +298,8 @@ export class EuclidDataList {
   private async applyFilters() {
     const startTime = performance.now();
 
-    if (this.useWorkerProcessing && this.storeData.length > 50) {
-      // Use worker for heavy processing
+    if (this.useWorkerProcessing && this.storeData.length > (this.infiniteScroll ? 25 : 50)) {
+      // Use worker for heavy processing - lower threshold for infinite scroll
       try {
         this.isWorkerProcessing = true;
         const result = await this.workerManager!.processData(
@@ -314,7 +318,7 @@ export class EuclidDataList {
           itemCount: this.storeData.length
         });
 
-        console.log(`⚡ Worker processed ${this.storeData.length} items in ${result.processingTime.toFixed(2)}ms`);
+        console.log(`⚡ Worker processed ${this.storeData.length} items in ${result.processingTime.toFixed(2)}ms ${this.infiniteScroll ? '(infinite scroll mode)' : ''}`);
       } catch (error) {
         console.error('❌ Worker processing failed, falling back to main thread:', error);
         this.filteredData = this.applyFiltersSync();
@@ -603,8 +607,8 @@ export class EuclidDataList {
     };
     this.currentPage = 1;
 
-    if (this.useWorkerProcessing && searchQuery.length > 2 && this.storeData.length > 100) {
-      // Use debounced worker search for large datasets
+    if (this.useWorkerProcessing && searchQuery.length > 1 && this.storeData.length > (this.infiniteScroll ? 25 : 100)) {
+      // Use debounced worker search for large datasets - more aggressive with infinite scroll
       try {
         this.isWorkerProcessing = true;
         const result = await this.workerManager!.searchDebounced(searchQuery, this.dataType);
@@ -637,7 +641,7 @@ export class EuclidDataList {
       sortOrder: sortOrder as 'asc' | 'desc',
     };
 
-    if (this.useWorkerProcessing && this.filteredData.length > 50) {
+    if (this.useWorkerProcessing && this.filteredData.length > (this.infiniteScroll ? 25 : 50)) {
       try {
         this.isWorkerProcessing = true;
         const result = await this.workerManager!.sort(sortBy, sortOrder as 'asc' | 'desc');
@@ -1186,7 +1190,9 @@ export class EuclidDataList {
             <h3 class="data-title">
               {this.effectiveCardTitle}
               {this.useWorkerProcessing && (
-                <span class="worker-badge">⚡ Worker</span>
+                <span class="worker-badge">
+                  ⚡ Worker{this.infiniteScroll && !this.enableWorker ? ' (auto)' : ''}
+                </span>
               )}
             </h3>
           </div>

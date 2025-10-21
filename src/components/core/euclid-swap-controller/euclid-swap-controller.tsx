@@ -8,7 +8,6 @@ import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
 
 @Component({
   tag: 'euclid-swap-controller',
-  shadow: true,
 })
 export class EuclidSwapController {
   @State() isInitialized = false;

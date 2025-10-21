@@ -5,7 +5,6 @@ import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
 
 @Component({
   tag: 'euclid-tx-tracker-controller',
-  shadow: true,
 })
 export class EuclidTxTrackerController {
   @State() isInitialized = false;

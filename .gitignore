@@ -80,11 +80,11 @@ out
 
 # Nuxt.js build / generate output
 .nuxt
-dist
 
 # Stencil build outputs
 loader/
 www/
+dist/
 .stencil/
 
 # Gatsby files

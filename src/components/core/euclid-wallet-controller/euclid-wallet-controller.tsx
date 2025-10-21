@@ -6,7 +6,6 @@ import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
 
 @Component({
   tag: 'euclid-wallet-controller',
-  shadow: true,
 })
 export class EuclidWalletController {
   @State() isInitialized = false;

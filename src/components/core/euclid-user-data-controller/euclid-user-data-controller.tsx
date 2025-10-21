@@ -18,7 +18,6 @@ interface BalanceData {
 
 @Component({
   tag: 'euclid-user-data-controller',
-  shadow: true,
 })
 export class EuclidUserDataController {
   @State() isInitialized = false;

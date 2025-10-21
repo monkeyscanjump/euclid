@@ -6,7 +6,6 @@ import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
 
 @Component({
   tag: 'euclid-market-data-controller',
-  shadow: true,
 })
 export class EuclidMarketDataController {
   @State() isInitialized = false;

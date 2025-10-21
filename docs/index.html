@@ -1,0 +1,99 @@
+<!doctype html><html lang="en"><head> <meta charset="utf-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0"> <title>Euclid Protocol - Component Testing</title> <link rel="modulepreload" href="/build/p-bb01fb4a.js"><link rel="modulepreload" href="/build/p-BQd9lUWY.js"><link rel="modulepreload" href="/build/p-CKexLjV3.js"><link rel="modulepreload" href="/build/p-Cpj4dy2_.js"><link rel="modulepreload" href="/build/p-DOUFQQkS.js"><link rel="modulepreload" href="/build/p-DQPEQJEF.js"><script type="module" src="/build/p-bb01fb4a.js" data-stencil data-resources-url="/build/" data-stencil-namespace="euclid"></script> <script nomodule="" src="/build/euclid.js" data-stencil></script> <style>body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    .components-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 40px;
+    }
+
+    .component-section {
+      padding: 20px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #fafafa;
+    }
+
+    .component-section h3 {
+      margin: 0 0 20px 0;
+      color: #2d3748;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    h1 {
+      color: #333;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    #logs {
+      background: #1a1a1a;
+      color: #00ff00;
+      padding: 15px;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      max-height: 300px;
+      overflow-y: auto;
+      margin-top: 20px;
+    }
+
+    .log-entry {
+      margin: 2px 0;
+      padding: 2px 0;
+    }
+
+    .log-success { color: #00ff00; }
+    .log-error { color: #ff4444; }
+    .log-warning { color: #ffaa00; }
+    .log-info { color: #00aaff; }
+    .log-debug { color: #888; }</style> </head> <body> <div class="container"> <h1>🧪 Euclid Protocol - Component Testing</h1> <div class="components-grid"> <!-- Pools List Component --> <section class="component-section"> <h3>📊 Pools List Component</h3> <euclid-pools-list card-title="Liquidity Pools" items-per-page="6"></euclid-pools-list> </section> <!-- Tokens List Component --> <section class="component-section"> <h3>🪙 Tokens List Component</h3> <euclid-tokens-list card-title="Available Tokens" items-per-page="8"></euclid-tokens-list> </section> <!-- Swap Card Component --> <section class="component-section"> <h3>🔄 Swap Card Component</h3> <euclid-swap-card card-title="Token Swap" show-advanced="true"></euclid-swap-card> </section> <!-- Liquidity Card Component --> <section class="component-section"> <h3>� Liquidity Card Component</h3> <euclid-liquidity-card card-title="Add Liquidity" show-pool-selection="true"></euclid-liquidity-card> </section> <!-- Portfolio Overview Component --> <section class="component-section"> <h3>💼 Portfolio Overview Component</h3> <euclid-portfolio-overview show-breakdown="true"></euclid-portfolio-overview> </section> </div> <div id="logs"></div> </div> <!-- Market Data Controller - This loads real Euclid API data --> <euclid-market-data-controller></euclid-market-data-controller> <!-- Generic Modal - Handles both wallet and token selection --> <euclid-modal></euclid-modal> <script>
+    // Global logging system
+    function log(message, type = 'info') {
+      const timestamp = new Date().toLocaleTimeString();
+      const logEntry = document.createElement('div');
+      logEntry.className = `log-entry log-${type}`;
+      logEntry.textContent = `[${timestamp}] ${message}`;
+
+      const logsContainer = document.getElementById('logs');
+      logsContainer.appendChild(logEntry);
+      logsContainer.scrollTop = logsContainer.scrollHeight;
+
+      console.log(`[${type.toUpperCase()}] ${message}`);
+    }
+
+    // Initialize when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+      log('🧪 Euclid Protocol Component Testing Page Loaded');
+      log('📡 Market data controller is initializing...');
+
+      // Check market data status after load
+      setTimeout(() => {
+        if (window.marketStore) {
+          log('Market store is available', 'success');
+          log(`Chains: ${window.marketStore.state.chains.length}, Tokens: ${window.marketStore.state.tokens.length}, Pools: ${window.marketStore.state.pools.length}`, 'info');
+
+          if (window.marketStore.state.error) {
+            log(`Store error: ${window.marketStore.state.error}`, 'error');
+          }
+        } else {
+          log('Market store not available yet', 'warning');
+        }
+      }, 3000);
+    });
+  </script> </body></html>

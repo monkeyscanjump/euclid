@@ -12,7 +12,6 @@ interface TransactionResponse {
 
 @Component({
   tag: 'euclid-liquidity-controller',
-  shadow: true,
 })
 export class EuclidLiquidityController {
   @State() isInitialized = false;

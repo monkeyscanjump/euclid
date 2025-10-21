@@ -1,7 +1,7 @@
 
 # Euclid: Open Source StencilJS Components for the Euclid Protocol
 
-**An independent, framework-agnostic component library** for building applications that interact with the [Euclid Protocol](https://euclid.xyz) - a cross-chain automated market maker (AMM) and liquidity protocol.
+**An independent, framework-agnostic component library** for building applications that interact with the [Euclid Protocol](https://euclidprotocol.io/) - a cross-chain automated market maker (AMM) and liquidity protocol.
 
 > **Note**: This is an **independent open-source project** built by framework-agnostic developers. We are **not affiliated** with the official Euclid Protocol team. Our goal is to provide high-quality, reusable Web Components that make it easier for developers to build applications using Euclid's public APIs.
 
@@ -308,7 +308,7 @@ This project includes an `index.html` file that serves as a development sandbox 
 
 This repository includes **comprehensive documentation** from the Euclid Protocol to ensure our components properly implement all available APIs and features.
 
-**Important**: We are an **independent project**. The `/docs` folder contains reference documentation to help us build accurate implementations of Euclid's public APIs. This is **not official documentation** - for the latest official docs, visit [euclid.xyz](https://euclid.xyz).
+**Important**: We are an **independent project**. The `/docs` folder contains reference documentation to help us build accurate implementations of Euclid's public APIs. This is **not official documentation** - for the latest official docs, visit [euclidprotocol.io](https://euclidprotocol.io/).
 
 **What's included:**
 - **GraphQL API Reference**: Complete schema for querying chain data, pools, tokens, and user balances

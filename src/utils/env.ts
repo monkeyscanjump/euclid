@@ -1,36 +1,21 @@
 /**
- * Environment Configuration Utility
- * Browser-compatible configuration without process.env dependency
+ * Default Configuration for Euclid Components
+ * These are fallback defaults that can be overridden by component props
  */
 
-interface EnvironmentConfig {
+export interface EuclidConfig {
   // API Configuration
-  euclidGraphqlEndpoint: string;
-  euclidRestEndpoint: string;
+  graphqlEndpoint: string;
+  restEndpoint: string;
   apiTimeout: number;
-
-  // Development Configuration
-  devServerPort: number;
-  devServerHost: string;
-  nodeEnv: 'development' | 'production' | 'test';
-
-  // Feature Flags
-  features: {
-    serviceWorker: boolean;
-    darkMode: boolean;
-    advancedRouting: boolean;
-    transactionHistory: boolean;
-    priceAlerts: boolean;
-    limitOrders: boolean;
-  };
+  environment: 'mainnet' | 'testnet' | 'devnet';
 
   // Performance Settings
   refreshIntervals: {
-    routes: number;
     marketData: number;
     balances: number;
+    routes: number;
   };
-  transactionTimeout: number;
 
   // UI Configuration
   ui: {
@@ -43,49 +28,36 @@ interface EnvironmentConfig {
     };
   };
 
-  // Chain Configuration
-  defaultChain: string;
-  supportedChains: string[];
+  // Feature Flags
+  features: {
+    darkMode: boolean;
+    transactionHistory: boolean;
+    advancedRouting: boolean;
+  };
 
   // Wallet Configuration
   defaultWallet: string;
   supportedWallets: string[];
 
-  // Logging & Debug
-  logLevel: 'error' | 'warn' | 'info' | 'debug';
-  debugMode: boolean;
-  enablePerformanceMonitoring: boolean;
+  // Chain Configuration
+  defaultChain: string;
+  supportedChains: string[];
 }
 
-// Direct configuration - this works in browser environments
-export const env: EnvironmentConfig = {
-  // API Configuration - using the values from your .env file
-  euclidGraphqlEndpoint: 'https://testnet.api.euclidprotocol.com/graphql',
-  euclidRestEndpoint: 'https://testnet.api.euclidprotocol.com/api/v1',
+// Default configuration (testnet endpoints as fallback)
+export const DEFAULT_CONFIG: EuclidConfig = {
+  // API Configuration
+  graphqlEndpoint: 'https://testnet.api.euclidprotocol.com/graphql',
+  restEndpoint: 'https://testnet.api.euclidprotocol.com/api/v1',
   apiTimeout: 10000,
-
-  // Development Configuration
-  devServerPort: 3333,
-  devServerHost: 'localhost',
-  nodeEnv: 'development',
-
-  // Feature Flags
-  features: {
-    serviceWorker: true,
-    darkMode: true,
-    advancedRouting: true,
-    transactionHistory: true,
-    priceAlerts: false,
-    limitOrders: false,
-  },
+  environment: 'testnet',
 
   // Performance Settings
   refreshIntervals: {
-    routes: 30000,
-    marketData: 300000,
-    balances: 60000,
+    marketData: 30000,  // 30 seconds
+    balances: 60000,    // 1 minute
+    routes: 300000,     // 5 minutes
   },
-  transactionTimeout: 300000,
 
   // UI Configuration
   ui: {
@@ -98,32 +70,61 @@ export const env: EnvironmentConfig = {
     },
   },
 
-  // Chain Configuration
-  defaultChain: 'osmosis-1',
-  supportedChains: ['cosmoshub-4', 'osmosis-1', 'juno-1', 'stargaze-1', 'ethereum', 'polygon', 'arbitrum', 'optimism'],
+  // Feature Flags
+  features: {
+    darkMode: true,
+    transactionHistory: true,
+    advancedRouting: true,
+  },
 
   // Wallet Configuration
   defaultWallet: 'keplr',
   supportedWallets: ['keplr', 'metamask', 'walletconnect', 'coinbase'],
 
-  // Logging & Debug
-  logLevel: 'info',
-  debugMode: false,
-  enablePerformanceMonitoring: false,
+  // Chain Configuration
+  defaultChain: 'osmosis-1',
+  supportedChains: ['cosmoshub-4', 'osmosis-1', 'juno-1', 'stargaze-1', 'ethereum', 'polygon', 'arbitrum', 'optimism'],
 };
 
-// Utility functions for common environment checks
-export const isDevelopment = () => env.nodeEnv === 'development';
-export const isProduction = () => env.nodeEnv === 'production';
-export const isFeatureEnabled = (feature: keyof typeof env.features) => env.features[feature];
-
-// Export individual configurations for convenience
-export const apiConfig = {
-  graphqlEndpoint: env.euclidGraphqlEndpoint,
-  restEndpoint: env.euclidRestEndpoint,
-  timeout: env.apiTimeout,
+// Environment presets for quick configuration
+export const ENVIRONMENT_PRESETS: Record<string, Partial<EuclidConfig>> = {
+  mainnet: {
+    graphqlEndpoint: 'https://api.euclidprotocol.com/graphql',
+    restEndpoint: 'https://api.euclidprotocol.com/api/v1',
+    environment: 'mainnet',
+  },
+  testnet: {
+    graphqlEndpoint: 'https://testnet.api.euclidprotocol.com/graphql',
+    restEndpoint: 'https://testnet.api.euclidprotocol.com/api/v1',
+    environment: 'testnet',
+  },
+  devnet: {
+    graphqlEndpoint: 'https://devnet.api.euclidprotocol.com/graphql',
+    restEndpoint: 'https://devnet.api.euclidprotocol.com/api/v1',
+    environment: 'devnet',
+  },
 };
 
-export const uiConfig = env.ui;
-export const featureFlags = env.features;
-export const refreshIntervals = env.refreshIntervals;
+// Utility function to merge config with overrides
+export const mergeConfig = (base: EuclidConfig, overrides: Partial<EuclidConfig>): EuclidConfig => {
+  return {
+    ...base,
+    ...overrides,
+    refreshIntervals: {
+      ...base.refreshIntervals,
+      ...overrides.refreshIntervals,
+    },
+    ui: {
+      ...base.ui,
+      ...overrides.ui,
+      zIndex: {
+        ...base.ui.zIndex,
+        ...overrides.ui?.zIndex,
+      },
+    },
+    features: {
+      ...base.features,
+      ...overrides.features,
+    },
+  };
+};

@@ -53,23 +53,23 @@ export const STORAGE_KEYS = {
   TRANSACTION_HISTORY: 'euclid_transaction_history',
 } as const;
 
-import { env } from './env';
+import { DEFAULT_CONFIG } from './env';
 
 // Default configuration values (now sourced from environment)
 export const DEFAULTS = {
-  SLIPPAGE: env.ui.defaultSlippage,
-  ROUTE_REFRESH_INTERVAL: env.refreshIntervals.routes,
-  MARKET_DATA_REFRESH_INTERVAL: env.refreshIntervals.marketData,
-  BALANCE_REFRESH_INTERVAL: env.refreshIntervals.balances,
-  TRANSACTION_TIMEOUT: env.transactionTimeout,
+  SLIPPAGE: DEFAULT_CONFIG.ui.defaultSlippage,
+  ROUTE_REFRESH_INTERVAL: DEFAULT_CONFIG.refreshIntervals.routes,
+  MARKET_DATA_REFRESH_INTERVAL: DEFAULT_CONFIG.refreshIntervals.marketData,
+  BALANCE_REFRESH_INTERVAL: DEFAULT_CONFIG.refreshIntervals.balances,
+  TRANSACTION_TIMEOUT: 300000, // 5 minutes
 } as const;
 
 // UI constants (now sourced from environment)
 export const UI = {
-  MODAL_Z_INDEX: env.ui.zIndex.modal,
-  TOOLTIP_Z_INDEX: env.ui.zIndex.tooltip,
-  DROPDOWN_Z_INDEX: env.ui.zIndex.dropdown,
-  ANIMATION_DURATION: env.ui.animationDuration,
+  MODAL_Z_INDEX: DEFAULT_CONFIG.ui.zIndex.modal,
+  TOOLTIP_Z_INDEX: DEFAULT_CONFIG.ui.zIndex.tooltip,
+  DROPDOWN_Z_INDEX: DEFAULT_CONFIG.ui.zIndex.dropdown,
+  ANIMATION_DURATION: DEFAULT_CONFIG.ui.animationDuration,
 } as const;
 
 // Validation regex patterns
@@ -102,10 +102,7 @@ export const SUCCESS_MESSAGES = {
 
 // Feature flags (now sourced from environment)
 export const FEATURES = {
-  SERVICE_WORKER: env.features.serviceWorker,
-  DARK_MODE: env.features.darkMode,
-  ADVANCED_ROUTING: env.features.advancedRouting,
-  TRANSACTION_HISTORY: env.features.transactionHistory,
-  PRICE_ALERTS: env.features.priceAlerts,
-  LIMIT_ORDERS: env.features.limitOrders,
+  DARK_MODE: DEFAULT_CONFIG.features.darkMode,
+  ADVANCED_ROUTING: DEFAULT_CONFIG.features.advancedRouting,
+  TRANSACTION_HISTORY: DEFAULT_CONFIG.features.transactionHistory,
 } as const;

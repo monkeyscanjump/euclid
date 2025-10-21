@@ -8,9 +8,8 @@ import type {
   TransactionResponse,
   ApiResponse
 } from './types/api.types';
-
-// REST API endpoint for Euclid testnet
-const EUCLID_REST_ENDPOINT = 'https://testnet.api.euclidprotocol.com/api/v1';
+import type { EuclidConfig } from './env';
+import { DEFAULT_CONFIG } from './env';
 
 /**
  * REST client for Euclid Protocol
@@ -18,9 +17,12 @@ const EUCLID_REST_ENDPOINT = 'https://testnet.api.euclidprotocol.com/api/v1';
  */
 export class EuclidRESTClient {
   private endpoint: string;
+  private timeout: number;
 
-  constructor(endpoint: string = EUCLID_REST_ENDPOINT) {
-    this.endpoint = endpoint;
+  constructor(config?: Partial<EuclidConfig>) {
+    const finalConfig = { ...DEFAULT_CONFIG, ...config };
+    this.endpoint = finalConfig.restEndpoint;
+    this.timeout = finalConfig.apiTimeout;
   }
 
   /**
@@ -34,6 +36,9 @@ export class EuclidRESTClient {
       headers?: Record<string, string>;
     } = {}
   ): Promise<ApiResponse<T>> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+
     try {
       const { method = 'GET', body, headers = {} } = options;
 
@@ -45,7 +50,10 @@ export class EuclidRESTClient {
           ...headers,
         },
         body: body ? JSON.stringify(body) : undefined,
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -59,6 +67,7 @@ export class EuclidRESTClient {
         data: result,
       };
     } catch (error) {
+      clearTimeout(timeoutId);
       console.error(`REST API request failed (${path}):`, error);
       return {
         success: false,
@@ -228,5 +237,10 @@ export class EuclidRESTClient {
   }
 }
 
-// Export a default instance
+// Export a default instance with default config
 export const euclidRESTClient = new EuclidRESTClient();
+
+// Export factory function for creating configured clients
+export const createRESTClient = (config?: Partial<EuclidConfig>) => {
+  return new EuclidRESTClient(config);
+};

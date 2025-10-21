@@ -9,9 +9,8 @@ import type {
   UserBalanceQueryResponse,
   ApiResponse
 } from './types/api.types';
-
-// GraphQL endpoint for Euclid testnet
-const EUCLID_GRAPHQL_ENDPOINT = 'https://testnet.api.euclidprotocol.com/graphql';
+import type { EuclidConfig } from './env';
+import { DEFAULT_CONFIG } from './env';
 
 /**
  * GraphQL client for Euclid Protocol
@@ -19,15 +18,21 @@ const EUCLID_GRAPHQL_ENDPOINT = 'https://testnet.api.euclidprotocol.com/graphql'
  */
 export class EuclidGraphQLClient {
   private endpoint: string;
+  private timeout: number;
 
-  constructor(endpoint: string = EUCLID_GRAPHQL_ENDPOINT) {
-    this.endpoint = endpoint;
+  constructor(config?: Partial<EuclidConfig>) {
+    const finalConfig = { ...DEFAULT_CONFIG, ...config };
+    this.endpoint = finalConfig.graphqlEndpoint;
+    this.timeout = finalConfig.apiTimeout;
   }
 
   /**
    * Execute a GraphQL query
    */
   private async query<T>(query: string, variables?: Record<string, unknown>): Promise<ApiResponse<T>> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+
     try {
       const response = await fetch(this.endpoint, {
         method: 'POST',
@@ -39,7 +44,10 @@ export class EuclidGraphQLClient {
           query,
           variables: variables || {},
         }),
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -56,6 +64,7 @@ export class EuclidGraphQLClient {
         data: result.data,
       };
     } catch (error) {
+      clearTimeout(timeoutId);
       console.error('GraphQL query failed:', error);
       return {
         success: false,
@@ -313,5 +322,10 @@ export class EuclidGraphQLClient {
   }
 }
 
-// Export a default instance
+// Export a default instance with default config
 export const euclidGraphQLClient = new EuclidGraphQLClient();
+
+// Export factory function for creating configured clients
+export const createGraphQLClient = (config?: Partial<EuclidConfig>) => {
+  return new EuclidGraphQLClient(config);
+};

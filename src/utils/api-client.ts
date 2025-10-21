@@ -3,8 +3,9 @@
  * Combines GraphQL and REST clients for a single interface
  */
 
-import { euclidGraphQLClient } from './graphql-client';
-import { euclidRESTClient } from './rest-client';
+import { EuclidGraphQLClient, createGraphQLClient } from './graphql-client';
+import { EuclidRESTClient, createRESTClient } from './rest-client';
+import type { EuclidConfig } from './env';
 import type {
   EuclidChainConfig,
   TokenMetadata,
@@ -24,8 +25,13 @@ import type {
  * Uses dedicated GraphQL and REST clients under the hood
  */
 export class EuclidAPIClient {
-  private graphql = euclidGraphQLClient;
-  private rest = euclidRESTClient;
+  private graphql: EuclidGraphQLClient;
+  private rest: EuclidRESTClient;
+
+  constructor(config?: Partial<EuclidConfig>) {
+    this.graphql = createGraphQLClient(config);
+    this.rest = createRESTClient(config);
+  }
 
   // ============================================================================
   // CHAIN & TOKEN METADATA (GraphQL)
@@ -421,7 +427,13 @@ export class EuclidAPIClient {
 }
 
 // Export the default instance
+// Export default instance with default configuration
 export const apiClient = new EuclidAPIClient();
+
+// Export factory function for creating configured clients
+export const createAPIClient = (config?: Partial<EuclidConfig>) => {
+  return new EuclidAPIClient(config);
+};
 
 // Re-export types for convenience
 export type {

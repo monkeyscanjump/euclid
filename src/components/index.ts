@@ -23,6 +23,7 @@ export { EuclidChainItem } from './ui/euclid-chain-item/euclid-chain-item';
 export { EuclidTokenItem } from './ui/euclid-token-item/euclid-token-item';
 export { EuclidListItems } from './ui/euclid-list-items/euclid-list-items';
 export { EuclidPoolItem } from './ui/euclid-pool-item/euclid-pool-item';
+export { EuclidDemoPlayground } from './ui/euclid-demo-playground/euclid-demo-playground';
 
 // Feature Components
 export { EuclidSwapCard } from './features/euclid-swap-card/euclid-swap-card';

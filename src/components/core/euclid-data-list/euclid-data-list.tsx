@@ -1,23 +1,15 @@
 import { Component, Prop, h, State, Event, EventEmitter, Watch, Element } from '@stencil/core';
 import { marketStore } from '../../../store/market.store';
 import type { TokenMetadata, EuclidChainConfig, PoolInfo } from '../../../utils/types/api.types';
-import { DataListWorkerManager } from '../../../utils/worker-manager';
-
-export type DataType = 'tokens' | 'chains' | 'pools';
-export type DisplayMode = 'card' | 'list-item' | 'compact' | 'grid';
-
-// Union type for all data items
-export type DataItem = TokenMetadata | EuclidChainConfig | PoolInfo;
-
-export interface FilterState {
-  search: string;
-  sortBy: string;
-  sortOrder: 'asc' | 'desc';
-  showFavorites?: boolean;
-  typeFilter?: string;
-  chainFilter?: string;
-  showMyPools?: boolean;
-}
+import {
+  InfiniteScrollManager,
+  FilterManager,
+  PaginationManager,
+  type InfiniteScrollConfig,
+  type FilterConfig,
+  type PaginationConfig
+} from './managers';
+import type { DataType, DisplayMode, DataItem, FilterState } from './types';
 
 @Component({
   tag: 'euclid-data-list',
@@ -27,98 +19,27 @@ export interface FilterState {
 export class EuclidDataList {
   @Element() el!: HTMLElement;
 
-  /**
-   * Type of data to display: tokens, chains, or pools
-   */
+  // Props
   @Prop() dataType!: DataType;
-
-  /**
-   * Display mode for items
-   */
   @Prop() displayMode: DisplayMode = 'card';
-
-  /**
-   * Card title
-   */
   @Prop() cardTitle: string = '';
-
-  /**
-   * Items per page for pagination, or initial items for infinite scroll
-   */
   @Prop() itemsPerPage: number = 10;
-
-  /**
-   * Enable infinite scroll instead of pagination
-   */
   @Prop() infiniteScroll: boolean = false;
-
-  /**
-   * Use parent container scroll instead of component's own scroll
-   */
   @Prop() useParentScroll: boolean = false;
-
-  /**
-   * Number of items from bottom to trigger infinite scroll load
-   */
   @Prop() infiniteScrollTriggerItems: number = 3;
-
-  /**
-   * Intersection threshold for infinite scroll trigger (0.0 to 1.0)
-   */
   @Prop() infiniteScrollThreshold: number = 0.1;
-
-  /**
-   * Maximum items to load in infinite scroll mode (prevents memory issues)
-   */
   @Prop() maxItems: number = 1000;
-
-  /**
-   * Fields to show in item components (comma-separated string)
-   */
   @Prop() showFields: string = '';
-
-  /**
-   * Whether to enable search
-   */
   @Prop() searchable: boolean = true;
-
-  /**
-   * Whether to enable filtering
-   */
   @Prop() filterable: boolean = true;
-
-  /**
-   * Whether to enable sorting
-   */
   @Prop() sortable: boolean = true;
-
-  /**
-   * Whether to show statistics
-   */
   @Prop() showStats: boolean = true;
-
-  /**
-   * Whether items are selectable
-   */
   @Prop() selectable: boolean = true;
-
-  /**
-   * External loading state override
-   */
   @Prop() loading: boolean = false;
-
-  /**
-   * Enable worker-based processing for better performance with large datasets
-   * Note: Worker is automatically enabled when infiniteScroll is true
-   */
   @Prop() enableWorker: boolean = false;
-
-  /**
-   * Wallet address for pool positions
-   */
   @Prop() walletAddress: string = '';
 
-  // Internal state
+  // State
   @State() filteredData: DataItem[] = [];
   @State() currentPage: number = 1;
   @State() totalPages: number = 1;
@@ -128,19 +49,13 @@ export class EuclidDataList {
     sortBy: '',
     sortOrder: 'asc',
   };
-
-  // Infinite scroll state
   @State() displayedItemsCount: number = 0;
   @State() hasMoreData: boolean = true;
   @State() isLoadingMore: boolean = false;
   @State() isComponentVisible: boolean = true;
-
-  // Store state
   @State() storeData: DataItem[] = [];
   @State() storeLoading: boolean = false;
   @State() storeError: string | null = null;
-
-  // Worker state
   @State() isWorkerProcessing: boolean = false;
   @State() workerProcessingTime: number = 0;
 
@@ -153,14 +68,10 @@ export class EuclidDataList {
   @Event() infiniteScrollStateChanged: EventEmitter<{ isLoading: boolean; hasMore: boolean; displayedCount: number }>;
   @Event() workerPerformance: EventEmitter<{ processingTime: number; operation: string; itemCount: number }>;
 
-  // Worker manager
-  private workerManager?: DataListWorkerManager;
-
-  // Intersection Observer instances
-  private componentObserver?: IntersectionObserver;
-  private itemObserver?: IntersectionObserver;
-  private triggerElements: Set<Element> = new Set();
-  private loadMoreDebounceTimer?: NodeJS.Timeout;
+  // Managers
+  private filterManager?: FilterManager;
+  private paginationManager?: PaginationManager;
+  private infiniteScrollManager?: InfiniteScrollManager;
   private contentElement?: HTMLElement;
 
   // Computed properties
@@ -185,17 +96,10 @@ export class EuclidDataList {
     return this.cardTitle || null;
   }
 
-  private get useWorkerProcessing(): boolean {
-    // Auto-enable worker when infinite scroll is enabled, or when explicitly enabled
-    const autoEnableForInfiniteScroll = this.infiniteScroll;
-    return (autoEnableForInfiniteScroll || this.enableWorker) && this.workerManager?.isWorkerAvailable() || false;
-  }
-
   componentWillLoad() {
     this.initializeFilterState();
-    this.initializeWorker();
     this.syncWithStore();
-    this.applyFilters();
+    this.initializeManagers();
 
     // Initialize infinite scroll state if enabled
     if (this.infiniteScroll) {
@@ -207,9 +111,7 @@ export class EuclidDataList {
     marketStore.onChange(this.storeKey, () => {
       this.syncWithStore();
       this.applyFilters();
-    });
-
-    marketStore.onChange('loading', () => {
+    });    marketStore.onChange('loading', () => {
       this.storeLoading = marketStore.state.loading;
     });
 
@@ -219,27 +121,21 @@ export class EuclidDataList {
   }
 
   componentDidLoad() {
-    console.log('🔍 EuclidDataList componentDidLoad - infiniteScroll:', this.infiniteScroll, 'useParentScroll:', this.useParentScroll);
     if (this.infiniteScroll) {
-      console.log('🚀 Setting up intersection observers for infinite scroll');
-      this.setupIntersectionObservers();
+      this.infiniteScrollManager?.initialize(this.contentElement);
     }
   }
 
   componentDidUpdate() {
     if (this.infiniteScroll) {
-      this.updateTriggerElements();
+      this.infiniteScrollManager?.updateTriggerElements();
     }
   }
 
   disconnectedCallback() {
-    this.cleanupIntersectionObservers();
-    if (this.loadMoreDebounceTimer) {
-      clearTimeout(this.loadMoreDebounceTimer);
-    }
-    if (this.workerManager) {
-      this.workerManager.destroy();
-    }
+    // Clean up managers
+    this.filterManager?.destroy();
+    this.infiniteScrollManager?.destroy();
   }
 
   private getDefaultFields(): string[] {
@@ -261,6 +157,83 @@ export class EuclidDataList {
     };
   }
 
+  private initializeManagers() {
+    // Initialize Filter Manager
+    const filterConfig: FilterConfig = {
+      enableWorker: this.enableWorker || this.infiniteScroll,
+      workerThreshold: this.infiniteScroll ? 25 : 50,
+      debounceTime: 200,
+    };
+
+    this.filterManager = new FilterManager(this.dataType, filterConfig, {
+      onFilterComplete: (data, processingTime) => {
+        this.filteredData = data;
+        this.workerProcessingTime = processingTime || 0;
+        this.paginationManager?.updateData(data);
+        this.filtersChanged.emit({
+          filters: { ...this.filterState },
+          resultCount: data.length,
+        });
+      },
+      onWorkerStateChange: (isProcessing) => {
+        this.isWorkerProcessing = isProcessing;
+      },
+      onPerformanceMetric: (metric) => {
+        this.workerPerformance.emit(metric);
+      },
+    });
+
+    // Initialize Pagination Manager
+    const paginationConfig: PaginationConfig = {
+      itemsPerPage: this.itemsPerPage,
+      maxItems: this.maxItems,
+      infiniteScroll: this.infiniteScroll,
+    };
+
+    this.paginationManager = new PaginationManager(paginationConfig, {
+      onStateChange: (state) => {
+        // Only sync non-infinite scroll state
+        if (!this.infiniteScroll) {
+          this.currentPage = state.currentPage;
+          this.totalPages = state.totalPages;
+        }
+      },
+      onPageChange: (page, totalPages, itemsPerPage) => {
+        this.pageChanged.emit({ page, totalPages, itemsPerPage });
+      },
+      onInfiniteScrollStateChange: (isLoading, hasMore, displayedCount) => {
+        this.infiniteScrollStateChanged.emit({
+          isLoading,
+          hasMore,
+          displayedCount,
+        });
+      },
+    });
+
+    // Initialize Infinite Scroll Manager (if needed)
+    if (this.infiniteScroll) {
+      const infiniteScrollConfig: InfiniteScrollConfig = {
+        useParentScroll: this.useParentScroll,
+        triggerItems: this.infiniteScrollTriggerItems,
+        threshold: this.infiniteScrollThreshold,
+        debounceTime: 100,
+      };
+
+      this.infiniteScrollManager = new InfiniteScrollManager(this.el, infiniteScrollConfig, {
+        onLoadMore: () => {
+          this.handleLoadMore();
+        },
+        onStateChange: (state) => {
+          this.isComponentVisible = state.isComponentVisible;
+          this.isLoadingMore = state.isLoadingMore;
+        },
+      });
+    }
+
+    // Apply initial filters
+    this.applyFilters();
+  }
+
   private getDefaultSort(): { key: string; order: 'asc' | 'desc' } {
     switch (this.dataType) {
       case 'tokens': return { key: 'name', order: 'asc' };
@@ -277,294 +250,55 @@ export class EuclidDataList {
     this.storeError = marketStore.state.error;
   }
 
-  private initializeWorker() {
-    // Auto-initialize worker when infinite scroll is enabled, or when explicitly enabled
-    if (this.enableWorker || this.infiniteScroll) {
-      this.workerManager = new DataListWorkerManager({
-        batchSize: this.itemsPerPage,
-        debounceTime: 200
-      });
-      console.log('🚀 Worker manager initialized', this.infiniteScroll ? '(auto-enabled for infinite scroll)' : '(explicitly enabled)');
-    }
-  }
-
   @Watch('dataType')
   @Watch('showFields')
+  @Watch('infiniteScroll')
   watchPropsChange() {
+    // Re-sync with store when dataType changes to get the correct data
+    this.syncWithStore();
+
+    // Reset filter state to defaults for new data type
     this.initializeFilterState();
+
+    // Re-initialize managers with new dataType
+    this.initializeManagers();
+
+    // Reset pagination and infinite scroll state
+    if (this.infiniteScroll) {
+      this.displayedItemsCount = this.itemsPerPage;
+      this.hasMoreData = true;
+    } else {
+      // When switching to pagination, ensure state is properly initialized
+      this.currentPage = 1;
+      this.displayedItemsCount = 0;
+      this.hasMoreData = false;
+    }
+
+    // Reset selection
+    this.selectedItemId = '';
+
+    // Apply filters with new data
     this.applyFilters();
   }
 
   private async applyFilters() {
-    const startTime = performance.now();
-
-    if (this.useWorkerProcessing && this.storeData.length > (this.infiniteScroll ? 25 : 50)) {
-      // Use worker for heavy processing - lower threshold for infinite scroll
-      try {
-        this.isWorkerProcessing = true;
-        const result = await this.workerManager!.processData(
-          this.storeData,
-          this.dataType,
-          this.filterState,
-          this.walletAddress
-        );
-
-        this.filteredData = result.filteredData;
-        this.workerProcessingTime = result.processingTime;
-
-        this.workerPerformance.emit({
-          processingTime: result.processingTime,
-          operation: 'filter_sort',
-          itemCount: this.storeData.length
-        });
-
-        console.log(`⚡ Worker processed ${this.storeData.length} items in ${result.processingTime.toFixed(2)}ms ${this.infiniteScroll ? '(infinite scroll mode)' : ''}`);
-      } catch (error) {
-        console.error('❌ Worker processing failed, falling back to main thread:', error);
-        this.filteredData = this.applyFiltersSync();
-      } finally {
-        this.isWorkerProcessing = false;
-      }
-    } else {
-      // Use main thread for smaller datasets or when worker is disabled
-      this.filteredData = this.applyFiltersSync();
-      const processingTime = performance.now() - startTime;
-      console.log(`⚡ Main thread processed ${this.storeData.length} items in ${processingTime.toFixed(2)}ms`);
+    if (this.filterManager && this.storeData.length > 0) {
+      await this.filterManager.processData(this.storeData, this.filterState, this.walletAddress);
+    } else if (this.storeData.length === 0) {
+      // No data yet, set empty filtered data
+      this.filteredData = [];
+      this.paginationManager?.updateData([]);
     }
 
-    // Reset infinite scroll state when filters change
-    if (this.infiniteScroll) {
-      this.displayedItemsCount = Math.min(this.itemsPerPage, this.filteredData.length);
-      this.hasMoreData = this.displayedItemsCount < this.filteredData.length;
-      this.isLoadingMore = false;
-    }
-
-    this.updatePagination();
-
-    // Emit filter change event
-    this.filtersChanged.emit({
-      filters: { ...this.filterState },
-      resultCount: this.filteredData.length,
-    });
-
-    // Update trigger elements after filter change
-    if (this.infiniteScroll) {
-      requestAnimationFrame(() => {
-        this.updateTriggerElements();
-      });
-    }
-  }
-
-  private applyFiltersSync(): DataItem[] {
-    let filtered = [...this.storeData];
-
-    // Apply search filter
-    if (this.searchable && this.filterState.search) {
-      const searchLower = this.filterState.search.toLowerCase();
-      filtered = filtered.filter(item => this.searchInItem(item, searchLower));
-    }
-
-    // Apply type-specific filters
-    filtered = this.applyTypeSpecificFilters(filtered);
-
-    // Apply sorting
-    if (this.sortable && this.filterState.sortBy) {
-      filtered = this.applySorting(filtered);
-    }
-
-    return filtered;
-  }
-
-  private searchInItem(item: DataItem, searchQuery: string): boolean {
-    const searchFields = this.getSearchFields();
-
-    return searchFields.some(field => {
-      const value = this.getItemValue(item, field);
-      return value && value.toString().toLowerCase().includes(searchQuery);
-    });
-  }
-
-  private getSearchFields(): string[] {
-    switch (this.dataType) {
-      case 'tokens': return ['displayName', 'tokenId', 'name'];
-      case 'chains': return ['display_name', 'chain_id', 'chain_uid'];
-      case 'pools': return ['token_1', 'token_2', 'pool_id'];
-      default: return ['name'];
-    }
-  }
-
-  private applyTypeSpecificFilters(items: DataItem[]): DataItem[] {
-    switch (this.dataType) {
-      case 'tokens':
-        return this.applyTokenFilters(items as TokenMetadata[]) as DataItem[];
-      case 'chains':
-        return this.applyChainFilters(items as EuclidChainConfig[]) as DataItem[];
-      case 'pools':
-        return this.applyPoolFilters(items as PoolInfo[]) as DataItem[];
-      default:
-        return items;
-    }
-  }
-
-  private applyTokenFilters(tokens: TokenMetadata[]): TokenMetadata[] {
-    let filtered = [...tokens];
-
-    // Chain filter
-    if (this.filterState.chainFilter) {
-      filtered = filtered.filter(token =>
-        token.chain_uids?.includes(this.filterState.chainFilter!)
-      );
-    }
-
-    // Favorites filter (if implemented)
-    if (this.filterState.showFavorites) {
-      // Implement favorites logic here
-    }
-
-    return filtered;
-  }
-
-  private applyChainFilters(chains: EuclidChainConfig[]): EuclidChainConfig[] {
-    let filtered = [...chains];
-
-    // Type filter
-    if (this.filterState.typeFilter) {
-      filtered = filtered.filter(chain => chain.type === this.filterState.typeFilter);
-    }
-
-    return filtered;
-  }
-
-  private applyPoolFilters(pools: PoolInfo[]): PoolInfo[] {
-    const filtered = [...pools];
-
-    // My pools filter (if wallet connected and positions available)
-    if (this.filterState.showMyPools && this.walletAddress) {
-      // This would need positions data - implement based on your needs
-      // For now, return all pools
-    }
-
-    return filtered;
-  }
-
-  private applySorting(items: DataItem[]): DataItem[] {
-    return [...items].sort((a, b) => {
-      let aValue: unknown, bValue: unknown;
-
-      switch (this.dataType) {
-        case 'tokens':
-          ({ aValue, bValue } = this.getTokenSortValues(a as TokenMetadata, b as TokenMetadata));
-          break;
-        case 'chains':
-          ({ aValue, bValue } = this.getChainSortValues(a as EuclidChainConfig, b as EuclidChainConfig));
-          break;
-        case 'pools':
-          ({ aValue, bValue } = this.getPoolSortValues(a as PoolInfo, b as PoolInfo));
-          break;
-        default:
-          aValue = bValue = 0;
-      }
-
-      if (typeof aValue === 'string' && typeof bValue === 'string') {
-        const result = aValue.localeCompare(bValue);
-        return this.filterState.sortOrder === 'asc' ? result : -result;
-      }
-
-      const result = (aValue as number || 0) - (bValue as number || 0);
-      return this.filterState.sortOrder === 'asc' ? result : -result;
-    });
-  }
-
-  private getTokenSortValues(a: TokenMetadata, b: TokenMetadata): { aValue: unknown; bValue: unknown } {
-    switch (this.filterState.sortBy) {
-      case 'name':
-        return { aValue: a.displayName, bValue: b.displayName };
-      case 'price':
-        return { aValue: parseFloat(a.price || '0'), bValue: parseFloat(b.price || '0') };
-      case 'volume':
-        return { aValue: a.total_volume_24h || 0, bValue: b.total_volume_24h || 0 };
-      case 'marketCap':
-        return { aValue: 0, bValue: 0 }; // Market cap not available in TokenMetadata
-      default:
-        return { aValue: a.displayName, bValue: b.displayName };
-    }
-  }
-
-  private getChainSortValues(a: EuclidChainConfig, b: EuclidChainConfig): { aValue: unknown; bValue: unknown } {
-    switch (this.filterState.sortBy) {
-      case 'name':
-        return { aValue: a.display_name, bValue: b.display_name };
-      case 'type':
-        return { aValue: a.type, bValue: b.type };
-      case 'chain_id':
-        return { aValue: a.chain_id, bValue: b.chain_id };
-      default:
-        return { aValue: a.display_name, bValue: b.display_name };
-    }
-  }
-
-  private getPoolSortValues(a: PoolInfo, b: PoolInfo): { aValue: unknown; bValue: unknown } {
-    switch (this.filterState.sortBy) {
-      case 'apr':
-        return {
-          aValue: parseFloat(a.apr?.replace('%', '') || '0'),
-          bValue: parseFloat(b.apr?.replace('%', '') || '0')
-        };
-      case 'tvl':
-        return {
-          aValue: parseFloat(a.total_liquidity || '0'),
-          bValue: parseFloat(b.total_liquidity || '0')
-        };
-      case 'volume':
-        return {
-          aValue: parseFloat(a.volume_24h || '0'),
-          bValue: parseFloat(b.volume_24h || '0')
-        };
-      case 'fees':
-        return {
-          aValue: parseFloat(a.fees_24h || '0'),
-          bValue: parseFloat(b.fees_24h || '0')
-        };
-      default:
-        return { aValue: a.token_1, bValue: b.token_1 };
-    }
-  }
-
-  private getItemValue(item: DataItem, field: string): string | number | null {
-    const fields = field.split('.');
-    let value: unknown = item;
-
-    for (const f of fields) {
-      if (value && typeof value === 'object' && f in value) {
-        value = (value as Record<string, unknown>)[f];
-      } else {
-        return null;
-      }
-    }
-
-    return value as string | number | null;
-  }
-
-  private updatePagination() {
-    console.log('🔍 updatePagination - infiniteScroll:', this.infiniteScroll, 'displayedItemsCount:', this.displayedItemsCount, 'filteredData.length:', this.filteredData.length);
-    if (this.infiniteScroll) {
-      // In infinite scroll mode, manage displayed items count
-      this.displayedItemsCount = Math.min(this.displayedItemsCount, this.filteredData.length, this.maxItems);
-      this.hasMoreData = this.displayedItemsCount < this.filteredData.length && this.displayedItemsCount < this.maxItems;
-      this.totalPages = 1; // Not used in infinite scroll
-      this.currentPage = 1; // Not used in infinite scroll
-      console.log('🚀 Infinite scroll state - displayedItemsCount:', this.displayedItemsCount, 'hasMoreData:', this.hasMoreData);
-    } else {
-      // Standard pagination logic
-      if (this.itemsPerPage > 0) {
-        this.totalPages = Math.ceil(this.filteredData.length / this.itemsPerPage);
-
-        if (this.currentPage > this.totalPages && this.totalPages > 0) {
+    // For non-infinite scroll mode, ensure pagination state is calculated
+    // This is a fallback in case the onStateChange callback doesn't trigger properly
+    if (!this.infiniteScroll && this.filteredData.length > 0) {
+      const totalPages = Math.ceil(this.filteredData.length / this.itemsPerPage);
+      if (this.totalPages !== totalPages) {
+        this.totalPages = totalPages;
+        if (this.currentPage > totalPages) {
           this.currentPage = 1;
         }
-      } else {
-        this.totalPages = 1;
-        this.currentPage = 1;
       }
     }
   }
@@ -572,9 +306,7 @@ export class EuclidDataList {
   private getPaginatedData(): DataItem[] {
     if (this.infiniteScroll) {
       // Return all displayed items for infinite scroll
-      const result = this.filteredData.slice(0, this.displayedItemsCount);
-      console.log('🔍 getPaginatedData (infinite scroll) - returning', result.length, 'items out of', this.filteredData.length);
-      return result;
+      return this.filteredData.slice(0, this.displayedItemsCount);
     }
 
     // Standard pagination logic
@@ -596,7 +328,7 @@ export class EuclidDataList {
     }
   }
 
-  // Event handlers
+  // Simplified event handlers using managers
   private handleSearch = async (event: Event) => {
     const target = event.target as HTMLInputElement;
     const searchQuery = target.value || '';
@@ -605,30 +337,8 @@ export class EuclidDataList {
       ...this.filterState,
       search: searchQuery,
     };
-    this.currentPage = 1;
-
-    if (this.useWorkerProcessing && searchQuery.length > 1 && this.storeData.length > (this.infiniteScroll ? 25 : 100)) {
-      // Use debounced worker search for large datasets - more aggressive with infinite scroll
-      try {
-        this.isWorkerProcessing = true;
-        const result = await this.workerManager!.searchDebounced(searchQuery, this.dataType);
-        this.filteredData = result.filteredData;
-        this.updatePagination();
-
-        this.workerPerformance.emit({
-          processingTime: result.processingTime,
-          operation: 'search',
-          itemCount: this.storeData.length
-        });
-      } catch (error) {
-        console.error('❌ Worker search failed:', error);
-        this.applyFilters(); // Fallback to sync processing
-      } finally {
-        this.isWorkerProcessing = false;
-      }
-    } else {
-      this.applyFilters();
-    }
+    this.paginationManager?.resetToFirstPage();
+    this.applyFilters();
   };
 
   private handleSortChange = async (event: Event) => {
@@ -641,26 +351,7 @@ export class EuclidDataList {
       sortOrder: sortOrder as 'asc' | 'desc',
     };
 
-    if (this.useWorkerProcessing && this.filteredData.length > (this.infiniteScroll ? 25 : 50)) {
-      try {
-        this.isWorkerProcessing = true;
-        const result = await this.workerManager!.sort(sortBy, sortOrder as 'asc' | 'desc');
-        this.filteredData = result.filteredData;
-
-        this.workerPerformance.emit({
-          processingTime: result.processingTime,
-          operation: 'sort',
-          itemCount: this.filteredData.length
-        });
-      } catch (error) {
-        console.error('❌ Worker sort failed:', error);
-        this.applyFilters();
-      } finally {
-        this.isWorkerProcessing = false;
-      }
-    } else {
-      this.applyFilters();
-    }
+    this.applyFilters();
   };
 
   private handleFilterChange = (filterKey: string, value: string | boolean) => {
@@ -668,7 +359,19 @@ export class EuclidDataList {
       ...this.filterState,
       [filterKey]: value,
     };
-    this.currentPage = 1;
+    this.paginationManager?.resetToFirstPage();
+    this.applyFilters();
+  };
+
+  private clearFilters = () => {
+    const defaultSort = this.getDefaultSort();
+
+    this.filterState = {
+      search: '',
+      sortBy: defaultSort.key,
+      sortOrder: defaultSort.order,
+    };
+    this.paginationManager?.resetToFirstPage();
     this.applyFilters();
   };
 
@@ -688,207 +391,10 @@ export class EuclidDataList {
   };
 
   private handlePageChange = (page: number) => {
-    if (page >= 1 && page <= this.totalPages) {
-      this.currentPage = page;
-      this.pageChanged.emit({
-        page,
-        totalPages: this.totalPages,
-        itemsPerPage: this.itemsPerPage,
-      });
-    }
+    this.paginationManager?.goToPage(page);
   };
-
-  private clearFilters = () => {
-    const defaultSort = this.getDefaultSort();
-
-    this.filterState = {
-      search: '',
-      sortBy: defaultSort.key,
-      sortOrder: defaultSort.order,
-    };
-    this.currentPage = 1;
-    this.applyFilters();
-  };
-
-  // Intersection Observer Methods
-  private findScrollContainer(element: Element): Element | null {
-    let current = element.parentElement;
-
-    while (current && current !== document.documentElement) {
-      const style = window.getComputedStyle(current);
-
-      // Check for explicit scroll settings
-      const hasScrollY = style.overflowY === 'auto' || style.overflowY === 'scroll';
-      const hasScrollGeneral = style.overflow === 'auto' || style.overflow === 'scroll';
-
-      // Check if element has scrollable content (height-wise)
-      const hasScrollableContent = current.scrollHeight > current.clientHeight;
-
-      // Special check for common scrollable containers
-      const isScrollableContainer = hasScrollableContent && (
-        hasScrollY ||
-        hasScrollGeneral ||
-        current.tagName === 'BODY' ||
-        current.classList.contains('container') ||
-        current.classList.contains('scroll') ||
-        current.classList.contains('scrollable')
-      );
-
-      if (isScrollableContainer) {
-        console.log('🔍 Found scroll container:', {
-          element: current,
-          tagName: current.tagName,
-          className: current.className,
-          overflowY: style.overflowY,
-          overflow: style.overflow,
-          scrollHeight: current.scrollHeight,
-          clientHeight: current.clientHeight
-        });
-        return current;
-      }
-
-      current = current.parentElement;
-    }
-
-    // If we reach body or document, check if body is scrollable
-    const body = document.body;
-    if (body && body.scrollHeight > body.clientHeight) {
-      console.log('🔍 Using body as scroll container');
-      return body;
-    }
-
-    console.log('🔍 No scroll container found, using viewport');
-    return null;
-  }
-
-  private setupIntersectionObservers() {
-    // Determine scroll root based on useParentScroll setting
-    let scrollRoot: Element | null = null;
-
-    if (this.useParentScroll) {
-      scrollRoot = this.findScrollContainer(this.el);
-    } else {
-      // Use component's own content element as scroll container
-      scrollRoot = this.contentElement || null;
-    }
-
-    console.log('🚀 Setting up observers with scroll root:', scrollRoot?.tagName || 'viewport');
-
-    // Component visibility observer for performance optimization
-    this.componentObserver = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          this.isComponentVisible = entry.isIntersecting;
-          if (!entry.isIntersecting) {
-            // Component is not visible, pause item observation
-            this.pauseItemObserver();
-          } else {
-            // Component is visible, resume item observation
-            this.resumeItemObserver();
-          }
-        });
-      },
-      {
-        root: this.useParentScroll ? scrollRoot : null,
-        rootMargin: '50px',
-        threshold: 0.1
-      }
-    );
-
-    // Observe the component itself
-    const hostElement = this.el;
-    if (hostElement) {
-      this.componentObserver.observe(hostElement);
-    }
-
-    // Item trigger observer for infinite scroll
-    this.itemObserver = new IntersectionObserver(
-      (entries) => {
-        if (!this.isComponentVisible || this.isLoadingMore || !this.hasMoreData) return;
-
-        entries.forEach((entry) => {
-          if (entry.isIntersecting && this.triggerElements.has(entry.target)) {
-            console.log('🎯 Trigger element intersected, loading more...');
-            this.handleLoadMore();
-          }
-        });
-      },
-      {
-        root: scrollRoot,
-        rootMargin: '20px',
-        threshold: this.infiniteScrollThreshold
-      }
-    );
-  }
-
-  private cleanupIntersectionObservers() {
-    if (this.componentObserver) {
-      this.componentObserver.disconnect();
-      this.componentObserver = undefined;
-    }
-
-    if (this.itemObserver) {
-      this.itemObserver.disconnect();
-      this.itemObserver = undefined;
-    }
-
-    this.triggerElements.clear();
-  }
-
-  private pauseItemObserver() {
-    if (this.itemObserver) {
-      this.triggerElements.forEach(element => {
-        this.itemObserver?.unobserve(element);
-      });
-    }
-  }
-
-  private resumeItemObserver() {
-    if (this.itemObserver && this.triggerElements.size > 0) {
-      this.triggerElements.forEach(element => {
-        this.itemObserver?.observe(element);
-      });
-    }
-  }
-
-  private updateTriggerElements() {
-    if (!this.infiniteScroll || !this.itemObserver) return;
-
-    // Clear existing observations
-    this.triggerElements.forEach(element => {
-      this.itemObserver?.unobserve(element);
-    });
-    this.triggerElements.clear();
-
-    // Find new trigger elements (last N items)
-    const contentElement = this.el?.shadowRoot?.querySelector('.data-content');
-    if (!contentElement) return;
-
-    const items = contentElement.querySelectorAll('.data-item');
-    const triggerCount = Math.min(this.infiniteScrollTriggerItems, items.length);
-
-    for (let i = items.length - triggerCount; i < items.length; i++) {
-      if (i >= 0 && items[i]) {
-        this.triggerElements.add(items[i]);
-        this.itemObserver.observe(items[i]);
-      }
-    }
-  }
 
   private handleLoadMore() {
-    if (this.isLoadingMore || !this.hasMoreData) return;
-
-    // Debounce multiple rapid calls
-    if (this.loadMoreDebounceTimer) {
-      clearTimeout(this.loadMoreDebounceTimer);
-    }
-
-    this.loadMoreDebounceTimer = setTimeout(() => {
-      this.loadMore();
-    }, 100);
-  }
-
-  private loadMore() {
     if (this.isLoadingMore || !this.hasMoreData) return;
 
     const currentCount = this.displayedItemsCount;
@@ -926,7 +432,7 @@ export class EuclidDataList {
 
       // Update trigger elements after DOM update
       requestAnimationFrame(() => {
-        this.updateTriggerElements();
+        this.infiniteScrollManager?.updateTriggerElements();
       });
     }, 200);
   }
@@ -1093,7 +599,7 @@ export class EuclidDataList {
       baseStats.push({ key: 'chains', label: 'Chains', value: chainCount.toString() });
     }
 
-    if (this.useWorkerProcessing && this.workerProcessingTime > 0) {
+    if ((this.enableWorker || this.infiniteScroll) && this.workerProcessingTime > 0) {
       baseStats.push({
         key: 'performance',
         label: 'Processing',
@@ -1105,8 +611,6 @@ export class EuclidDataList {
   }
 
   private renderPagination() {
-    console.log('🔍 renderPagination - infiniteScroll:', this.infiniteScroll, 'totalPages:', this.totalPages);
-    // Don't show pagination in infinite scroll mode
     if (this.infiniteScroll || this.totalPages <= 1) return null;
 
     return (
@@ -1177,7 +681,6 @@ export class EuclidDataList {
   }
 
   render() {
-    console.log('🔍 Rendering EuclidDataList - infiniteScroll:', this.infiniteScroll, 'useWorker:', this.useWorkerProcessing);
     const isLoading = (this.storeLoading || this.loading) && this.storeData.length === 0;
     const paginatedData = this.getPaginatedData();
     const ItemComponent = this.itemComponent;
@@ -1189,7 +692,7 @@ export class EuclidDataList {
           <div class="data-header">
             <h3 class="data-title">
               {this.effectiveCardTitle}
-              {this.useWorkerProcessing && (
+              {(this.enableWorker || this.infiniteScroll) && (
                 <span class="worker-badge">
                   ⚡ Worker{this.infiniteScroll && !this.enableWorker ? ' (auto)' : ''}
                 </span>

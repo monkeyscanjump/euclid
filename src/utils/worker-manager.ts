@@ -33,9 +33,7 @@ export class DataListWorkerManager {
     };
 
     this.initializeWorker();
-  }
-
-  private initializeWorker() {
+  }  private initializeWorker() {
     if (!this.worker) {
       try {
         this.worker = new Worker(this.config.workerPath);

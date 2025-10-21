@@ -8,7 +8,7 @@ import { HTMLStencilElement, JSXBase } from "@stencil/core/internal";
 import { ButtonSize, ButtonVariant } from "./components/ui/euclid-button/euclid-button";
 import { EuclidChainConfig, PoolInfo, TokenMetadata } from "./utils/types/api.types";
 import { ChainDisplayMode, ChainField } from "./components/ui/euclid-chain-item/euclid-chain-item";
-import { DataItem, DataType, DisplayMode, FilterState } from "./components/core/euclid-data-list/euclid-data-list";
+import { DataItem, DataType, DisplayMode, FilterState } from "./components/core/euclid-data-list/types";
 import { LiquidityPoolInfo, LiquidityPosition, LiquidityToken } from "./components/features/euclid-liquidity-card/euclid-liquidity-card";
 import { DisplayMode as DisplayMode1, FilterConfig, ListFilters, ListItemData, ListItemType, SortConfig } from "./components/ui/euclid-list-items/euclid-list-items";
 import { UserPoolPosition } from "./components/ui/euclid-pool-item/euclid-pool-item";
@@ -21,7 +21,7 @@ import { WalletProvider } from "./components/ui/euclid-wallet-content/euclid-wal
 export { ButtonSize, ButtonVariant } from "./components/ui/euclid-button/euclid-button";
 export { EuclidChainConfig, PoolInfo, TokenMetadata } from "./utils/types/api.types";
 export { ChainDisplayMode, ChainField } from "./components/ui/euclid-chain-item/euclid-chain-item";
-export { DataItem, DataType, DisplayMode, FilterState } from "./components/core/euclid-data-list/euclid-data-list";
+export { DataItem, DataType, DisplayMode, FilterState } from "./components/core/euclid-data-list/types";
 export { LiquidityPoolInfo, LiquidityPosition, LiquidityToken } from "./components/features/euclid-liquidity-card/euclid-liquidity-card";
 export { DisplayMode as DisplayMode1, FilterConfig, ListFilters, ListItemData, ListItemType, SortConfig } from "./components/ui/euclid-list-items/euclid-list-items";
 export { UserPoolPosition } from "./components/ui/euclid-pool-item/euclid-pool-item";
@@ -94,94 +94,80 @@ export namespace Components {
     }
     interface EuclidDataList {
         /**
-          * Card title
           * @default ''
          */
         "cardTitle": string;
-        /**
-          * Type of data to display: tokens, chains, or pools
-         */
         "dataType": DataType;
         /**
-          * Display mode for items
           * @default 'card'
          */
         "displayMode": DisplayMode;
         /**
-          * Enable worker-based processing for better performance with large datasets
           * @default false
          */
         "enableWorker": boolean;
         /**
-          * Whether to enable filtering
           * @default true
          */
         "filterable": boolean;
         /**
-          * Enable infinite scroll instead of pagination
           * @default false
          */
         "infiniteScroll": boolean;
         /**
-          * Intersection threshold for infinite scroll trigger (0.0 to 1.0)
           * @default 0.1
          */
         "infiniteScrollThreshold": number;
         /**
-          * Number of items from bottom to trigger infinite scroll load
           * @default 3
          */
         "infiniteScrollTriggerItems": number;
         /**
-          * Items per page for pagination, or initial items for infinite scroll
           * @default 10
          */
         "itemsPerPage": number;
         /**
-          * External loading state override
           * @default false
          */
         "loading": boolean;
         /**
-          * Maximum items to load in infinite scroll mode (prevents memory issues)
           * @default 1000
          */
         "maxItems": number;
         /**
-          * Whether to enable search
           * @default true
          */
         "searchable": boolean;
         /**
-          * Whether items are selectable
           * @default true
          */
         "selectable": boolean;
         /**
-          * Fields to show in item components (comma-separated string)
           * @default ''
          */
         "showFields": string;
         /**
-          * Whether to show statistics
           * @default true
          */
         "showStats": boolean;
         /**
-          * Whether to enable sorting
           * @default true
          */
         "sortable": boolean;
         /**
-          * Use parent container scroll instead of component's own scroll
           * @default false
          */
         "useParentScroll": boolean;
         /**
-          * Wallet address for pool positions
           * @default ''
          */
         "walletAddress": string;
+    }
+    interface EuclidDemoPlayground {
+        /**
+          * @default 'data-list-tokens'
+         */
+        "selectedDemo": string;
     }
     interface EuclidLiquidityCard {
         /**
@@ -644,6 +630,12 @@ declare global {
         prototype: HTMLEuclidDataListElement;
         new (): HTMLEuclidDataListElement;
     };
+    interface HTMLEuclidDemoPlaygroundElement extends Components.EuclidDemoPlayground, HTMLStencilElement {
+    }
+    var HTMLEuclidDemoPlaygroundElement: {
+        prototype: HTMLEuclidDemoPlaygroundElement;
+        new (): HTMLEuclidDemoPlaygroundElement;
+    };
     interface HTMLEuclidLiquidityCardElementEventMap {
         "liquidityAdded": {
     pool: LiquidityPoolInfo;
@@ -900,6 +892,7 @@ declare global {
         "euclid-chain-item": HTMLEuclidChainItemElement;
         "euclid-core-provider": HTMLEuclidCoreProviderElement;
         "euclid-data-list": HTMLEuclidDataListElement;
+        "euclid-demo-playground": HTMLEuclidDemoPlaygroundElement;
         "euclid-liquidity-card": HTMLEuclidLiquidityCardElement;
         "euclid-liquidity-controller": HTMLEuclidLiquidityControllerElement;
         "euclid-list-items": HTMLEuclidListItemsElement;
@@ -989,56 +982,43 @@ declare namespace LocalJSX {
     }
     interface EuclidDataList {
         /**
-          * Card title
           * @default ''
          */
         "cardTitle"?: string;
-        /**
-          * Type of data to display: tokens, chains, or pools
-         */
         "dataType": DataType;
         /**
-          * Display mode for items
           * @default 'card'
          */
         "displayMode"?: DisplayMode;
         /**
-          * Enable worker-based processing for better performance with large datasets
           * @default false
          */
         "enableWorker"?: boolean;
         /**
-          * Whether to enable filtering
           * @default true
          */
         "filterable"?: boolean;
         /**
-          * Enable infinite scroll instead of pagination
           * @default false
          */
         "infiniteScroll"?: boolean;
         /**
-          * Intersection threshold for infinite scroll trigger (0.0 to 1.0)
           * @default 0.1
          */
         "infiniteScrollThreshold"?: number;
         /**
-          * Number of items from bottom to trigger infinite scroll load
           * @default 3
          */
         "infiniteScrollTriggerItems"?: number;
         /**
-          * Items per page for pagination, or initial items for infinite scroll
           * @default 10
          */
         "itemsPerPage"?: number;
         /**
-          * External loading state override
           * @default false
          */
         "loading"?: boolean;
         /**
-          * Maximum items to load in infinite scroll mode (prevents memory issues)
           * @default 1000
          */
         "maxItems"?: number;
@@ -1050,40 +1030,39 @@ declare namespace LocalJSX {
         "onPageChanged"?: (event: EuclidDataListCustomEvent<{ page: number; totalPages: number; itemsPerPage: number }>) => void;
         "onWorkerPerformance"?: (event: EuclidDataListCustomEvent<{ processingTime: number; operation: string; itemCount: number }>) => void;
         /**
-          * Whether to enable search
           * @default true
          */
         "searchable"?: boolean;
         /**
-          * Whether items are selectable
           * @default true
          */
         "selectable"?: boolean;
         /**
-          * Fields to show in item components (comma-separated string)
           * @default ''
          */
         "showFields"?: string;
         /**
-          * Whether to show statistics
           * @default true
          */
         "showStats"?: boolean;
         /**
-          * Whether to enable sorting
           * @default true
          */
         "sortable"?: boolean;
         /**
-          * Use parent container scroll instead of component's own scroll
           * @default false
          */
         "useParentScroll"?: boolean;
         /**
-          * Wallet address for pool positions
           * @default ''
          */
         "walletAddress"?: string;
+    }
+    interface EuclidDemoPlayground {
+        /**
+          * @default 'data-list-tokens'
+         */
+        "selectedDemo"?: string;
     }
     interface EuclidLiquidityCard {
         /**
@@ -1526,6 +1505,7 @@ declare namespace LocalJSX {
         "euclid-chain-item": EuclidChainItem;
         "euclid-core-provider": EuclidCoreProvider;
         "euclid-data-list": EuclidDataList;
+        "euclid-demo-playground": EuclidDemoPlayground;
         "euclid-liquidity-card": EuclidLiquidityCard;
         "euclid-liquidity-controller": EuclidLiquidityController;
         "euclid-list-items": EuclidListItems;
@@ -1552,6 +1532,7 @@ declare module "@stencil/core" {
             "euclid-chain-item": LocalJSX.EuclidChainItem & JSXBase.HTMLAttributes<HTMLEuclidChainItemElement>;
             "euclid-core-provider": LocalJSX.EuclidCoreProvider & JSXBase.HTMLAttributes<HTMLEuclidCoreProviderElement>;
             "euclid-data-list": LocalJSX.EuclidDataList & JSXBase.HTMLAttributes<HTMLEuclidDataListElement>;
+            "euclid-demo-playground": LocalJSX.EuclidDemoPlayground & JSXBase.HTMLAttributes<HTMLEuclidDemoPlaygroundElement>;
             "euclid-liquidity-card": LocalJSX.EuclidLiquidityCard & JSXBase.HTMLAttributes<HTMLEuclidLiquidityCardElement>;
             "euclid-liquidity-controller": LocalJSX.EuclidLiquidityController & JSXBase.HTMLAttributes<HTMLEuclidLiquidityControllerElement>;
             "euclid-list-items": LocalJSX.EuclidListItems & JSXBase.HTMLAttributes<HTMLEuclidListItemsElement>;

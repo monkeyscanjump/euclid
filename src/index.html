@@ -4,263 +4,39 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0" />
-  <title>Euclid Protocol - Component Testing</title>
+  <title>Euclid</title>
 
   <script type="module" src="/build/euclid.esm.js"></script>
   <script nomodule src="/build/euclid.js"></script>
 
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       margin: 0;
-      padding: 20px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #ffffff;
       min-height: 100vh;
     }
 
     .container {
-      max-width: 1400px;
-      margin: 0 auto;
-      background: white;
-      border-radius: 12px;
-      padding: 30px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-    }
-
-    .components-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 40px;
-    }
-
-    .component-section {
-      padding: 20px;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      background: #fafafa;
-    }
-
-    .component-section h3 {
-      margin: 0 0 20px 0;
-      color: #2d3748;
-      font-size: 18px;
-      font-weight: 600;
-    }
-
-    h1 {
-      color: #333;
-      text-align: center;
-      margin-bottom: 30px;
-    }
-
-    #logs {
-      background: #1a1a1a;
-      color: #00ff00;
-      padding: 15px;
-      border-radius: 8px;
-      font-family: 'Courier New', monospace;
-      font-size: 12px;
-      max-height: 300px;
-      overflow-y: auto;
-      margin-top: 20px;
-    }
-
-    .log-entry {
-      margin: 2px 0;
-      padding: 2px 0;
-    }
-
-    .log-success { color: #00ff00; }
-    .log-error { color: #ff4444; }
-    .log-warning { color: #ffaa00; }
-    .log-info { color: #00aaff; }
-    .log-debug { color: #888; }
-
-    /* Demo section styles for parent scroll testing */
-    .demo-section {
-      padding: 20px;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      background: #fafafa;
-      max-height: 600px;
-      overflow-y: auto;
-    }
-
-    .demo-section h3 {
-      margin: 0 0 20px 0;
-      color: #2d3748;
-      font-size: 18px;
-      font-weight: 600;
-    }
-
-    .demo-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
+      width: 100%;
+      height: 100vh;
     }
   </style>
 </head>
 
 <body>
   <div class="container">
-    <h1>🧪 Euclid Protocol - Component Testing</h1>
-
-    <div class="components-grid">
-      <!-- Pools List Component -->
-      <section class="component-section">
-        <h3>📊 Pools List Component (NEW UNIFIED)</h3>
-        <euclid-data-list
-          data-type="pools"
-          display-mode="list-item"
-          card-title="Liquidity Pools"
-          items-per-page="10"
-          searchable
-          infinite-scroll
-          filterable
-          sortable
-          show-stats>
-        </euclid-data-list>
-      </section>
-
-      <!-- Tokens List Component -->
-      <section class="demo-section">
-        <h3>🪙 Tokens List Component (NEW UNIFIED)</h3>
-        <div class="demo-grid">
-          <euclid-data-list
-            data-type="tokens"
-            display-mode="list-item"
-            card-title="Tokens (List View - Parent Scroll)"
-            show-fields="logo,name,price,change"
-            items-per-page="8"
-            infinite-scroll
-            use-parent-scroll
-            searchable
-            sortable
-            show-stats>
-          </euclid-data-list>
-
-          <euclid-data-list
-            data-type="tokens"
-            display-mode="list-item"
-            card-title="Tokens (Worker-Optimized)"
-            show-fields="logo,name,price,change"
-            items-per-page="12"
-            infinite-scroll
-            use-parent-scroll
-            enable-worker
-            searchable
-            sortable
-            show-stats>
-          </euclid-data-list>
-        </div>
-
-        <!-- Note: Using the new unified euclid-data-list component with token configurations -->
-      </section>
-
-      <!-- Chains List Component -->
-      <section class="component-section">
-        <h3>⛓️ Chains List Component (NEW UNIFIED)</h3>
-        <euclid-data-list
-          data-type="chains"
-          display-mode="list-item"
-          card-title="Supported Chains"
-          show-fields="logo,name,type,chain_id"
-          items-per-page="10"
-          searchable="true"
-          filterable="true"
-          sortable="true"
-          show-stats="true">
-        </euclid-data-list>
-      </section>
-
-      <!-- Swap Card Component -->
-      <section class="component-section">
-        <h3>🔄 Swap Card Component</h3>
-        <euclid-swap-card
-          card-title="Token Swap"
-          show-advanced="true">
-        </euclid-swap-card>
-      </section>
-
-      <!-- Liquidity Card Component -->
-      <section class="component-section">
-        <h3>� Liquidity Card Component</h3>
-        <euclid-liquidity-card
-          card-title="Add Liquidity"
-          show-pool-selection="true">
-        </euclid-liquidity-card>
-      </section>
-
-      <!-- Portfolio Overview Component -->
-      <section class="component-section">
-        <h3>💼 Portfolio Overview Component</h3>
-        <euclid-portfolio-overview
-          show-breakdown="true">
-        </euclid-portfolio-overview>
-      </section>
-    </div>
-
-    <div id="logs"></div>
+    <euclid-demo-playground></euclid-demo-playground>
   </div>
 
-  <!-- Market Data Controller - This loads real Euclid API data -->
+  <!-- Controllers -->
   <euclid-market-data-controller></euclid-market-data-controller>
-
-  <!-- Generic Modal - Handles both wallet and token selection -->
   <euclid-modal></euclid-modal>
-
-  <script>
-    // Global logging system
-    function log(message, type = 'info') {
-      const timestamp = new Date().toLocaleTimeString();
-      const logEntry = document.createElement('div');
-      logEntry.className = `log-entry log-${type}`;
-      logEntry.textContent = `[${timestamp}] ${message}`;
-
-      const logsContainer = document.getElementById('logs');
-      logsContainer.appendChild(logEntry);
-      logsContainer.scrollTop = logsContainer.scrollHeight;
-
-      console.log(`[${type.toUpperCase()}] ${message}`);
-    }
-
-    // Initialize when page loads
-    document.addEventListener('DOMContentLoaded', () => {
-      log('🧪 Euclid Protocol Component Testing Page Loaded');
-      log('📡 Market data controller is initializing...');
-
-      // Check market data status after load
-      setTimeout(() => {
-        if (window.marketStore) {
-          log('Market store is available', 'success');
-          log(`Chains: ${window.marketStore.state.chains.length}, Tokens: ${window.marketStore.state.tokens.length}, Pools: ${window.marketStore.state.pools.length}`, 'info');
-
-          if (window.marketStore.state.error) {
-            log(`Store error: ${window.marketStore.state.error}`, 'error');
-          }
-        } else {
-          log('Market store not available yet', 'warning');
-        }
-      }, 3000);
-
-      // Add event listeners for unified components
-      setTimeout(() => {
-        try {
-          document.addEventListener('itemSelected', (event) => {
-            log(`Item selected: ${JSON.stringify(event.detail)}`, 'info');
-          });
-
-          document.addEventListener('filtersChanged', (event) => {
-            log(`Filters changed: ${event.detail.resultCount} results`, 'info');
-          });
-
-          log('✅ Unified data list components configured via HTML attributes', 'success');
-        } catch (error) {
-          log(`Failed to configure event listeners: ${error.message}`, 'error');
-        }
-      }, 1000);
-    });
-  </script>
 </body>
 
 </html>

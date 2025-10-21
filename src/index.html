@@ -85,30 +85,63 @@
     <div class="components-grid">
       <!-- Pools List Component -->
       <section class="component-section">
-        <h3>📊 Pools List Component</h3>
-        <euclid-pools-list
+        <h3>📊 Pools List Component (NEW UNIFIED)</h3>
+        <euclid-data-list
+          data-type="pools"
+          display-mode="card"
           card-title="Liquidity Pools"
-          items-per-page="6">
-        </euclid-pools-list>
+          items-per-page="6"
+          searchable="true"
+          filterable="true"
+          sortable="true"
+          show-stats="true">
+        </euclid-data-list>
       </section>
 
       <!-- Tokens List Component -->
-      <section class="component-section">
-        <h3>🪙 Tokens List Component</h3>
-        <euclid-tokens-list
-          card-title="Available Tokens"
-          items-per-page="8">
-        </euclid-tokens-list>
+      <section class="demo-section">
+        <h3>🪙 Tokens List Component (NEW UNIFIED)</h3>
+        <div class="demo-grid">
+          <euclid-data-list
+            data-type="tokens"
+            display-mode="list-item"
+            card-title="Tokens (List View)"
+            show-fields="logo,name,price,change"
+            items-per-page="12"
+            searchable="true"
+            sortable="true"
+            show-stats="true">
+          </euclid-data-list>
+
+          <euclid-data-list
+            data-type="tokens"
+            display-mode="card"
+            card-title="Tokens (Card View)"
+            show-fields="logo,name,price,change,change7d,volume,volume24h,chains,tags,verified,dex,decimals,description,minSwap"
+            items-per-page="12"
+            searchable="true"
+            sortable="true"
+            show-stats="true">
+          </euclid-data-list>
+        </div>
+
+        <!-- Note: Using the new unified euclid-data-list component with token configurations -->
       </section>
 
       <!-- Chains List Component -->
       <section class="component-section">
-        <h3>⛓️ Chains List Component</h3>
-        <euclid-chains-list
-          card-title="Supported Chains"
+        <h3>⛓️ Chains List Component (NEW UNIFIED)</h3>
+        <euclid-data-list
+          data-type="chains"
           display-mode="list-item"
-          items-per-page="10">
-        </euclid-chains-list>
+          card-title="Supported Chains"
+          show-fields="logo,name,type,chain_id"
+          items-per-page="10"
+          searchable="true"
+          filterable="true"
+          sortable="true"
+          show-stats="true">
+        </euclid-data-list>
       </section>
 
       <!-- Swap Card Component -->
@@ -180,6 +213,23 @@
           log('Market store not available yet', 'warning');
         }
       }, 3000);
+
+      // Add event listeners for unified components
+      setTimeout(() => {
+        try {
+          document.addEventListener('itemSelected', (event) => {
+            log(`Item selected: ${JSON.stringify(event.detail)}`, 'info');
+          });
+
+          document.addEventListener('filtersChanged', (event) => {
+            log(`Filters changed: ${event.detail.resultCount} results`, 'info');
+          });
+
+          log('✅ Unified data list components configured via HTML attributes', 'success');
+        } catch (error) {
+          log(`Failed to configure event listeners: ${error.message}`, 'error');
+        }
+      }, 1000);
     });
   </script>
 </body>

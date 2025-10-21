@@ -77,7 +77,7 @@ function App() {
 
 **Vue:**
 
-```vue
+```html
 <template>
   <euclid-core-provider>
     <euclid-swap-card />
@@ -166,6 +166,7 @@ npm run build
 ```
 
 Builds the component library to `dist/` with multiple output formats:
+
 - ES modules
 - CommonJS
 - React bindings

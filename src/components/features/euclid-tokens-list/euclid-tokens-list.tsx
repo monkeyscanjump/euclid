@@ -1,5 +1,6 @@
 import { Component, Prop, h, State, Event, EventEmitter, Watch } from '@stencil/core';
 import type { TokenMetadata } from '../../../utils/types/api.types';
+import type { TokenDisplayMode, TokenField } from '../../ui/euclid-token-item/euclid-token-item';
 import { marketStore } from '../../../store/market.store';
 
 export interface TokenFilters {
@@ -23,14 +24,39 @@ export class EuclidTokensList {
   @Prop() tokens: TokenMetadata[] = [];
 
   /**
+   * Display mode for token items
+   */
+  @Prop() displayMode: TokenDisplayMode = 'card';
+
+  /**
+   * Fields to show for each token
+   */
+  @Prop() showFields: TokenField[] = ['logo', 'name', 'price', 'change', 'volume24h', 'decimals', 'chains', 'tags', 'verified'];
+
+  /**
+   * Whether tokens are selectable
+   */
+  @Prop() selectable: boolean = true;
+
+  /**
+   * Whether to show search functionality
+   */
+  @Prop() searchable: boolean = true;
+
+  /**
+   * Whether to show filters
+   */
+  @Prop() filterable: boolean = true;
+
+  /**
    * Whether the component is in loading state (overrides store loading)
    */
   @Prop() loading: boolean = false;
 
   /**
-   * Items per page for pagination
+   * Items per page for pagination (0 = no pagination)
    */
-  @Prop() itemsPerPage: number = 20;
+  @Prop() itemsPerPage: number = 12;
 
   /**
    * Card title
@@ -41,6 +67,7 @@ export class EuclidTokensList {
   @State() filteredTokens: TokenMetadata[] = [];
   @State() currentPage: number = 1;
   @State() totalPages: number = 1;
+  @State() selectedTokenId: string = '';
   @State() filters: TokenFilters = {
     search: '',
     sortBy: 'name',
@@ -193,6 +220,31 @@ export class EuclidTokensList {
     return Array.from(chains).sort();
   }
 
+  private handleSearchInput = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    this.filters = { ...this.filters, search: target.value || '' };
+    this.currentPage = 1;
+    this.applyFilters();
+  };
+
+  private handleSortChange = (event: Event) => {
+    const target = event.target as HTMLSelectElement;
+    const [sortBy, sortOrder] = target.value.split('_');
+    this.filters = {
+      ...this.filters,
+      sortBy: sortBy as TokenFilters['sortBy'],
+      sortOrder: sortOrder as TokenFilters['sortOrder']
+    };
+    this.applyFilters();
+  };
+
+  private handleChainFilter = (event: Event) => {
+    const target = event.target as HTMLSelectElement;
+    this.filters = { ...this.filters, chainFilter: target.value };
+    this.currentPage = 1;
+    this.applyFilters();
+  };
+
   private handleFiltersChanged = (event: CustomEvent<TokenFilters>) => {
     this.filters = event.detail;
     this.currentPage = 1;
@@ -205,24 +257,13 @@ export class EuclidTokensList {
     }
   };
 
-  private handleTokenClick = (token: TokenMetadata) => {
+  private handleTokenSelect = (event: CustomEvent<TokenMetadata>) => {
+    const token = event.detail;
+    this.selectedTokenId = token.tokenId;
     this.tokenSelected.emit(token);
   };
 
-  private formatPrice(price: string | undefined): string {
-    if (!price || price === '0') return '$0.00';
-    const numPrice = parseFloat(price);
-    if (numPrice < 0.01) return `$${numPrice.toFixed(6)}`;
-    if (numPrice < 1) return `$${numPrice.toFixed(4)}`;
-    return `$${numPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  }
 
-  private formatVolume(volume: number): string {
-    if (volume >= 1e9) return `$${(volume / 1e9).toFixed(2)}B`;
-    if (volume >= 1e6) return `$${(volume / 1e6).toFixed(2)}M`;
-    if (volume >= 1e3) return `$${(volume / 1e3).toFixed(2)}K`;
-    return `$${volume.toFixed(2)}`;
-  }
 
   render() {
     const activeTokens = this.storeTokens.length > 0 ? this.storeTokens : this.tokens;
@@ -246,12 +287,52 @@ export class EuclidTokensList {
           <h3 class="tokens-title">{this.cardTitle}</h3>
         </div>
 
-        {/* Filters */}
-        <tokens-filters
-          filters={this.filters}
-          chains={uniqueChains}
-          onFiltersChanged={this.handleFiltersChanged}
-        />
+        {/* Search & Filters */}
+        {(this.searchable || this.filterable) && (
+          <div class="tokens-controls">
+            {this.searchable && (
+              <div class="search-input-container">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                </svg>
+                <input
+                  type="text"
+                  class="search-input"
+                  placeholder="Search tokens..."
+                  value={this.filters.search}
+                  onInput={this.handleSearchInput}
+                />
+              </div>
+            )}
+
+            {this.filterable && (
+              <div class="filters-container">
+                <select
+                  class="filter-select"
+                  onChange={this.handleChainFilter}
+                >
+                  <option value="" selected={this.filters.chainFilter === ''}>All Chains</option>
+                  {uniqueChains.map(chain => (
+                    <option key={chain} value={chain} selected={this.filters.chainFilter === chain}>
+                      {chain}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  class="filter-select"
+                  onChange={this.handleSortChange}
+                >
+                  <option value="name_asc" selected={this.filters.sortBy === 'name' && this.filters.sortOrder === 'asc'}>Name A-Z</option>
+                  <option value="name_desc" selected={this.filters.sortBy === 'name' && this.filters.sortOrder === 'desc'}>Name Z-A</option>
+                  <option value="price_desc" selected={this.filters.sortBy === 'price' && this.filters.sortOrder === 'desc'}>Price High-Low</option>
+                  <option value="price_asc" selected={this.filters.sortBy === 'price' && this.filters.sortOrder === 'asc'}>Price Low-High</option>
+                  <option value="volume_desc" selected={this.filters.sortBy === 'volume' && this.filters.sortOrder === 'desc'}>Volume High-Low</option>
+                </select>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Stats */}
         <div class="tokens-stats">
@@ -272,7 +353,10 @@ export class EuclidTokensList {
         {/* Content */}
         <div class="tokens-content">
           {isLoading ? (
-            <tokens-loading count={6} />
+            <div class="loading-state">
+              <div class="loading-spinner"></div>
+              <span>Loading tokens...</span>
+            </div>
           ) : paginatedTokens.length === 0 ? (
             <div class="empty-state">
               <svg viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -281,12 +365,19 @@ export class EuclidTokensList {
               <span>No tokens found matching your criteria</span>
             </div>
           ) : (
-            <div class="tokens-grid">
+            <div class={{
+              'tokens-grid': this.displayMode === 'card',
+              'tokens-list-container': this.displayMode !== 'card'
+            }}>
               {paginatedTokens.map(token => (
-                <token-item
+                <euclid-token-item
                   key={token.tokenId}
                   token={token}
-                  onClick={() => this.handleTokenClick(token)}
+                  displayMode={this.displayMode}
+                  showFields={this.showFields}
+                  selectable={this.selectable}
+                  selected={this.selectedTokenId === token.tokenId}
+                  onTokenClick={this.handleTokenSelect}
                 />
               ))}
             </div>

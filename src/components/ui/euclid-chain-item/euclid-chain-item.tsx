@@ -66,14 +66,23 @@ export class EuclidChainItem {
     return this.showFields.includes(field);
   }
 
-  private getChainTypeColor(): string {
+  private getChainTypeStyles(): { backgroundColor: string; color: string } {
     switch (this.chain.type) {
       case 'EVM':
-        return 'var(--euclid-accent-blue)';
+        return {
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          color: '#3b82f6'
+        };
       case 'Cosmwasm':
-        return 'var(--euclid-accent-purple)';
+        return {
+          backgroundColor: 'rgba(147, 51, 234, 0.1)',
+          color: '#9333ea'
+        };
       default:
-        return 'var(--euclid-text-secondary)';
+        return {
+          backgroundColor: 'rgba(107, 114, 128, 0.1)',
+          color: '#6b7280'
+        };
     }
   }
 
@@ -132,7 +141,7 @@ export class EuclidChainItem {
               {this.shouldShowField('type') && (
                 <span
                   class="chain-type"
-                  style={{ color: this.getChainTypeColor() }}
+                  style={this.getChainTypeStyles()}
                 >
                   {this.getChainTypeLabel()}
                 </span>

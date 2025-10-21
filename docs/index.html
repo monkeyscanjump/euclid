@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head> <meta charset="utf-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0"> <title>Euclid Protocol - Component Testing</title> <link rel="modulepreload" href="./build/p-bb01fb4a.js"><link rel="modulepreload" href="./build/p-BQd9lUWY.js"><link rel="modulepreload" href="./build/p-CKexLjV3.js"><link rel="modulepreload" href="./build/p-Cpj4dy2_.js"><link rel="modulepreload" href="./build/p-DOUFQQkS.js"><link rel="modulepreload" href="./build/p-DQPEQJEF.js"><script type="module" src="./build/p-bb01fb4a.js" data-stencil data-resources-url="./build/" data-stencil-namespace="euclid"></script> <script nomodule="" src="./build/euclid.js" data-stencil></script> <style>body {
+<!doctype html><html lang="en"><head> <meta charset="utf-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0"> <title>Euclid Protocol - Component Testing</title> <link rel="modulepreload" href="./build/p-afd2e413.js"><link rel="modulepreload" href="./build/p-B5JcU1Ey.js"><link rel="modulepreload" href="./build/p-BAyCcMK2.js"><link rel="modulepreload" href="./build/p-CDg7SVxJ.js"><link rel="modulepreload" href="./build/p-CHLqsENg.js"><link rel="modulepreload" href="./build/p-CKexLjV3.js"><link rel="modulepreload" href="./build/p-D7LBObh4.js"><link rel="modulepreload" href="./build/p-KvMX95QM.js"><script type="module" src="./build/p-afd2e413.js" data-stencil data-resources-url="./build/" data-stencil-namespace="euclid"></script> <script nomodule="" src="./build/euclid.js" data-stencil></script> <style>body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       margin: 0;
       padding: 20px;
@@ -62,7 +62,7 @@
     .log-error { color: #ff4444; }
     .log-warning { color: #ffaa00; }
     .log-info { color: #00aaff; }
-    .log-debug { color: #888; }</style> </head> <body> <div class="container"> <h1>🧪 Euclid Protocol - Component Testing</h1> <div class="components-grid"> <!-- Pools List Component --> <section class="component-section"> <h3>📊 Pools List Component</h3> <euclid-pools-list card-title="Liquidity Pools" items-per-page="6"></euclid-pools-list> </section> <!-- Tokens List Component --> <section class="component-section"> <h3>🪙 Tokens List Component</h3> <euclid-tokens-list card-title="Available Tokens" items-per-page="8"></euclid-tokens-list> </section> <!-- Swap Card Component --> <section class="component-section"> <h3>🔄 Swap Card Component</h3> <euclid-swap-card card-title="Token Swap" show-advanced="true"></euclid-swap-card> </section> <!-- Liquidity Card Component --> <section class="component-section"> <h3>� Liquidity Card Component</h3> <euclid-liquidity-card card-title="Add Liquidity" show-pool-selection="true"></euclid-liquidity-card> </section> <!-- Portfolio Overview Component --> <section class="component-section"> <h3>💼 Portfolio Overview Component</h3> <euclid-portfolio-overview show-breakdown="true"></euclid-portfolio-overview> </section> </div> <div id="logs"></div> </div> <!-- Market Data Controller - This loads real Euclid API data --> <euclid-market-data-controller></euclid-market-data-controller> <!-- Generic Modal - Handles both wallet and token selection --> <euclid-modal></euclid-modal> <script>
+    .log-debug { color: #888; }</style> </head> <body> <div class="container"> <h1>🧪 Euclid Protocol - Component Testing</h1> <div class="components-grid"> <!-- Pools List Component --> <section class="component-section"> <h3>📊 Pools List Component (NEW UNIFIED)</h3> <euclid-data-list data-type="pools" display-mode="list-item" card-title="Liquidity Pools" items-per-page="10" searchable="true" filterable="true" sortable="true" show-stats="true"></euclid-data-list> </section> <!-- Tokens List Component --> <section class="demo-section"> <h3>🪙 Tokens List Component (NEW UNIFIED)</h3> <div class="demo-grid"> <euclid-data-list data-type="tokens" display-mode="list-item" card-title="Tokens (List View)" show-fields="logo,name,price,change" items-per-page="12" searchable="true" sortable="true" show-stats="true"></euclid-data-list> <euclid-data-list data-type="tokens" display-mode="card" card-title="Tokens (Card View)" show-fields="logo,name,price,change,change7d,volume,volume24h,chains,tags,verified,dex,decimals,description,minSwap" items-per-page="12" searchable="true" sortable="true" show-stats="true"></euclid-data-list> </div> <!-- Note: Using the new unified euclid-data-list component with token configurations --> </section> <!-- Chains List Component --> <section class="component-section"> <h3>⛓️ Chains List Component (NEW UNIFIED)</h3> <euclid-data-list data-type="chains" display-mode="list-item" card-title="Supported Chains" show-fields="logo,name,type,chain_id" items-per-page="10" searchable="true" filterable="true" sortable="true" show-stats="true"></euclid-data-list> </section> <!-- Swap Card Component --> <section class="component-section"> <h3>🔄 Swap Card Component</h3> <euclid-swap-card card-title="Token Swap" show-advanced="true"></euclid-swap-card> </section> <!-- Liquidity Card Component --> <section class="component-section"> <h3>� Liquidity Card Component</h3> <euclid-liquidity-card card-title="Add Liquidity" show-pool-selection="true"></euclid-liquidity-card> </section> <!-- Portfolio Overview Component --> <section class="component-section"> <h3>💼 Portfolio Overview Component</h3> <euclid-portfolio-overview show-breakdown="true"></euclid-portfolio-overview> </section> </div> <div id="logs"></div> </div> <!-- Market Data Controller - This loads real Euclid API data --> <euclid-market-data-controller></euclid-market-data-controller> <!-- Generic Modal - Handles both wallet and token selection --> <euclid-modal></euclid-modal> <script>
     // Global logging system
     function log(message, type = 'info') {
       const timestamp = new Date().toLocaleTimeString();
@@ -95,5 +95,22 @@
           log('Market store not available yet', 'warning');
         }
       }, 3000);
+
+      // Add event listeners for unified components
+      setTimeout(() => {
+        try {
+          document.addEventListener('itemSelected', (event) => {
+            log(`Item selected: ${JSON.stringify(event.detail)}`, 'info');
+          });
+
+          document.addEventListener('filtersChanged', (event) => {
+            log(`Filters changed: ${event.detail.resultCount} results`, 'info');
+          });
+
+          log('✅ Unified data list components configured via HTML attributes', 'success');
+        } catch (error) {
+          log(`Failed to configure event listeners: ${error.message}`, 'error');
+        }
+      }, 1000);
     });
   </script> </body></html>

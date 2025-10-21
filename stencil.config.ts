@@ -41,6 +41,10 @@ export const config: Config = {
         {
           src: 'assets',
           dest: 'assets'
+        },
+        {
+          src: 'workers',
+          dest: 'workers'
         }
       ]
     },

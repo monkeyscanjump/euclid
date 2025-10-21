@@ -108,6 +108,11 @@ export namespace Components {
          */
         "displayMode": DisplayMode;
         /**
+          * Enable worker-based processing for better performance with large datasets
+          * @default false
+         */
+        "enableWorker": boolean;
+        /**
           * Whether to enable filtering
           * @default true
          */
@@ -623,6 +628,7 @@ declare global {
         "pageChanged": { page: number; totalPages: number; itemsPerPage: number };
         "loadMoreRequested": { currentCount: number; requestedCount: number };
         "infiniteScrollStateChanged": { isLoading: boolean; hasMore: boolean; displayedCount: number };
+        "workerPerformance": { processingTime: number; operation: string; itemCount: number };
     }
     interface HTMLEuclidDataListElement extends Components.EuclidDataList, HTMLStencilElement {
         addEventListener<K extends keyof HTMLEuclidDataListElementEventMap>(type: K, listener: (this: HTMLEuclidDataListElement, ev: EuclidDataListCustomEvent<HTMLEuclidDataListElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -997,6 +1003,11 @@ declare namespace LocalJSX {
          */
         "displayMode"?: DisplayMode;
         /**
+          * Enable worker-based processing for better performance with large datasets
+          * @default false
+         */
+        "enableWorker"?: boolean;
+        /**
           * Whether to enable filtering
           * @default true
          */
@@ -1037,6 +1048,7 @@ declare namespace LocalJSX {
         "onItemSelected"?: (event: EuclidDataListCustomEvent<{ item: DataItem; id: string }>) => void;
         "onLoadMoreRequested"?: (event: EuclidDataListCustomEvent<{ currentCount: number; requestedCount: number }>) => void;
         "onPageChanged"?: (event: EuclidDataListCustomEvent<{ page: number; totalPages: number; itemsPerPage: number }>) => void;
+        "onWorkerPerformance"?: (event: EuclidDataListCustomEvent<{ processingTime: number; operation: string; itemCount: number }>) => void;
         /**
           * Whether to enable search
           * @default true

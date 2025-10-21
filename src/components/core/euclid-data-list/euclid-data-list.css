@@ -215,6 +215,38 @@
   position: relative;
 }
 
+/* Worker-related styles */
+.worker-badge {
+  font-size: 0.8em;
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 8px;
+  font-weight: normal;
+}
+
+.search-processing {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.loading-spinner-small {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.data-content--processing {
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
 /* Infinite Scroll Footer */
 .infinite-scroll-footer {
   padding: 16px 24px;

@@ -141,13 +141,16 @@
 
           <euclid-data-list
             data-type="tokens"
-            display-mode="card"
-            card-title="Tokens (Card View)"
-            show-fields="logo,name,price,change,change7d,volume,volume24h,chains,tags,verified,dex,decimals,description,minSwap"
+            display-mode="list-item"
+            card-title="Tokens (Worker-Optimized)"
+            show-fields="logo,name,price,change"
             items-per-page="12"
-            searchable="true"
-            sortable="true"
-            show-stats="true">
+            infinite-scroll
+            use-parent-scroll
+            enable-worker
+            searchable
+            sortable
+            show-stats>
           </euclid-data-list>
         </div>
 

@@ -49,9 +49,10 @@
   "scripts": {
     "prebuild": "rimraf dist",
     "build:stencil": "stencil build",
+    "build:worker": "node scripts/build-worker.ts",
     "build:sw:bundle": "esbuild src/sw.ts --bundle --outfile=dist/www/sw-base.js --format=esm --minify --external:fs --external:crypto",
     "build:sw:inject": "node build-sw.mjs",
-    "build": "npm run build:stencil && npm run build:sw:bundle && npm run build:sw:inject",
+    "build": "npm run build:stencil && npm run build:worker && npm run build:sw:bundle && npm run build:sw:inject",
     "predeploy": "npm run build && node deploy-gh-pages.js",
     "deploy": "npm run predeploy && git add docs && git commit -m \"Deploy: Update GitHub Pages\" && git push origin main",
     "dev": "stencil build --dev --watch",

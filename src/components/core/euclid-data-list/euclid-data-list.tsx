@@ -1,6 +1,7 @@
 import { Component, Prop, h, State, Event, EventEmitter, Watch, Element } from '@stencil/core';
 import { marketStore } from '../../../store/market.store';
 import type { TokenMetadata, EuclidChainConfig, PoolInfo } from '../../../utils/types/api.types';
+import { DataListWorkerManager } from '../../../utils/worker-manager';
 
 export type DataType = 'tokens' | 'chains' | 'pools';
 export type DisplayMode = 'card' | 'list-item' | 'compact' | 'grid';
@@ -107,6 +108,11 @@ export class EuclidDataList {
   @Prop() loading: boolean = false;
 
   /**
+   * Enable worker-based processing for better performance with large datasets
+   */
+  @Prop() enableWorker: boolean = false;
+
+  /**
    * Wallet address for pool positions
    */
   @Prop() walletAddress: string = '';
@@ -133,6 +139,10 @@ export class EuclidDataList {
   @State() storeLoading: boolean = false;
   @State() storeError: string | null = null;
 
+  // Worker state
+  @State() isWorkerProcessing: boolean = false;
+  @State() workerProcessingTime: number = 0;
+
   // Events
   @Event() itemSelected: EventEmitter<{ item: DataItem; id: string }>;
   @Event() itemHover: EventEmitter<{ item: DataItem; id: string }>;
@@ -140,6 +150,10 @@ export class EuclidDataList {
   @Event() pageChanged: EventEmitter<{ page: number; totalPages: number; itemsPerPage: number }>;
   @Event() loadMoreRequested: EventEmitter<{ currentCount: number; requestedCount: number }>;
   @Event() infiniteScrollStateChanged: EventEmitter<{ isLoading: boolean; hasMore: boolean; displayedCount: number }>;
+  @Event() workerPerformance: EventEmitter<{ processingTime: number; operation: string; itemCount: number }>;
+
+  // Worker manager
+  private workerManager?: DataListWorkerManager;
 
   // Intersection Observer instances
   private componentObserver?: IntersectionObserver;
@@ -170,8 +184,13 @@ export class EuclidDataList {
     return this.cardTitle || null;
   }
 
+  private get useWorkerProcessing(): boolean {
+    return this.enableWorker && this.workerManager?.isWorkerAvailable() || false;
+  }
+
   componentWillLoad() {
     this.initializeFilterState();
+    this.initializeWorker();
     this.syncWithStore();
     this.applyFilters();
 
@@ -215,6 +234,9 @@ export class EuclidDataList {
     if (this.loadMoreDebounceTimer) {
       clearTimeout(this.loadMoreDebounceTimer);
     }
+    if (this.workerManager) {
+      this.workerManager.destroy();
+    }
   }
 
   private getDefaultFields(): string[] {
@@ -252,6 +274,16 @@ export class EuclidDataList {
     this.storeError = marketStore.state.error;
   }
 
+  private initializeWorker() {
+    if (this.enableWorker) {
+      this.workerManager = new DataListWorkerManager({
+        batchSize: this.itemsPerPage,
+        debounceTime: 200
+      });
+      console.log('🚀 Worker manager initialized');
+    }
+  }
+
   @Watch('dataType')
   @Watch('showFields')
   watchPropsChange() {
@@ -259,7 +291,67 @@ export class EuclidDataList {
     this.applyFilters();
   }
 
-  private applyFilters() {
+  private async applyFilters() {
+    const startTime = performance.now();
+
+    if (this.useWorkerProcessing && this.storeData.length > 50) {
+      // Use worker for heavy processing
+      try {
+        this.isWorkerProcessing = true;
+        const result = await this.workerManager!.processData(
+          this.storeData,
+          this.dataType,
+          this.filterState,
+          this.walletAddress
+        );
+
+        this.filteredData = result.filteredData;
+        this.workerProcessingTime = result.processingTime;
+
+        this.workerPerformance.emit({
+          processingTime: result.processingTime,
+          operation: 'filter_sort',
+          itemCount: this.storeData.length
+        });
+
+        console.log(`⚡ Worker processed ${this.storeData.length} items in ${result.processingTime.toFixed(2)}ms`);
+      } catch (error) {
+        console.error('❌ Worker processing failed, falling back to main thread:', error);
+        this.filteredData = this.applyFiltersSync();
+      } finally {
+        this.isWorkerProcessing = false;
+      }
+    } else {
+      // Use main thread for smaller datasets or when worker is disabled
+      this.filteredData = this.applyFiltersSync();
+      const processingTime = performance.now() - startTime;
+      console.log(`⚡ Main thread processed ${this.storeData.length} items in ${processingTime.toFixed(2)}ms`);
+    }
+
+    // Reset infinite scroll state when filters change
+    if (this.infiniteScroll) {
+      this.displayedItemsCount = Math.min(this.itemsPerPage, this.filteredData.length);
+      this.hasMoreData = this.displayedItemsCount < this.filteredData.length;
+      this.isLoadingMore = false;
+    }
+
+    this.updatePagination();
+
+    // Emit filter change event
+    this.filtersChanged.emit({
+      filters: { ...this.filterState },
+      resultCount: this.filteredData.length,
+    });
+
+    // Update trigger elements after filter change
+    if (this.infiniteScroll) {
+      requestAnimationFrame(() => {
+        this.updateTriggerElements();
+      });
+    }
+  }
+
+  private applyFiltersSync(): DataItem[] {
     let filtered = [...this.storeData];
 
     // Apply search filter
@@ -276,29 +368,7 @@ export class EuclidDataList {
       filtered = this.applySorting(filtered);
     }
 
-    this.filteredData = filtered;
-
-    // Reset infinite scroll state when filters change
-    if (this.infiniteScroll) {
-      this.displayedItemsCount = Math.min(this.itemsPerPage, filtered.length);
-      this.hasMoreData = this.displayedItemsCount < filtered.length;
-      this.isLoadingMore = false;
-    }
-
-    this.updatePagination();
-
-    // Emit filter change event
-    this.filtersChanged.emit({
-      filters: { ...this.filterState },
-      resultCount: filtered.length,
-    });
-
-    // Update trigger elements after filter change
-    if (this.infiniteScroll) {
-      requestAnimationFrame(() => {
-        this.updateTriggerElements();
-      });
-    }
+    return filtered;
   }
 
   private searchInItem(item: DataItem, searchQuery: string): boolean {
@@ -523,25 +593,70 @@ export class EuclidDataList {
   }
 
   // Event handlers
-  private handleSearch = (event: Event) => {
+  private handleSearch = async (event: Event) => {
     const target = event.target as HTMLInputElement;
+    const searchQuery = target.value || '';
+
     this.filterState = {
       ...this.filterState,
-      search: target.value || '',
+      search: searchQuery,
     };
     this.currentPage = 1;
-    this.applyFilters();
+
+    if (this.useWorkerProcessing && searchQuery.length > 2 && this.storeData.length > 100) {
+      // Use debounced worker search for large datasets
+      try {
+        this.isWorkerProcessing = true;
+        const result = await this.workerManager!.searchDebounced(searchQuery, this.dataType);
+        this.filteredData = result.filteredData;
+        this.updatePagination();
+
+        this.workerPerformance.emit({
+          processingTime: result.processingTime,
+          operation: 'search',
+          itemCount: this.storeData.length
+        });
+      } catch (error) {
+        console.error('❌ Worker search failed:', error);
+        this.applyFilters(); // Fallback to sync processing
+      } finally {
+        this.isWorkerProcessing = false;
+      }
+    } else {
+      this.applyFilters();
+    }
   };
 
-  private handleSortChange = (event: Event) => {
+  private handleSortChange = async (event: Event) => {
     const target = event.target as HTMLSelectElement;
     const [sortBy, sortOrder] = target.value.split('_');
+
     this.filterState = {
       ...this.filterState,
       sortBy,
       sortOrder: sortOrder as 'asc' | 'desc',
     };
-    this.applyFilters();
+
+    if (this.useWorkerProcessing && this.filteredData.length > 50) {
+      try {
+        this.isWorkerProcessing = true;
+        const result = await this.workerManager!.sort(sortBy, sortOrder as 'asc' | 'desc');
+        this.filteredData = result.filteredData;
+
+        this.workerPerformance.emit({
+          processingTime: result.processingTime,
+          operation: 'sort',
+          itemCount: this.filteredData.length
+        });
+      } catch (error) {
+        console.error('❌ Worker sort failed:', error);
+        this.applyFilters();
+      } finally {
+        this.isWorkerProcessing = false;
+      }
+    } else {
+      this.applyFilters();
+    }
   };
 
   private handleFilterChange = (filterKey: string, value: string | boolean) => {
@@ -836,6 +951,11 @@ export class EuclidDataList {
           value={this.filterState.search}
           onInput={this.handleSearch}
         />
+        {this.isWorkerProcessing && (
+          <div class="search-processing">
+            <div class="loading-spinner-small"></div>
+          </div>
+        )}
       </div>
     );
   }
@@ -969,6 +1089,14 @@ export class EuclidDataList {
       baseStats.push({ key: 'chains', label: 'Chains', value: chainCount.toString() });
     }
 
+    if (this.useWorkerProcessing && this.workerProcessingTime > 0) {
+      baseStats.push({
+        key: 'performance',
+        label: 'Processing',
+        value: `${this.workerProcessingTime.toFixed(1)}ms (worker)`
+      });
+    }
+
     return baseStats;
   }
 
@@ -1045,7 +1173,7 @@ export class EuclidDataList {
   }
 
   render() {
-    console.log('🔍 Rendering EuclidDataList - infiniteScroll:', this.infiniteScroll, 'dataType:', this.dataType);
+    console.log('🔍 Rendering EuclidDataList - infiniteScroll:', this.infiniteScroll, 'useWorker:', this.useWorkerProcessing);
     const isLoading = (this.storeLoading || this.loading) && this.storeData.length === 0;
     const paginatedData = this.getPaginatedData();
     const ItemComponent = this.itemComponent;
@@ -1055,7 +1183,12 @@ export class EuclidDataList {
         {/* Header */}
         {this.effectiveCardTitle && (
           <div class="data-header">
-            <h3 class="data-title">{this.effectiveCardTitle}</h3>
+            <h3 class="data-title">
+              {this.effectiveCardTitle}
+              {this.useWorkerProcessing && (
+                <span class="worker-badge">⚡ Worker</span>
+              )}
+            </h3>
           </div>
         )}
 
@@ -1076,14 +1209,18 @@ export class EuclidDataList {
           class={{
             'data-content': true,
             'data-content--infinite': this.infiniteScroll && !this.useParentScroll,
-            'data-content--parent-scroll': this.infiniteScroll && this.useParentScroll
+            'data-content--parent-scroll': this.infiniteScroll && this.useParentScroll,
+            'data-content--processing': this.isWorkerProcessing
           }}
           ref={(el) => this.contentElement = el}
         >
-          {isLoading ? (
+          {isLoading || this.isWorkerProcessing ? (
             <div class="loading-state">
               <div class="loading-spinner"></div>
-              <span>Loading {this.dataType}...</span>
+              <span>
+                Loading {this.dataType}...
+                {this.isWorkerProcessing && ' (worker processing)'}
+              </span>
             </div>
           ) : paginatedData.length === 0 ? (
             <div class="empty-state">

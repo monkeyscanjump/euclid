@@ -115,7 +115,7 @@ export class EuclidDataList {
     switch (this.dataType) {
       case 'tokens': return 'euclid-token-item';
       case 'chains': return 'euclid-chain-item';
-      case 'pools': return 'pool-item';
+      case 'pools': return 'euclid-pool-item';
       default: return 'div';
     }
   }

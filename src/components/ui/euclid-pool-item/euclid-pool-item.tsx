@@ -14,16 +14,22 @@ export interface UserPoolPosition {
 }
 
 @Component({
-  tag: 'pool-item',
-  styleUrl: 'pool-item.css',
+  tag: 'euclid-pool-item',
+  styleUrl: 'euclid-pool-item.css',
   shadow: true,
 })
-export class PoolItem {
+export class EuclidPoolItem {
   @Prop() pool!: PoolInfo;
   @Prop() tokens: TokenMetadata[] = [];
   @Prop() position?: UserPoolPosition;
   @Prop() walletAddress?: string;
+  @Prop() displayMode: 'card' | 'list-item' | 'compact' | 'grid' = 'list-item';
+  @Prop() showFields: string[] = [];
+  @Prop() selectable: boolean = true;
+  @Prop() selected: boolean = false;
 
+  @Event() poolSelect: EventEmitter<PoolInfo>;
+  @Event() poolHover: EventEmitter<PoolInfo>;
   @Event() addLiquidity: EventEmitter<PoolInfo>;
   @Event() removeLiquidity: EventEmitter<{ pool: PoolInfo; position: UserPoolPosition }>;
   @Event() stakeTokens: EventEmitter<{ pool: PoolInfo; position?: UserPoolPosition }>;
@@ -67,7 +73,15 @@ export class PoolItem {
     });
 
     return (
-      <div class="pool-item">
+      <div
+        class={{
+          'pool-item': true,
+          [`pool-item--${this.displayMode}`]: true,
+          'selected': this.selected
+        }}
+        onClick={() => this.poolSelect.emit(this.pool)}
+        onMouseEnter={() => this.poolHover.emit(this.pool)}
+      >
         <div class="pool-main">
           <div class="pool-tokens">
             <div class="token-logos">
@@ -108,50 +122,50 @@ export class PoolItem {
               <div class="metric-value">${this.formatNumber(parseFloat(this.pool.fees_24h || '0'))}</div>
             </div>
           </div>
-        </div>
 
-        {this.walletAddress && this.position && (
-          <div class="pool-position">
-            <div class="position-details">
-              <div class="position-value">${this.formatNumber(this.position.value)}</div>
-              <div class="position-share">{this.position.shareOfPool.toFixed(4)}% of pool</div>
-              {this.position.unclaimedRewards && this.position.unclaimedRewards > 0 && (
-                <div class="unclaimed-rewards">
-                  ${this.formatNumber(this.position.unclaimedRewards)} rewards
-                </div>
-              )}
+          {this.walletAddress && this.position && (
+            <div class="pool-position">
+              <div class="position-details">
+                <div class="position-value">${this.formatNumber(this.position.value)}</div>
+                <div class="position-share">{this.position.shareOfPool.toFixed(4)}% of pool</div>
+                {this.position.unclaimedRewards && this.position.unclaimedRewards > 0 && (
+                  <div class="unclaimed-rewards">
+                    ${this.formatNumber(this.position.unclaimedRewards)} rewards
+                  </div>
+                )}
+              </div>
             </div>
+          )}
+
+          <div class="pool-actions">
+            <euclid-button
+              variant="primary"
+              size="sm"
+              onClick={() => this.addLiquidity.emit(this.pool)}
+            >
+              Add Liquidity
+            </euclid-button>
+
+            {this.position && (
+              <euclid-button
+                variant="secondary"
+                size="sm"
+                onClick={() => this.removeLiquidity.emit({ pool: this.pool, position: this.position! })}
+              >
+                Remove
+              </euclid-button>
+            )}
+
+            {this.position && this.position.unclaimedRewards && this.position.unclaimedRewards > 0 && (
+              <euclid-button
+                variant="ghost"
+                size="sm"
+                onClick={() => this.claimRewards.emit({ pool: this.pool, position: this.position! })}
+              >
+                Claim Rewards
+              </euclid-button>
+            )}
           </div>
-        )}
-
-        <div class="pool-actions">
-          <euclid-button
-            variant="primary"
-            size="sm"
-            onClick={() => this.addLiquidity.emit(this.pool)}
-          >
-            Add Liquidity
-          </euclid-button>
-
-          {this.position && (
-            <euclid-button
-              variant="secondary"
-              size="sm"
-              onClick={() => this.removeLiquidity.emit({ pool: this.pool, position: this.position! })}
-            >
-              Remove
-            </euclid-button>
-          )}
-
-          {this.position && this.position.unclaimedRewards && this.position.unclaimedRewards > 0 && (
-            <euclid-button
-              variant="ghost"
-              size="sm"
-              onClick={() => this.claimRewards.emit({ pool: this.pool, position: this.position! })}
-            >
-              Claim Rewards
-            </euclid-button>
-          )}
         </div>
       </div>
     );

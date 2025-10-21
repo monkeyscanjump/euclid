@@ -113,7 +113,22 @@ export namespace Components {
          */
         "filterable": boolean;
         /**
-          * Items per page for pagination
+          * Enable infinite scroll instead of pagination
+          * @default false
+         */
+        "infiniteScroll": boolean;
+        /**
+          * Intersection threshold for infinite scroll trigger (0.0 to 1.0)
+          * @default 0.1
+         */
+        "infiniteScrollThreshold": number;
+        /**
+          * Number of items from bottom to trigger infinite scroll load
+          * @default 3
+         */
+        "infiniteScrollTriggerItems": number;
+        /**
+          * Items per page for pagination, or initial items for infinite scroll
           * @default 10
          */
         "itemsPerPage": number;
@@ -122,6 +137,11 @@ export namespace Components {
           * @default false
          */
         "loading": boolean;
+        /**
+          * Maximum items to load in infinite scroll mode (prevents memory issues)
+          * @default 1000
+         */
+        "maxItems": number;
         /**
           * Whether to enable search
           * @default true
@@ -147,6 +167,11 @@ export namespace Components {
           * @default true
          */
         "sortable": boolean;
+        /**
+          * Use parent container scroll instead of component's own scroll
+          * @default false
+         */
+        "useParentScroll": boolean;
         /**
           * Wallet address for pool positions
           * @default ''
@@ -596,6 +621,8 @@ declare global {
         "itemHover": { item: DataItem; id: string };
         "filtersChanged": { filters: FilterState; resultCount: number };
         "pageChanged": { page: number; totalPages: number; itemsPerPage: number };
+        "loadMoreRequested": { currentCount: number; requestedCount: number };
+        "infiniteScrollStateChanged": { isLoading: boolean; hasMore: boolean; displayedCount: number };
     }
     interface HTMLEuclidDataListElement extends Components.EuclidDataList, HTMLStencilElement {
         addEventListener<K extends keyof HTMLEuclidDataListElementEventMap>(type: K, listener: (this: HTMLEuclidDataListElement, ev: EuclidDataListCustomEvent<HTMLEuclidDataListElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -975,7 +1002,22 @@ declare namespace LocalJSX {
          */
         "filterable"?: boolean;
         /**
-          * Items per page for pagination
+          * Enable infinite scroll instead of pagination
+          * @default false
+         */
+        "infiniteScroll"?: boolean;
+        /**
+          * Intersection threshold for infinite scroll trigger (0.0 to 1.0)
+          * @default 0.1
+         */
+        "infiniteScrollThreshold"?: number;
+        /**
+          * Number of items from bottom to trigger infinite scroll load
+          * @default 3
+         */
+        "infiniteScrollTriggerItems"?: number;
+        /**
+          * Items per page for pagination, or initial items for infinite scroll
           * @default 10
          */
         "itemsPerPage"?: number;
@@ -984,9 +1026,16 @@ declare namespace LocalJSX {
           * @default false
          */
         "loading"?: boolean;
+        /**
+          * Maximum items to load in infinite scroll mode (prevents memory issues)
+          * @default 1000
+         */
+        "maxItems"?: number;
         "onFiltersChanged"?: (event: EuclidDataListCustomEvent<{ filters: FilterState; resultCount: number }>) => void;
+        "onInfiniteScrollStateChanged"?: (event: EuclidDataListCustomEvent<{ isLoading: boolean; hasMore: boolean; displayedCount: number }>) => void;
         "onItemHover"?: (event: EuclidDataListCustomEvent<{ item: DataItem; id: string }>) => void;
         "onItemSelected"?: (event: EuclidDataListCustomEvent<{ item: DataItem; id: string }>) => void;
+        "onLoadMoreRequested"?: (event: EuclidDataListCustomEvent<{ currentCount: number; requestedCount: number }>) => void;
         "onPageChanged"?: (event: EuclidDataListCustomEvent<{ page: number; totalPages: number; itemsPerPage: number }>) => void;
         /**
           * Whether to enable search
@@ -1013,6 +1062,11 @@ declare namespace LocalJSX {
           * @default true
          */
         "sortable"?: boolean;
+        /**
+          * Use parent container scroll instead of component's own scroll
+          * @default false
+         */
+        "useParentScroll"?: boolean;
         /**
           * Wallet address for pool positions
           * @default ''

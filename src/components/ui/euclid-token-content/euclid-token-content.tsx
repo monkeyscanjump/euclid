@@ -69,6 +69,8 @@ export class EuclidTokenContent {
           dataType="tokens"
           displayMode="list-item"
           itemsPerPage={20}
+          infiniteScroll={true}
+          useParentScroll={true}
           searchable={true}
           sortable={true}
           showStats={false}

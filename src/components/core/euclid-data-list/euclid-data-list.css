@@ -196,6 +196,70 @@
   padding: 20px;
 }
 
+/* Infinite Scroll Content */
+.data-content--infinite {
+  max-height: 60vh;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+
+/* Parent Scroll Mode - No internal scrolling */
+.data-content--parent-scroll {
+  max-height: none;
+  overflow-y: visible;
+}
+
+/* Data Items (for intersection observer) */
+.data-item {
+  /* Base styling for intersection observer targeting */
+  position: relative;
+}
+
+/* Infinite Scroll Footer */
+.infinite-scroll-footer {
+  padding: 16px 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-top: 1px solid var(--euclid-border);
+  background: var(--euclid-surface-secondary);
+}
+
+.infinite-scroll-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: var(--euclid-text-secondary);
+}
+
+.infinite-scroll-loading .loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--euclid-border);
+  border-top-color: var(--euclid-interactive-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.infinite-scroll-loading span {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.infinite-scroll-end {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 0;
+}
+
+.infinite-scroll-end span {
+  font-size: 14px;
+  color: var(--euclid-text-tertiary);
+  font-style: italic;
+}
+
 /* Loading State */
 .loading-state {
   display: flex;

@@ -1,4 +1,4 @@
-import { Component, Prop, h, State, Event, EventEmitter, Watch } from '@stencil/core';
+import { Component, Prop, h, State, Event, EventEmitter, Watch, Element } from '@stencil/core';
 import { marketStore } from '../../../store/market.store';
 import type { TokenMetadata, EuclidChainConfig, PoolInfo } from '../../../utils/types/api.types';
 
@@ -24,6 +24,8 @@ export interface FilterState {
   shadow: true,
 })
 export class EuclidDataList {
+  @Element() el!: HTMLElement;
+
   /**
    * Type of data to display: tokens, chains, or pools
    */
@@ -40,9 +42,34 @@ export class EuclidDataList {
   @Prop() cardTitle: string = '';
 
   /**
-   * Items per page for pagination
+   * Items per page for pagination, or initial items for infinite scroll
    */
   @Prop() itemsPerPage: number = 10;
+
+  /**
+   * Enable infinite scroll instead of pagination
+   */
+  @Prop() infiniteScroll: boolean = false;
+
+  /**
+   * Use parent container scroll instead of component's own scroll
+   */
+  @Prop() useParentScroll: boolean = false;
+
+  /**
+   * Number of items from bottom to trigger infinite scroll load
+   */
+  @Prop() infiniteScrollTriggerItems: number = 3;
+
+  /**
+   * Intersection threshold for infinite scroll trigger (0.0 to 1.0)
+   */
+  @Prop() infiniteScrollThreshold: number = 0.1;
+
+  /**
+   * Maximum items to load in infinite scroll mode (prevents memory issues)
+   */
+  @Prop() maxItems: number = 1000;
 
   /**
    * Fields to show in item components (comma-separated string)
@@ -95,6 +122,12 @@ export class EuclidDataList {
     sortOrder: 'asc',
   };
 
+  // Infinite scroll state
+  @State() displayedItemsCount: number = 0;
+  @State() hasMoreData: boolean = true;
+  @State() isLoadingMore: boolean = false;
+  @State() isComponentVisible: boolean = true;
+
   // Store state
   @State() storeData: DataItem[] = [];
   @State() storeLoading: boolean = false;
@@ -105,6 +138,15 @@ export class EuclidDataList {
   @Event() itemHover: EventEmitter<{ item: DataItem; id: string }>;
   @Event() filtersChanged: EventEmitter<{ filters: FilterState; resultCount: number }>;
   @Event() pageChanged: EventEmitter<{ page: number; totalPages: number; itemsPerPage: number }>;
+  @Event() loadMoreRequested: EventEmitter<{ currentCount: number; requestedCount: number }>;
+  @Event() infiniteScrollStateChanged: EventEmitter<{ isLoading: boolean; hasMore: boolean; displayedCount: number }>;
+
+  // Intersection Observer instances
+  private componentObserver?: IntersectionObserver;
+  private itemObserver?: IntersectionObserver;
+  private triggerElements: Set<Element> = new Set();
+  private loadMoreDebounceTimer?: NodeJS.Timeout;
+  private contentElement?: HTMLElement;
 
   // Computed properties
   private get storeKey(): 'tokens' | 'pools' | 'chains' {
@@ -133,6 +175,12 @@ export class EuclidDataList {
     this.syncWithStore();
     this.applyFilters();
 
+    // Initialize infinite scroll state if enabled
+    if (this.infiniteScroll) {
+      this.displayedItemsCount = this.itemsPerPage;
+      this.hasMoreData = true;
+    }
+
     // Listen for store changes
     marketStore.onChange(this.storeKey, () => {
       this.syncWithStore();
@@ -146,6 +194,27 @@ export class EuclidDataList {
     marketStore.onChange('error', () => {
       this.storeError = marketStore.state.error;
     });
+  }
+
+  componentDidLoad() {
+    console.log('🔍 EuclidDataList componentDidLoad - infiniteScroll:', this.infiniteScroll, 'useParentScroll:', this.useParentScroll);
+    if (this.infiniteScroll) {
+      console.log('🚀 Setting up intersection observers for infinite scroll');
+      this.setupIntersectionObservers();
+    }
+  }
+
+  componentDidUpdate() {
+    if (this.infiniteScroll) {
+      this.updateTriggerElements();
+    }
+  }
+
+  disconnectedCallback() {
+    this.cleanupIntersectionObservers();
+    if (this.loadMoreDebounceTimer) {
+      clearTimeout(this.loadMoreDebounceTimer);
+    }
   }
 
   private getDefaultFields(): string[] {
@@ -208,6 +277,14 @@ export class EuclidDataList {
     }
 
     this.filteredData = filtered;
+
+    // Reset infinite scroll state when filters change
+    if (this.infiniteScroll) {
+      this.displayedItemsCount = Math.min(this.itemsPerPage, filtered.length);
+      this.hasMoreData = this.displayedItemsCount < filtered.length;
+      this.isLoadingMore = false;
+    }
+
     this.updatePagination();
 
     // Emit filter change event
@@ -215,6 +292,13 @@ export class EuclidDataList {
       filters: { ...this.filterState },
       resultCount: filtered.length,
     });
+
+    // Update trigger elements after filter change
+    if (this.infiniteScroll) {
+      requestAnimationFrame(() => {
+        this.updateTriggerElements();
+      });
+    }
   }
 
   private searchInItem(item: DataItem, searchQuery: string): boolean {
@@ -388,19 +472,38 @@ export class EuclidDataList {
   }
 
   private updatePagination() {
-    if (this.itemsPerPage > 0) {
-      this.totalPages = Math.ceil(this.filteredData.length / this.itemsPerPage);
+    console.log('🔍 updatePagination - infiniteScroll:', this.infiniteScroll, 'displayedItemsCount:', this.displayedItemsCount, 'filteredData.length:', this.filteredData.length);
+    if (this.infiniteScroll) {
+      // In infinite scroll mode, manage displayed items count
+      this.displayedItemsCount = Math.min(this.displayedItemsCount, this.filteredData.length, this.maxItems);
+      this.hasMoreData = this.displayedItemsCount < this.filteredData.length && this.displayedItemsCount < this.maxItems;
+      this.totalPages = 1; // Not used in infinite scroll
+      this.currentPage = 1; // Not used in infinite scroll
+      console.log('🚀 Infinite scroll state - displayedItemsCount:', this.displayedItemsCount, 'hasMoreData:', this.hasMoreData);
+    } else {
+      // Standard pagination logic
+      if (this.itemsPerPage > 0) {
+        this.totalPages = Math.ceil(this.filteredData.length / this.itemsPerPage);
 
-      if (this.currentPage > this.totalPages && this.totalPages > 0) {
+        if (this.currentPage > this.totalPages && this.totalPages > 0) {
+          this.currentPage = 1;
+        }
+      } else {
+        this.totalPages = 1;
         this.currentPage = 1;
       }
-    } else {
-      this.totalPages = 1;
-      this.currentPage = 1;
     }
   }
 
   private getPaginatedData(): DataItem[] {
+    if (this.infiniteScroll) {
+      // Return all displayed items for infinite scroll
+      const result = this.filteredData.slice(0, this.displayedItemsCount);
+      console.log('🔍 getPaginatedData (infinite scroll) - returning', result.length, 'items out of', this.filteredData.length);
+      return result;
+    }
+
+    // Standard pagination logic
     if (this.itemsPerPage <= 0) {
       return this.filteredData;
     }
@@ -487,6 +590,235 @@ export class EuclidDataList {
     this.currentPage = 1;
     this.applyFilters();
   };
+
+  // Intersection Observer Methods
+  private findScrollContainer(element: Element): Element | null {
+    let current = element.parentElement;
+
+    while (current && current !== document.documentElement) {
+      const style = window.getComputedStyle(current);
+
+      // Check for explicit scroll settings
+      const hasScrollY = style.overflowY === 'auto' || style.overflowY === 'scroll';
+      const hasScrollGeneral = style.overflow === 'auto' || style.overflow === 'scroll';
+
+      // Check if element has scrollable content (height-wise)
+      const hasScrollableContent = current.scrollHeight > current.clientHeight;
+
+      // Special check for common scrollable containers
+      const isScrollableContainer = hasScrollableContent && (
+        hasScrollY ||
+        hasScrollGeneral ||
+        current.tagName === 'BODY' ||
+        current.classList.contains('container') ||
+        current.classList.contains('scroll') ||
+        current.classList.contains('scrollable')
+      );
+
+      if (isScrollableContainer) {
+        console.log('🔍 Found scroll container:', {
+          element: current,
+          tagName: current.tagName,
+          className: current.className,
+          overflowY: style.overflowY,
+          overflow: style.overflow,
+          scrollHeight: current.scrollHeight,
+          clientHeight: current.clientHeight
+        });
+        return current;
+      }
+
+      current = current.parentElement;
+    }
+
+    // If we reach body or document, check if body is scrollable
+    const body = document.body;
+    if (body && body.scrollHeight > body.clientHeight) {
+      console.log('🔍 Using body as scroll container');
+      return body;
+    }
+
+    console.log('🔍 No scroll container found, using viewport');
+    return null;
+  }
+
+  private setupIntersectionObservers() {
+    // Determine scroll root based on useParentScroll setting
+    let scrollRoot: Element | null = null;
+
+    if (this.useParentScroll) {
+      scrollRoot = this.findScrollContainer(this.el);
+    } else {
+      // Use component's own content element as scroll container
+      scrollRoot = this.contentElement || null;
+    }
+
+    console.log('🚀 Setting up observers with scroll root:', scrollRoot?.tagName || 'viewport');
+
+    // Component visibility observer for performance optimization
+    this.componentObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          this.isComponentVisible = entry.isIntersecting;
+          if (!entry.isIntersecting) {
+            // Component is not visible, pause item observation
+            this.pauseItemObserver();
+          } else {
+            // Component is visible, resume item observation
+            this.resumeItemObserver();
+          }
+        });
+      },
+      {
+        root: this.useParentScroll ? scrollRoot : null,
+        rootMargin: '50px',
+        threshold: 0.1
+      }
+    );
+
+    // Observe the component itself
+    const hostElement = this.el;
+    if (hostElement) {
+      this.componentObserver.observe(hostElement);
+    }
+
+    // Item trigger observer for infinite scroll
+    this.itemObserver = new IntersectionObserver(
+      (entries) => {
+        if (!this.isComponentVisible || this.isLoadingMore || !this.hasMoreData) return;
+
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && this.triggerElements.has(entry.target)) {
+            console.log('🎯 Trigger element intersected, loading more...');
+            this.handleLoadMore();
+          }
+        });
+      },
+      {
+        root: scrollRoot,
+        rootMargin: '20px',
+        threshold: this.infiniteScrollThreshold
+      }
+    );
+  }
+
+  private cleanupIntersectionObservers() {
+    if (this.componentObserver) {
+      this.componentObserver.disconnect();
+      this.componentObserver = undefined;
+    }
+
+    if (this.itemObserver) {
+      this.itemObserver.disconnect();
+      this.itemObserver = undefined;
+    }
+
+    this.triggerElements.clear();
+  }
+
+  private pauseItemObserver() {
+    if (this.itemObserver) {
+      this.triggerElements.forEach(element => {
+        this.itemObserver?.unobserve(element);
+      });
+    }
+  }
+
+  private resumeItemObserver() {
+    if (this.itemObserver && this.triggerElements.size > 0) {
+      this.triggerElements.forEach(element => {
+        this.itemObserver?.observe(element);
+      });
+    }
+  }
+
+  private updateTriggerElements() {
+    if (!this.infiniteScroll || !this.itemObserver) return;
+
+    // Clear existing observations
+    this.triggerElements.forEach(element => {
+      this.itemObserver?.unobserve(element);
+    });
+    this.triggerElements.clear();
+
+    // Find new trigger elements (last N items)
+    const contentElement = this.el?.shadowRoot?.querySelector('.data-content');
+    if (!contentElement) return;
+
+    const items = contentElement.querySelectorAll('.data-item');
+    const triggerCount = Math.min(this.infiniteScrollTriggerItems, items.length);
+
+    for (let i = items.length - triggerCount; i < items.length; i++) {
+      if (i >= 0 && items[i]) {
+        this.triggerElements.add(items[i]);
+        this.itemObserver.observe(items[i]);
+      }
+    }
+  }
+
+  private handleLoadMore() {
+    if (this.isLoadingMore || !this.hasMoreData) return;
+
+    // Debounce multiple rapid calls
+    if (this.loadMoreDebounceTimer) {
+      clearTimeout(this.loadMoreDebounceTimer);
+    }
+
+    this.loadMoreDebounceTimer = setTimeout(() => {
+      this.loadMore();
+    }, 100);
+  }
+
+  private loadMore() {
+    if (this.isLoadingMore || !this.hasMoreData) return;
+
+    const currentCount = this.displayedItemsCount;
+    const totalAvailable = this.filteredData.length;
+    const requestedCount = Math.min(this.itemsPerPage, totalAvailable - currentCount);
+
+    if (requestedCount <= 0) {
+      this.hasMoreData = false;
+      this.emitInfiniteScrollState();
+      return;
+    }
+
+    this.isLoadingMore = true;
+    this.emitInfiniteScrollState();
+
+    // Emit event for external data loading if needed
+    this.loadMoreRequested.emit({
+      currentCount,
+      requestedCount
+    });
+
+    // Simulate async loading (in real scenario, this would be triggered by store updates)
+    setTimeout(() => {
+      const newDisplayedCount = Math.min(
+        currentCount + requestedCount,
+        totalAvailable,
+        this.maxItems
+      );
+
+      this.displayedItemsCount = newDisplayedCount;
+      this.hasMoreData = newDisplayedCount < totalAvailable && newDisplayedCount < this.maxItems;
+      this.isLoadingMore = false;
+
+      this.emitInfiniteScrollState();
+
+      // Update trigger elements after DOM update
+      requestAnimationFrame(() => {
+        this.updateTriggerElements();
+      });
+    }, 200);
+  }
+
+  private emitInfiniteScrollState() {
+    this.infiniteScrollStateChanged.emit({
+      isLoading: this.isLoadingMore,
+      hasMore: this.hasMoreData,
+      displayedCount: this.displayedItemsCount
+    });
+  }
 
   // Render methods
   private renderSearch() {
@@ -641,7 +973,9 @@ export class EuclidDataList {
   }
 
   private renderPagination() {
-    if (this.totalPages <= 1) return null;
+    console.log('🔍 renderPagination - infiniteScroll:', this.infiniteScroll, 'totalPages:', this.totalPages);
+    // Don't show pagination in infinite scroll mode
+    if (this.infiniteScroll || this.totalPages <= 1) return null;
 
     return (
       <div class="pagination">
@@ -689,7 +1023,29 @@ export class EuclidDataList {
     );
   }
 
+  private renderInfiniteScrollLoader() {
+    if (!this.infiniteScroll) return null;
+
+    return (
+      <div class="infinite-scroll-footer">
+        {this.isLoadingMore && (
+          <div class="infinite-scroll-loading">
+            <div class="loading-spinner"></div>
+            <span>Loading more {this.dataType}...</span>
+          </div>
+        )}
+
+        {!this.hasMoreData && this.displayedItemsCount > 0 && (
+          <div class="infinite-scroll-end">
+            <span>All {this.dataType} loaded ({this.displayedItemsCount} of {this.filteredData.length})</span>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   render() {
+    console.log('🔍 Rendering EuclidDataList - infiniteScroll:', this.infiniteScroll, 'dataType:', this.dataType);
     const isLoading = (this.storeLoading || this.loading) && this.storeData.length === 0;
     const paginatedData = this.getPaginatedData();
     const ItemComponent = this.itemComponent;
@@ -716,7 +1072,14 @@ export class EuclidDataList {
         {this.renderStats()}
 
         {/* Content */}
-        <div class="data-content">
+        <div
+          class={{
+            'data-content': true,
+            'data-content--infinite': this.infiniteScroll && !this.useParentScroll,
+            'data-content--parent-scroll': this.infiniteScroll && this.useParentScroll
+          }}
+          ref={(el) => this.contentElement = el}
+        >
           {isLoading ? (
             <div class="loading-state">
               <div class="loading-spinner"></div>
@@ -778,6 +1141,7 @@ export class EuclidDataList {
                 return (
                   <ItemComponent
                     key={itemId}
+                    class="data-item"
                     {...itemProps}
                     {...eventHandlers}
                   />
@@ -785,6 +1149,9 @@ export class EuclidDataList {
               })}
             </div>
           )}
+
+          {/* Infinite Scroll Loader */}
+          {this.renderInfiniteScrollLoader()}
         </div>
 
         {/* Pagination */}

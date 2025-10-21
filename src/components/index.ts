@@ -16,6 +16,7 @@ export { EuclidTokenInput } from './ui/euclid-token-input/euclid-token-input';
 export { EuclidModal } from './ui/euclid-modal/euclid-modal';
 export { EuclidTokenContent } from './ui/euclid-token-content/euclid-token-content';
 export { EuclidWalletContent } from './ui/euclid-wallet-content/euclid-wallet-content';
+export { EuclidChainItem } from './ui/euclid-chain-item/euclid-chain-item';
 
 // Feature Components
 export { EuclidSwapCard } from './features/euclid-swap-card/euclid-swap-card';
@@ -25,6 +26,7 @@ export { EuclidTokensList } from './features/euclid-tokens-list/euclid-tokens-li
 export { TokenItem } from './features/euclid-tokens-list/token-item';
 export { TokensFilters } from './features/euclid-tokens-list/tokens-filters';
 export { TokensLoading } from './features/euclid-tokens-list/tokens-loading';
+export { EuclidChainsList } from './features/euclid-chains-list/euclid-chains-list';
 export { EuclidPortfolioOverview } from './features/euclid-portfolio-overview/euclid-portfolio-overview';
 
 // Re-export component interfaces

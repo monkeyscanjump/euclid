@@ -6,8 +6,10 @@
  */
 import { HTMLStencilElement, JSXBase } from "@stencil/core/internal";
 import { ButtonSize, ButtonVariant } from "./components/ui/euclid-button/euclid-button";
+import { EuclidChainConfig, PoolInfo, TokenMetadata } from "./utils/types/api.types";
+import { ChainDisplayMode, ChainField } from "./components/ui/euclid-chain-item/euclid-chain-item";
+import { ChainDisplayMode as ChainDisplayMode1, ChainField as ChainField1 } from "./components/ui/euclid-chain-item/euclid-chain-item";
 import { LiquidityPoolInfo, LiquidityPosition, LiquidityToken } from "./components/features/euclid-liquidity-card/euclid-liquidity-card";
-import { PoolInfo, TokenMetadata } from "./utils/types/api.types";
 import { PoolFilters, UserPoolPosition } from "./components/features/euclid-pools-list/euclid-pools-list";
 import { ChartDataPoint, PoolPosition, PortfolioStats, StakingPosition, TokenBalance, Transaction } from "./components/features/euclid-portfolio-overview/euclid-portfolio-overview";
 import { SwapQuote, SwapSettings, SwapToken } from "./components/features/euclid-swap-card/euclid-swap-card";
@@ -19,8 +21,10 @@ import { UserPoolPosition as UserPoolPosition1 } from "./components/features/euc
 import { PoolFilters as PoolFilters1 } from "./components/features/euclid-pools-list/pools-filters";
 import { TokenFilters as TokenFilters1 } from "./components/features/euclid-tokens-list/tokens-filters";
 export { ButtonSize, ButtonVariant } from "./components/ui/euclid-button/euclid-button";
+export { EuclidChainConfig, PoolInfo, TokenMetadata } from "./utils/types/api.types";
+export { ChainDisplayMode, ChainField } from "./components/ui/euclid-chain-item/euclid-chain-item";
+export { ChainDisplayMode as ChainDisplayMode1, ChainField as ChainField1 } from "./components/ui/euclid-chain-item/euclid-chain-item";
 export { LiquidityPoolInfo, LiquidityPosition, LiquidityToken } from "./components/features/euclid-liquidity-card/euclid-liquidity-card";
-export { PoolInfo, TokenMetadata } from "./utils/types/api.types";
 export { PoolFilters, UserPoolPosition } from "./components/features/euclid-pools-list/euclid-pools-list";
 export { ChartDataPoint, PoolPosition, PortfolioStats, StakingPosition, TokenBalance, Transaction } from "./components/features/euclid-portfolio-overview/euclid-portfolio-overview";
 export { SwapQuote, SwapSettings, SwapToken } from "./components/features/euclid-swap-card/euclid-swap-card";
@@ -58,6 +62,84 @@ export namespace Components {
           * @default 'primary'
          */
         "variant": ButtonVariant;
+    }
+    interface EuclidChainItem {
+        /**
+          * Chain data to display
+         */
+        "chain": EuclidChainConfig;
+        /**
+          * Whether the item is disabled
+          * @default false
+         */
+        "disabled": boolean;
+        /**
+          * Display mode: card (full info), list-item (compact row), compact (minimal)
+          * @default 'list-item'
+         */
+        "displayMode": ChainDisplayMode;
+        /**
+          * Whether the item is selectable (shows hover states, emits events)
+          * @default false
+         */
+        "selectable": boolean;
+        /**
+          * Whether the item is currently selected
+          * @default false
+         */
+        "selected": boolean;
+        /**
+          * Fields to show in the display
+          * @default ['logo', 'name', 'type']
+         */
+        "showFields": ChainField[];
+    }
+    interface EuclidChainsList {
+        /**
+          * Component card title
+          * @default 'Select Chain'
+         */
+        "cardTitle": string;
+        /**
+          * Chain data (gets from market store automatically)
+          * @default []
+         */
+        "chains": EuclidChainConfig[];
+        /**
+          * Display mode for chain items
+          * @default 'list-item'
+         */
+        "displayMode": ChainDisplayMode1;
+        /**
+          * Whether to show filters
+          * @default true
+         */
+        "filterable": boolean;
+        /**
+          * Items per page (0 = no pagination)
+          * @default 0
+         */
+        "itemsPerPage": number;
+        /**
+          * Whether component is loading
+          * @default false
+         */
+        "loading": boolean;
+        /**
+          * Whether to show search functionality
+          * @default true
+         */
+        "searchable": boolean;
+        /**
+          * Whether chains are selectable
+          * @default true
+         */
+        "selectable": boolean;
+        /**
+          * Fields to show for each chain
+          * @default ['logo', 'name', 'type']
+         */
+        "showFields": ChainField1[];
     }
     interface EuclidCoreProvider {
     }
@@ -433,6 +515,14 @@ export namespace Components {
         "show": boolean;
     }
 }
+export interface EuclidChainItemCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLEuclidChainItemElement;
+}
+export interface EuclidChainsListCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLEuclidChainsListElement;
+}
 export interface EuclidLiquidityCardCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLEuclidLiquidityCardElement;
@@ -487,6 +577,42 @@ declare global {
     var HTMLEuclidButtonElement: {
         prototype: HTMLEuclidButtonElement;
         new (): HTMLEuclidButtonElement;
+    };
+    interface HTMLEuclidChainItemElementEventMap {
+        "chainSelect": EuclidChainConfig;
+        "chainHover": EuclidChainConfig;
+    }
+    interface HTMLEuclidChainItemElement extends Components.EuclidChainItem, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLEuclidChainItemElementEventMap>(type: K, listener: (this: HTMLEuclidChainItemElement, ev: EuclidChainItemCustomEvent<HTMLEuclidChainItemElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLEuclidChainItemElementEventMap>(type: K, listener: (this: HTMLEuclidChainItemElement, ev: EuclidChainItemCustomEvent<HTMLEuclidChainItemElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    }
+    var HTMLEuclidChainItemElement: {
+        prototype: HTMLEuclidChainItemElement;
+        new (): HTMLEuclidChainItemElement;
+    };
+    interface HTMLEuclidChainsListElementEventMap {
+        "chainSelected": EuclidChainConfig;
+        "chainHover": EuclidChainConfig;
+    }
+    interface HTMLEuclidChainsListElement extends Components.EuclidChainsList, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLEuclidChainsListElementEventMap>(type: K, listener: (this: HTMLEuclidChainsListElement, ev: EuclidChainsListCustomEvent<HTMLEuclidChainsListElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLEuclidChainsListElementEventMap>(type: K, listener: (this: HTMLEuclidChainsListElement, ev: EuclidChainsListCustomEvent<HTMLEuclidChainsListElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    }
+    var HTMLEuclidChainsListElement: {
+        prototype: HTMLEuclidChainsListElement;
+        new (): HTMLEuclidChainsListElement;
     };
     interface HTMLEuclidCoreProviderElement extends Components.EuclidCoreProvider, HTMLStencilElement {
     }
@@ -818,6 +944,8 @@ declare global {
     };
     interface HTMLElementTagNameMap {
         "euclid-button": HTMLEuclidButtonElement;
+        "euclid-chain-item": HTMLEuclidChainItemElement;
+        "euclid-chains-list": HTMLEuclidChainsListElement;
         "euclid-core-provider": HTMLEuclidCoreProviderElement;
         "euclid-liquidity-card": HTMLEuclidLiquidityCardElement;
         "euclid-liquidity-controller": HTMLEuclidLiquidityControllerElement;
@@ -870,6 +998,94 @@ declare namespace LocalJSX {
           * @default 'primary'
          */
         "variant"?: ButtonVariant;
+    }
+    interface EuclidChainItem {
+        /**
+          * Chain data to display
+         */
+        "chain": EuclidChainConfig;
+        /**
+          * Whether the item is disabled
+          * @default false
+         */
+        "disabled"?: boolean;
+        /**
+          * Display mode: card (full info), list-item (compact row), compact (minimal)
+          * @default 'list-item'
+         */
+        "displayMode"?: ChainDisplayMode;
+        /**
+          * Emitted when the chain item is hovered
+         */
+        "onChainHover"?: (event: EuclidChainItemCustomEvent<EuclidChainConfig>) => void;
+        /**
+          * Emitted when the chain item is clicked (only if selectable)
+         */
+        "onChainSelect"?: (event: EuclidChainItemCustomEvent<EuclidChainConfig>) => void;
+        /**
+          * Whether the item is selectable (shows hover states, emits events)
+          * @default false
+         */
+        "selectable"?: boolean;
+        /**
+          * Whether the item is currently selected
+          * @default false
+         */
+        "selected"?: boolean;
+        /**
+          * Fields to show in the display
+          * @default ['logo', 'name', 'type']
+         */
+        "showFields"?: ChainField[];
+    }
+    interface EuclidChainsList {
+        /**
+          * Component card title
+          * @default 'Select Chain'
+         */
+        "cardTitle"?: string;
+        /**
+          * Chain data (gets from market store automatically)
+          * @default []
+         */
+        "chains"?: EuclidChainConfig[];
+        /**
+          * Display mode for chain items
+          * @default 'list-item'
+         */
+        "displayMode"?: ChainDisplayMode1;
+        /**
+          * Whether to show filters
+          * @default true
+         */
+        "filterable"?: boolean;
+        /**
+          * Items per page (0 = no pagination)
+          * @default 0
+         */
+        "itemsPerPage"?: number;
+        /**
+          * Whether component is loading
+          * @default false
+         */
+        "loading"?: boolean;
+        "onChainHover"?: (event: EuclidChainsListCustomEvent<EuclidChainConfig>) => void;
+        "onChainSelected"?: (event: EuclidChainsListCustomEvent<EuclidChainConfig>) => void;
+        /**
+          * Whether to show search functionality
+          * @default true
+         */
+        "searchable"?: boolean;
+        /**
+          * Whether chains are selectable
+          * @default true
+         */
+        "selectable"?: boolean;
+        /**
+          * Fields to show for each chain
+          * @default ['logo', 'name', 'type']
+         */
+        "showFields"?: ChainField1[];
     }
     interface EuclidCoreProvider {
     }
@@ -1325,6 +1541,8 @@ declare namespace LocalJSX {
     }
     interface IntrinsicElements {
         "euclid-button": EuclidButton;
+        "euclid-chain-item": EuclidChainItem;
+        "euclid-chains-list": EuclidChainsList;
         "euclid-core-provider": EuclidCoreProvider;
         "euclid-liquidity-card": EuclidLiquidityCard;
         "euclid-liquidity-controller": EuclidLiquidityController;
@@ -1355,6 +1573,8 @@ declare module "@stencil/core" {
     export namespace JSX {
         interface IntrinsicElements {
             "euclid-button": LocalJSX.EuclidButton & JSXBase.HTMLAttributes<HTMLEuclidButtonElement>;
+            "euclid-chain-item": LocalJSX.EuclidChainItem & JSXBase.HTMLAttributes<HTMLEuclidChainItemElement>;
+            "euclid-chains-list": LocalJSX.EuclidChainsList & JSXBase.HTMLAttributes<HTMLEuclidChainsListElement>;
             "euclid-core-provider": LocalJSX.EuclidCoreProvider & JSXBase.HTMLAttributes<HTMLEuclidCoreProviderElement>;
             "euclid-liquidity-card": LocalJSX.EuclidLiquidityCard & JSXBase.HTMLAttributes<HTMLEuclidLiquidityCardElement>;
             "euclid-liquidity-controller": LocalJSX.EuclidLiquidityController & JSXBase.HTMLAttributes<HTMLEuclidLiquidityControllerElement>;

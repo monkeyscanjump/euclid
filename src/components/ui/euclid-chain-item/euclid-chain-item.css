@@ -1,0 +1,235 @@
+:host {
+  display: block;
+  --chain-item-padding: 12px;
+  --chain-item-border-radius: 8px;
+  --chain-item-bg: var(--euclid-surface);
+  --chain-item-border: var(--euclid-border-color);
+  --chain-item-hover-bg: var(--euclid-surface-hover);
+  --chain-item-selected-bg: var(--euclid-accent-alpha-10);
+  --chain-item-selected-border: var(--euclid-accent);
+}
+
+.chain-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: var(--chain-item-padding);
+  background: var(--chain-item-bg);
+  border: 1px solid var(--chain-item-border);
+  border-radius: var(--chain-item-border-radius);
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.chain-item--selectable {
+  cursor: pointer;
+}
+
+.chain-item--selectable:hover:not(.chain-item--disabled) {
+  background: var(--chain-item-hover-bg);
+  border-color: var(--euclid-accent-alpha-30);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px var(--euclid-shadow-light);
+}
+
+.chain-item--selected {
+  background: var(--chain-item-selected-bg);
+  border-color: var(--chain-item-selected-border);
+}
+
+.chain-item--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Display Modes */
+.chain-item--compact {
+  padding: 8px 12px;
+  gap: 8px;
+}
+
+.chain-item--compact .chain-logo {
+  width: 24px;
+  height: 24px;
+}
+
+.chain-item--list-item {
+  padding: 12px;
+  gap: 12px;
+}
+
+.chain-item--card {
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 16px;
+  gap: 12px;
+}
+
+.chain-item--card .chain-info {
+  width: 100%;
+}
+
+/* Logo */
+.chain-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chain-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.chain-logo-fallback {
+  width: 100%;
+  height: 100%;
+  background: var(--euclid-accent-gradient);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Chain Info */
+.chain-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.chain-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--euclid-text-primary);
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chain-details {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.chain-type {
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: currentColor;
+  color: white;
+  font-weight: 500;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.9;
+}
+
+.chain-id {
+  color: var(--euclid-text-secondary);
+  font-family: var(--euclid-font-mono);
+}
+
+/* Extra Info (Card mode) */
+.chain-extra {
+  width: 100%;
+  padding-top: 8px;
+  border-top: 1px solid var(--euclid-border-light);
+}
+
+.chain-factory {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.factory-label {
+  color: var(--euclid-text-secondary);
+  font-weight: 500;
+}
+
+.factory-address {
+  color: var(--euclid-text-primary);
+  font-family: var(--euclid-font-mono);
+  font-size: 11px;
+}
+
+/* Selection Indicator */
+.selection-indicator {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 16px;
+  height: 16px;
+  color: var(--euclid-accent);
+  opacity: 0.8;
+}
+
+.selection-indicator svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Compact mode adjustments */
+.chain-item--compact .chain-name {
+  font-size: 13px;
+  margin-bottom: 0;
+}
+
+.chain-item--compact .selection-indicator {
+  position: static;
+  width: 14px;
+  height: 14px;
+}
+
+/* Card mode adjustments */
+.chain-item--card .chain-logo {
+  width: 40px;
+  height: 40px;
+}
+
+.chain-item--card .chain-name {
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.chain-item--card .chain-details {
+  font-size: 13px;
+  gap: 12px;
+}
+
+/* Focus styles */
+.chain-item--selectable:focus {
+  outline: 2px solid var(--euclid-accent);
+  outline-offset: 2px;
+}
+
+.chain-item--selectable:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .chain-item--card {
+    padding: 12px;
+  }
+
+  .chain-item--card .chain-logo {
+    width: 32px;
+    height: 32px;
+  }
+
+  .chain-name {
+    font-size: 13px;
+  }
+}

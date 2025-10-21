@@ -1,8 +1,0 @@
-/**
- * Euclid Swap Controller Component Styles
- * This is a headless controller with no visual output
- */
-
-:host {
-  display: none;
-}

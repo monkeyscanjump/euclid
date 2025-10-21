@@ -13,8 +13,6 @@ import { ChartDataPoint, PoolPosition, PortfolioStats, StakingPosition, TokenBal
 import { SwapQuote, SwapSettings, SwapToken } from "./components/features/euclid-swap-card/euclid-swap-card";
 import { TokenInfo } from "./components/ui/euclid-token-content/euclid-token-content";
 import { TokenInfo as TokenInfo1 } from "./components/ui/euclid-token-input/euclid-token-input";
-import { ExtendedTokenInfo, PopularToken, TokenList } from "./components/ui/euclid-token-modal/euclid-token-modal";
-import { TokenInfo as TokenInfo2 } from "./components/ui/euclid-token-input/euclid-token-input";
 import { TokenFilters } from "./components/features/euclid-tokens-list/euclid-tokens-list";
 import { WalletProvider } from "./components/ui/euclid-wallet-content/euclid-wallet-content";
 import { UserPoolPosition as UserPoolPosition1 } from "./components/features/euclid-pools-list/pool-item";
@@ -28,8 +26,6 @@ export { ChartDataPoint, PoolPosition, PortfolioStats, StakingPosition, TokenBal
 export { SwapQuote, SwapSettings, SwapToken } from "./components/features/euclid-swap-card/euclid-swap-card";
 export { TokenInfo } from "./components/ui/euclid-token-content/euclid-token-content";
 export { TokenInfo as TokenInfo1 } from "./components/ui/euclid-token-input/euclid-token-input";
-export { ExtendedTokenInfo, PopularToken, TokenList } from "./components/ui/euclid-token-modal/euclid-token-modal";
-export { TokenInfo as TokenInfo2 } from "./components/ui/euclid-token-input/euclid-token-input";
 export { TokenFilters } from "./components/features/euclid-tokens-list/euclid-tokens-list";
 export { WalletProvider } from "./components/ui/euclid-wallet-content/euclid-wallet-content";
 export { UserPoolPosition as UserPoolPosition1 } from "./components/features/euclid-pools-list/pool-item";
@@ -65,8 +61,6 @@ export namespace Components {
     }
     interface EuclidCoreProvider {
     }
-    interface EuclidDemoButtons {
-    }
     interface EuclidLiquidityCard {
         /**
           * Card title
@@ -99,7 +93,8 @@ export namespace Components {
          */
         "mode": 'add' | 'remove';
         /**
-          * Available pools
+          * Available pools (legacy - use store instead)
+          * @deprecated Use marketStore instead
           * @default []
          */
         "pools": LiquidityPoolInfo[];
@@ -124,7 +119,8 @@ export namespace Components {
          */
         "tokenBAmount": string;
         /**
-          * Available tokens for liquidity provision
+          * Available tokens for liquidity provision (legacy - use store instead)
+          * @deprecated Use marketStore instead
           * @default []
          */
         "tokens": LiquidityToken[];
@@ -342,56 +338,6 @@ export namespace Components {
          */
         "value": string;
     }
-    interface EuclidTokenModal {
-        /**
-          * Error message to display
-         */
-        "error"?: string;
-        /**
-          * Loading state for token lists
-          * @default false
-         */
-        "loading": boolean;
-        /**
-          * Whether the modal is open
-          * @default false
-         */
-        "open": boolean;
-        /**
-          * Popular/featured tokens to show at the top
-          * @default []
-         */
-        "popularTokens": PopularToken[];
-        /**
-          * Placeholder text for search input
-          * @default 'Search tokens...'
-         */
-        "searchPlaceholder": string;
-        /**
-          * Currently selected token (to show as selected)
-         */
-        "selectedToken"?: TokenInfo2;
-        /**
-          * Whether to show balances
-          * @default true
-         */
-        "showBalances": boolean;
-        /**
-          * Whether to show popular tokens section
-          * @default true
-         */
-        "showPopular": boolean;
-        /**
-          * Available token lists
-          * @default []
-         */
-        "tokenLists": TokenList[];
-        /**
-          * User's token balances
-          * @default {}
-         */
-        "userBalances": Record<string, string>;
-    }
     interface EuclidTokensList {
         /**
           * Card title
@@ -511,10 +457,6 @@ export interface EuclidTokenInputCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLEuclidTokenInputElement;
 }
-export interface EuclidTokenModalCustomEvent<T> extends CustomEvent<T> {
-    detail: T;
-    target: HTMLEuclidTokenModalElement;
-}
 export interface EuclidTokensListCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLEuclidTokensListElement;
@@ -552,12 +494,6 @@ declare global {
         prototype: HTMLEuclidCoreProviderElement;
         new (): HTMLEuclidCoreProviderElement;
     };
-    interface HTMLEuclidDemoButtonsElement extends Components.EuclidDemoButtons, HTMLStencilElement {
-    }
-    var HTMLEuclidDemoButtonsElement: {
-        prototype: HTMLEuclidDemoButtonsElement;
-        new (): HTMLEuclidDemoButtonsElement;
-    };
     interface HTMLEuclidLiquidityCardElementEventMap {
         "liquidityAdded": {
     pool: LiquidityPoolInfo;
@@ -573,7 +509,7 @@ declare global {
     expectedTokenB: string;
     slippage: number;
   };
-        "poolSelected": LiquidityPoolInfo;
+        "poolSelected": PoolInfo;
         "quoteRequested": {
     pool: PoolInfo;
     tokenAAmount?: string;
@@ -700,7 +636,10 @@ declare global {
         new (): HTMLEuclidSwapControllerElement;
     };
     interface HTMLEuclidTokenContentElementEventMap {
-        "tokenSelect": TokenInfo;
+        "tokenSelect": {
+    token: TokenInfo;
+    selectorType: 'input' | 'output';
+  };
     }
     interface HTMLEuclidTokenContentElement extends Components.EuclidTokenContent, HTMLStencilElement {
         addEventListener<K extends keyof HTMLEuclidTokenContentElementEventMap>(type: K, listener: (this: HTMLEuclidTokenContentElement, ev: EuclidTokenContentCustomEvent<HTMLEuclidTokenContentElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -734,27 +673,6 @@ declare global {
     var HTMLEuclidTokenInputElement: {
         prototype: HTMLEuclidTokenInputElement;
         new (): HTMLEuclidTokenInputElement;
-    };
-    interface HTMLEuclidTokenModalElementEventMap {
-        "tokenSelect": {
-    token: ExtendedTokenInfo;
-    selectorType: 'input' | 'output';
-  };
-        "modalClose": void;
-    }
-    interface HTMLEuclidTokenModalElement extends Components.EuclidTokenModal, HTMLStencilElement {
-        addEventListener<K extends keyof HTMLEuclidTokenModalElementEventMap>(type: K, listener: (this: HTMLEuclidTokenModalElement, ev: EuclidTokenModalCustomEvent<HTMLEuclidTokenModalElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
-        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
-        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
-        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
-        removeEventListener<K extends keyof HTMLEuclidTokenModalElementEventMap>(type: K, listener: (this: HTMLEuclidTokenModalElement, ev: EuclidTokenModalCustomEvent<HTMLEuclidTokenModalElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
-        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
-        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
-        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
-    }
-    var HTMLEuclidTokenModalElement: {
-        prototype: HTMLEuclidTokenModalElement;
-        new (): HTMLEuclidTokenModalElement;
     };
     interface HTMLEuclidTokensListElementEventMap {
         "tokenSelected": TokenMetadata;
@@ -901,7 +819,6 @@ declare global {
     interface HTMLElementTagNameMap {
         "euclid-button": HTMLEuclidButtonElement;
         "euclid-core-provider": HTMLEuclidCoreProviderElement;
-        "euclid-demo-buttons": HTMLEuclidDemoButtonsElement;
         "euclid-liquidity-card": HTMLEuclidLiquidityCardElement;
         "euclid-liquidity-controller": HTMLEuclidLiquidityControllerElement;
         "euclid-market-data-controller": HTMLEuclidMarketDataControllerElement;
@@ -912,7 +829,6 @@ declare global {
         "euclid-swap-controller": HTMLEuclidSwapControllerElement;
         "euclid-token-content": HTMLEuclidTokenContentElement;
         "euclid-token-input": HTMLEuclidTokenInputElement;
-        "euclid-token-modal": HTMLEuclidTokenModalElement;
         "euclid-tokens-list": HTMLEuclidTokensListElement;
         "euclid-tx-tracker-controller": HTMLEuclidTxTrackerControllerElement;
         "euclid-user-data-controller": HTMLEuclidUserDataControllerElement;
@@ -956,8 +872,6 @@ declare namespace LocalJSX {
         "variant"?: ButtonVariant;
     }
     interface EuclidCoreProvider {
-    }
-    interface EuclidDemoButtons {
     }
     interface EuclidLiquidityCard {
         /**
@@ -1004,7 +918,7 @@ declare namespace LocalJSX {
     expectedTokenB: string;
     slippage: number;
   }>) => void;
-        "onPoolSelected"?: (event: EuclidLiquidityCardCustomEvent<LiquidityPoolInfo>) => void;
+        "onPoolSelected"?: (event: EuclidLiquidityCardCustomEvent<PoolInfo>) => void;
         "onQuoteRequested"?: (event: EuclidLiquidityCardCustomEvent<{
     pool: PoolInfo;
     tokenAAmount?: string;
@@ -1013,7 +927,8 @@ declare namespace LocalJSX {
     mode: 'add' | 'remove';
   }>) => void;
         /**
-          * Available pools
+          * Available pools (legacy - use store instead)
+          * @deprecated Use marketStore instead
           * @default []
          */
         "pools"?: LiquidityPoolInfo[];
@@ -1038,7 +953,8 @@ declare namespace LocalJSX {
          */
         "tokenBAmount"?: string;
         /**
-          * Available tokens for liquidity provision
+          * Available tokens for liquidity provision (legacy - use store instead)
+          * @deprecated Use marketStore instead
           * @default []
          */
         "tokens"?: LiquidityToken[];
@@ -1237,7 +1153,10 @@ declare namespace LocalJSX {
     interface EuclidSwapController {
     }
     interface EuclidTokenContent {
-        "onTokenSelect"?: (event: EuclidTokenContentCustomEvent<TokenInfo>) => void;
+        "onTokenSelect"?: (event: EuclidTokenContentCustomEvent<{
+    token: TokenInfo;
+    selectorType: 'input' | 'output';
+  }>) => void;
     }
     interface EuclidTokenInput {
         /**
@@ -1299,67 +1218,6 @@ declare namespace LocalJSX {
           * @default ''
          */
         "value"?: string;
-    }
-    interface EuclidTokenModal {
-        /**
-          * Error message to display
-         */
-        "error"?: string;
-        /**
-          * Loading state for token lists
-          * @default false
-         */
-        "loading"?: boolean;
-        /**
-          * Emitted when the modal is closed
-         */
-        "onModalClose"?: (event: EuclidTokenModalCustomEvent<void>) => void;
-        /**
-          * Emitted when a token is selected
-         */
-        "onTokenSelect"?: (event: EuclidTokenModalCustomEvent<{
-    token: ExtendedTokenInfo;
-    selectorType: 'input' | 'output';
-  }>) => void;
-        /**
-          * Whether the modal is open
-          * @default false
-         */
-        "open"?: boolean;
-        /**
-          * Popular/featured tokens to show at the top
-          * @default []
-         */
-        "popularTokens"?: PopularToken[];
-        /**
-          * Placeholder text for search input
-          * @default 'Search tokens...'
-         */
-        "searchPlaceholder"?: string;
-        /**
-          * Currently selected token (to show as selected)
-         */
-        "selectedToken"?: TokenInfo2;
-        /**
-          * Whether to show balances
-          * @default true
-         */
-        "showBalances"?: boolean;
-        /**
-          * Whether to show popular tokens section
-          * @default true
-         */
-        "showPopular"?: boolean;
-        /**
-          * Available token lists
-          * @default []
-         */
-        "tokenLists"?: TokenList[];
-        /**
-          * User's token balances
-          * @default {}
-         */
-        "userBalances"?: Record<string, string>;
     }
     interface EuclidTokensList {
         /**
@@ -1468,7 +1326,6 @@ declare namespace LocalJSX {
     interface IntrinsicElements {
         "euclid-button": EuclidButton;
         "euclid-core-provider": EuclidCoreProvider;
-        "euclid-demo-buttons": EuclidDemoButtons;
         "euclid-liquidity-card": EuclidLiquidityCard;
         "euclid-liquidity-controller": EuclidLiquidityController;
         "euclid-market-data-controller": EuclidMarketDataController;
@@ -1479,7 +1336,6 @@ declare namespace LocalJSX {
         "euclid-swap-controller": EuclidSwapController;
         "euclid-token-content": EuclidTokenContent;
         "euclid-token-input": EuclidTokenInput;
-        "euclid-token-modal": EuclidTokenModal;
         "euclid-tokens-list": EuclidTokensList;
         "euclid-tx-tracker-controller": EuclidTxTrackerController;
         "euclid-user-data-controller": EuclidUserDataController;
@@ -1500,7 +1356,6 @@ declare module "@stencil/core" {
         interface IntrinsicElements {
             "euclid-button": LocalJSX.EuclidButton & JSXBase.HTMLAttributes<HTMLEuclidButtonElement>;
             "euclid-core-provider": LocalJSX.EuclidCoreProvider & JSXBase.HTMLAttributes<HTMLEuclidCoreProviderElement>;
-            "euclid-demo-buttons": LocalJSX.EuclidDemoButtons & JSXBase.HTMLAttributes<HTMLEuclidDemoButtonsElement>;
             "euclid-liquidity-card": LocalJSX.EuclidLiquidityCard & JSXBase.HTMLAttributes<HTMLEuclidLiquidityCardElement>;
             "euclid-liquidity-controller": LocalJSX.EuclidLiquidityController & JSXBase.HTMLAttributes<HTMLEuclidLiquidityControllerElement>;
             "euclid-market-data-controller": LocalJSX.EuclidMarketDataController & JSXBase.HTMLAttributes<HTMLEuclidMarketDataControllerElement>;
@@ -1511,7 +1366,6 @@ declare module "@stencil/core" {
             "euclid-swap-controller": LocalJSX.EuclidSwapController & JSXBase.HTMLAttributes<HTMLEuclidSwapControllerElement>;
             "euclid-token-content": LocalJSX.EuclidTokenContent & JSXBase.HTMLAttributes<HTMLEuclidTokenContentElement>;
             "euclid-token-input": LocalJSX.EuclidTokenInput & JSXBase.HTMLAttributes<HTMLEuclidTokenInputElement>;
-            "euclid-token-modal": LocalJSX.EuclidTokenModal & JSXBase.HTMLAttributes<HTMLEuclidTokenModalElement>;
             "euclid-tokens-list": LocalJSX.EuclidTokensList & JSXBase.HTMLAttributes<HTMLEuclidTokensListElement>;
             "euclid-tx-tracker-controller": LocalJSX.EuclidTxTrackerController & JSXBase.HTMLAttributes<HTMLEuclidTxTrackerControllerElement>;
             "euclid-user-data-controller": LocalJSX.EuclidUserDataController & JSXBase.HTMLAttributes<HTMLEuclidUserDataControllerElement>;

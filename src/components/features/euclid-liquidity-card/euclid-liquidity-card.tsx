@@ -2,8 +2,9 @@ import { Component, Prop, h, State, Event, EventEmitter, Listen, Element } from 
 import { walletStore } from '../../../store/wallet.store';
 import { appStore } from '../../../store/app.store';
 import { liquidityStore } from '../../../store/liquidity.store';
+import { marketStore } from '../../../store/market.store';
 import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
-import type { PoolInfo } from '../../../utils/types/api.types';
+import type { PoolInfo, TokenMetadata } from '../../../utils/types/api.types';
 
 export interface LiquidityToken {
   symbol: string;
@@ -65,12 +66,14 @@ export class EuclidLiquidityCard {
   @Element() element!: HTMLElement;
 
   /**
-   * Available tokens for liquidity provision
+   * Available tokens for liquidity provision (legacy - use store instead)
+   * @deprecated Use marketStore instead
    */
   @Prop() tokens: LiquidityToken[] = [];
 
   /**
-   * Available pools
+   * Available pools (legacy - use store instead)
+   * @deprecated Use marketStore instead
    */
   @Prop() pools: LiquidityPoolInfo[] = [];
 
@@ -78,6 +81,14 @@ export class EuclidLiquidityCard {
    * User's liquidity positions
    */
   @Prop() positions: LiquidityPosition[] = [];
+
+  // Store data (automatically synced like pools-list)
+  @State() storePools: PoolInfo[] = [];
+  @State() storeTokens: TokenMetadata[] = [];
+  @State() storeLoading: boolean = false;
+
+  // Selected pool from store data (this is what we actually use)
+  @State() selectedStorePool: PoolInfo | null = null;
 
   /**
    * Selected pool for liquidity operations
@@ -131,7 +142,7 @@ export class EuclidLiquidityCard {
 
   // Internal state
   @State() isPoolSelectorOpen: boolean = false;
-  @State() tokenSelectorType: 'tokenA' | 'tokenB' = 'tokenA';
+    // Token selector type removed - no individual token selection needed
   @State() currentQuote: LiquidityQuote | null = null;
   @State() removeQuote: RemoveLiquidityQuote | null = null;
   @State() isQuoting: boolean = false;
@@ -156,7 +167,7 @@ export class EuclidLiquidityCard {
     slippage: number;
   }>;
 
-  @Event() poolSelected: EventEmitter<LiquidityPoolInfo>;
+  @Event() poolSelected: EventEmitter<PoolInfo>;
 
   @Event() quoteRequested: EventEmitter<{
     pool: PoolInfo;
@@ -169,6 +180,20 @@ export class EuclidLiquidityCard {
   // Quote update timer
   private quoteTimer: NodeJS.Timeout | null = null;
 
+  componentWillLoad() {
+    // Connect to market store for automatic data updates
+    this.syncWithStore();
+
+    // Listen for store changes
+    marketStore.onChange('pools', () => {
+      this.syncWithStore();
+    });
+
+    marketStore.onChange('tokens', () => {
+      this.syncWithStore();
+    });
+  }
+
   componentDidLoad() {
     // Auto-quote when inputs change
     this.startQuoteTimer();
@@ -178,6 +203,19 @@ export class EuclidLiquidityCard {
     if (this.quoteTimer) {
       clearTimeout(this.quoteTimer);
     }
+  }
+
+  private syncWithStore() {
+    // Use store data if available, fallback to legacy props
+    this.storePools = marketStore.state.pools.length > 0 ? marketStore.state.pools : [];
+    this.storeTokens = marketStore.state.tokens.length > 0 ? marketStore.state.tokens : [];
+    this.storeLoading = marketStore.state.loading;
+
+    console.log('🔄 Liquidity card store sync:', {
+      storePools: this.storePools.length,
+      storeTokens: this.storeTokens.length,
+      storeLoading: this.storeLoading
+    });
   }
 
   @Listen('valueChange')
@@ -196,33 +234,14 @@ export class EuclidLiquidityCard {
     }
   }
 
-  @Listen('tokenSelect')
-  handleTokenModalSelect(event: CustomEvent) {
-    const selectedToken = event.detail.token;
-
-    if (this.tokenSelectorType === 'tokenA') {
-      this.selectedPool = this.findPoolWithToken(selectedToken, this.selectedPool?.tokenB);
-    } else {
-      this.selectedPool = this.findPoolWithToken(this.selectedPool?.tokenA, selectedToken);
-    }
-
-    this.resetAmounts();
-    this.startQuoteTimer();
-  }
+  // Token selection removed - pools determine tokens
 
   @Listen('modalClose')
   handleModalClose() {
     this.isPoolSelectorOpen = false;
   }
 
-  private findPoolWithToken(tokenA?: LiquidityToken, tokenB?: LiquidityToken): LiquidityPoolInfo | null {
-    if (!tokenA || !tokenB) return null;
-
-    return this.pools.find(pool =>
-      (pool.tokenA.address === tokenA.address && pool.tokenB.address === tokenB.address) ||
-      (pool.tokenA.address === tokenB.address && pool.tokenB.address === tokenA.address)
-    ) || null;
-  }
+  // findPoolWithToken method removed - pool selection is direct
 
   private calculateTokenBFromA() {
     if (!this.selectedPool || !this.tokenAAmount || parseFloat(this.tokenAAmount) <= 0) {
@@ -369,21 +388,30 @@ export class EuclidLiquidityCard {
     this.lpPercentage = 0;
   };
 
-  private openTokenSelector = (type: 'tokenA' | 'tokenB') => {
-    this.tokenSelectorType = type;
-    appStore.openTokenModal();
-  };
+  // Token selection is not needed - tokens are determined by pool selection
 
   private openPoolSelector = () => {
     this.isPoolSelectorOpen = true;
   };
 
-  private selectPool = (pool: LiquidityPoolInfo) => {
-    this.selectedPool = pool;
-    this.poolSelected.emit(pool);
+  // Legacy selectPool method removed - use selectStorePool instead
+
+  private selectStorePool = (pool: PoolInfo) => {
+    // Store the selected pool directly - no conversion needed!
+    this.selectedStorePool = pool;
     this.isPoolSelectorOpen = false;
     this.resetAmounts();
-    this.startQuoteTimer();
+
+    // Emit the pool selection event with actual store data
+    this.poolSelected.emit(pool);
+
+    console.log('🎯 Pool selected:', {
+      poolId: pool.pool_id,
+      token1: pool.token_1,
+      token2: pool.token_2,
+      totalLiquidity: pool.total_liquidity,
+      apr: pool.apr
+    });
   };
 
   private handleMaxClick = (type: 'tokenA' | 'tokenB' | 'lp') => {
@@ -598,32 +626,27 @@ export class EuclidLiquidityCard {
           </div>
 
           <div class="pool-selector" onClick={this.openPoolSelector}>
-            {this.selectedPool ? (
+            {this.selectedStorePool ? (
               <div class="selected-pool">
                 <div class="pool-tokens">
                   <div class="token-pair">
-                    {this.selectedPool.tokenA.logoUrl && (
-                      <img src={this.selectedPool.tokenA.logoUrl} alt={this.selectedPool.tokenA.symbol} class="token-logo" />
-                    )}
-                    {this.selectedPool.tokenB.logoUrl && (
-                      <img src={this.selectedPool.tokenB.logoUrl} alt={this.selectedPool.tokenB.symbol} class="token-logo token-logo--overlap" />
-                    )}
+                    {/* Token logos would come from storeTokens metadata */}
                   </div>
                   <div class="pool-info">
                     <span class="pool-name">
-                      {this.selectedPool.tokenA.symbol}/{this.selectedPool.tokenB.symbol}
+                      {this.selectedStorePool.token_1.toUpperCase()}/{this.selectedStorePool.token_2.toUpperCase()}
                     </span>
-                    <span class="pool-fee">{this.selectedPool.fee}% Fee</span>
+                    <span class="pool-fee">Pool Fee</span>
                   </div>
                 </div>
                 <div class="pool-stats">
                   <div class="stat">
-                    <span class="stat-label">APY</span>
-                    <span class="stat-value">{this.selectedPool.apy.toFixed(2)}%</span>
+                    <span class="stat-label">APR</span>
+                    <span class="stat-value">{this.selectedStorePool.apr || 'N/A'}</span>
                   </div>
                   <div class="stat">
                     <span class="stat-label">TVL</span>
-                    <span class="stat-value">${this.selectedPool.tvl.toLocaleString()}</span>
+                    <span class="stat-value">${parseFloat(this.selectedStorePool.total_liquidity || '0').toLocaleString()}</span>
                   </div>
                 </div>
               </div>
@@ -772,6 +795,37 @@ export class EuclidLiquidityCard {
         >
           {this.getButtonText()}
         </euclid-button>
+
+        {/* Pool Selector Dropdown */}
+        {this.isPoolSelectorOpen && (
+          <div class="pool-selector-dropdown">
+            <div class="dropdown-header">
+              <h4>Select Pool</h4>
+              <button class="close-button" onClick={() => this.isPoolSelectorOpen = false}>×</button>
+            </div>
+            <div class="pool-list">
+              {this.storePools.length > 0 ? (
+                this.storePools.map(pool => (
+                  <div
+                    key={pool.pool_id}
+                    class="pool-item"
+                    onClick={() => this.selectStorePool(pool)}
+                  >
+                    <div class="pool-tokens">
+                      <span class="pool-name">{pool.token_1.toUpperCase()}/{pool.token_2.toUpperCase()}</span>
+                    </div>
+                    <div class="pool-stats">
+                      <span class="apr">APR: {pool.apr || '0.00%'}</span>
+                      <span class="tvl">TVL: ${parseFloat(pool.total_liquidity || '0').toLocaleString()}</span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div class="no-pools">No pools available</div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -797,34 +851,22 @@ export class EuclidLiquidityCard {
             show-max={!!this.selectedPool?.tokenA.balance}
             onMaxClick={() => this.handleMaxClick('tokenA')}
           >
-            <div slot="token" class="token-selector" onClick={() => this.openTokenSelector('tokenA')}>
-              {this.selectedPool?.tokenA ? (
+            <div slot="token" class="token-display">
+              {this.selectedStorePool ? (
                 <div class="selected-token">
-                  {this.selectedPool.tokenA.logoUrl && (
-                    <img src={this.selectedPool.tokenA.logoUrl} alt={this.selectedPool.tokenA.symbol} class="token-logo" />
-                  )}
                   <div class="token-info">
-                    <span class="token-symbol">{this.selectedPool.tokenA.symbol}</span>
-                    <span class="token-name">{this.selectedPool.tokenA.name}</span>
+                    <span class="token-symbol">{this.selectedStorePool.token_1.toUpperCase()}</span>
+                    <span class="token-name">{this.selectedStorePool.token_1}</span>
                   </div>
                 </div>
               ) : (
-                <div class="select-token-button">
-                  <span>Select Token</span>
-                  <svg class="dropdown-arrow" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M7 10l5 5 5-5z"/>
-                  </svg>
+                <div class="no-pool-selected">
+                  <span class="token-symbol">TOKEN</span>
+                  <span class="token-name">Select pool first</span>
                 </div>
               )}
             </div>
           </euclid-token-input>
-        </div>
-
-        {/* Plus Icon */}
-        <div class="plus-icon">
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-          </svg>
         </div>
 
         {/* Token B Input */}
@@ -845,23 +887,18 @@ export class EuclidLiquidityCard {
             show-max={!!this.selectedPool?.tokenB.balance}
             onMaxClick={() => this.handleMaxClick('tokenB')}
           >
-            <div slot="token" class="token-selector" onClick={() => this.openTokenSelector('tokenB')}>
-              {this.selectedPool?.tokenB ? (
+            <div slot="token" class="token-display">
+              {this.selectedStorePool ? (
                 <div class="selected-token">
-                  {this.selectedPool.tokenB.logoUrl && (
-                    <img src={this.selectedPool.tokenB.logoUrl} alt={this.selectedPool.tokenB.symbol} class="token-logo" />
-                  )}
                   <div class="token-info">
-                    <span class="token-symbol">{this.selectedPool.tokenB.symbol}</span>
-                    <span class="token-name">{this.selectedPool.tokenB.name}</span>
+                    <span class="token-symbol">{this.selectedStorePool.token_2.toUpperCase()}</span>
+                    <span class="token-name">{this.selectedStorePool.token_2}</span>
                   </div>
                 </div>
               ) : (
-                <div class="select-token-button">
-                  <span>Select Token</span>
-                  <svg class="dropdown-arrow" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M7 10l5 5 5-5z"/>
-                  </svg>
+                <div class="no-pool-selected">
+                  <span class="token-symbol">TOKEN</span>
+                  <span class="token-name">Select pool first</span>
                 </div>
               )}
             </div>
@@ -932,6 +969,7 @@ export class EuclidLiquidityCard {
             </div>
           </euclid-token-input>
         </div>
+
       </div>
     );
   }

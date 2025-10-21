@@ -1,10 +1,9 @@
 import { Component, Prop, h, State, Event, EventEmitter, Listen, Element } from '@stencil/core';
 import { walletStore } from '../../../store/wallet.store';
 import { appStore } from '../../../store/app.store';
-import { swapStore } from '../../../store/swap.store';
 import { marketStore } from '../../../store/market.store';
 import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
-import type { TokenInfo, TokenMetadata } from '../../../utils/types/api.types';
+import type { TokenMetadata } from '../../../utils/types/api.types';
 
 export interface SwapToken {
   id: string;
@@ -144,10 +143,12 @@ export class EuclidSwapCard {
   // Quote update timer
   private quoteTimer: NodeJS.Timeout | null = null;
 
-  componentDidLoad() {
+  componentWillLoad() {
     // Connect to market store for automatic token updates
     this.syncWithStore();
+  }
 
+  componentDidLoad() {
     // Listen for store changes
     marketStore.onChange('tokens', () => {
       this.syncWithStore();
@@ -161,14 +162,6 @@ export class EuclidSwapCard {
     // Use store data if available, fallback to props
     this.storeTokens = marketStore.state.tokens.length > 0 ? marketStore.state.tokens : [];
     this.storeLoading = marketStore.state.loading;
-
-    // Debug logging
-    console.log('🔄 Swap store sync:', {
-      storeTokens: this.storeTokens.length,
-      storeLoading: this.storeLoading,
-      marketStoreTokens: marketStore.state.tokens.length,
-      marketStoreLoading: marketStore.state.loading
-    });
   }
 
   /**
@@ -180,19 +173,19 @@ export class EuclidSwapCard {
     const sourceTokens = this.storeTokens.length > 0 ? this.storeTokens : this.tokens;
 
     return sourceTokens.map(token => {
-      // Convert TokenMetadata to SwapToken format
-      if ('token_info' in token) {
+      // Check if this is TokenMetadata from store or legacy SwapToken from props
+      if ('tokenId' in token && 'displayName' in token && 'coinDecimal' in token) {
         // Store token format (TokenMetadata)
         return {
-          id: token.token_info.tokenId,
-          symbol: token.token_info.symbol || token.token_info.displayName.toUpperCase(),
-          name: token.token_info.displayName,
-          address: token.token_info.tokenId,
-          chainUID: token.chain.chain_uid,
-          decimals: token.token_info.coinDecimal,
-          logoUrl: token.token_info.logo || undefined,
+          id: token.tokenId,
+          symbol: token.symbol || token.displayName.toUpperCase(),
+          name: token.displayName,
+          address: token.address || token.tokenId,
+          chainUID: token.chainUID || token.chain_uid || token.chain_uids?.[0] || '',
+          decimals: token.coinDecimal,
+          logoUrl: token.logo || token.image || undefined,
           balance: undefined, // Would need to fetch from wallet
-          price: token.price_usd ? parseFloat(token.price_usd) : undefined,
+          price: token.price ? parseFloat(token.price) : undefined,
         };
       } else {
         // Legacy prop format (SwapToken)
@@ -234,13 +227,14 @@ export class EuclidSwapCard {
     }
   }
 
-  @Listen('tokenSelect')
+  @Listen('tokenSelect', { target: 'document' })
   handleTokenModalSelect(event: CustomEvent) {
-    // Handle the new token selection format from the modal
-    if (!event.detail || !event.detail.token) {
-      console.warn('Token select event received without valid token data:', event.detail);
+    // Only handle events from the token modal with proper structure
+    if (!event.detail || !event.detail.token || !event.detail.selectorType) {
       return;
     }
+
+    console.log('🔧 Swap - received token selection:', event.detail);
 
     const { token, selectorType } = event.detail;
 
@@ -258,24 +252,26 @@ export class EuclidSwapCard {
     };
 
     if (selectorType === 'input') {
-      // Prevent selecting same token for both input and output
+      // If we're selecting the same token that's already in output, swap them
       if (this.outputToken && selectedToken.address === this.outputToken.address) {
         this.outputToken = this.inputToken;
       }
       this.inputToken = selectedToken;
     } else {
-      // Prevent selecting same token for both input and output
+      // If we're selecting the same token that's already in input, swap them
       if (this.inputToken && selectedToken.address === this.inputToken.address) {
         this.inputToken = this.outputToken;
       }
       this.outputToken = selectedToken;
     }
 
+    // Emit event for external listeners
     this.tokenSelect.emit({
       type: selectorType,
       token: selectedToken,
     });
 
+    // Start quote timer if we have both tokens
     this.startQuoteTimer();
   }
 
@@ -355,11 +351,10 @@ export class EuclidSwapCard {
   };
 
   private openTokenSelector = (type: 'input' | 'output') => {
+    console.log('🔧 Opening token selector for:', type);
     this.tokenSelectorType = type;
     appStore.openTokenModal(type);
-  };
-
-  private toggleSettings = () => {
+  };  private toggleSettings = () => {
     this.isSettingsOpen = !this.isSettingsOpen;
   };
 
@@ -379,47 +374,10 @@ export class EuclidSwapCard {
 
     if (!this.outputToken || !this.currentQuote) return;
 
-    // Update swap store and trigger swap execution - convert to TokenInfo format
-    const fromTokenInfo: TokenInfo = {
-      tokenId: this.inputToken.id || this.inputToken.address,
-      displayName: this.inputToken.name,
-      coinDecimal: this.inputToken.decimals,
-      // Legacy compatibility fields
-      id: this.inputToken.id || this.inputToken.address,
-      symbol: this.inputToken.symbol,
-      name: this.inputToken.name,
-      decimals: this.inputToken.decimals,
-      chain_uid: this.inputToken.chainUID,
-      chainUID: this.inputToken.chainUID, // legacy compatibility
-      address: this.inputToken.address,
-      logo: this.inputToken.logoUrl,
-      token_type: { native: { denom: this.inputToken.address } } // Default to native token
-    };
-
-    const toTokenInfo: TokenInfo = {
-      tokenId: this.outputToken.id || this.outputToken.address,
-      displayName: this.outputToken.name,
-      coinDecimal: this.outputToken.decimals,
-      // Legacy compatibility fields
-      id: this.outputToken.id || this.outputToken.address,
-      symbol: this.outputToken.symbol,
-      name: this.outputToken.name,
-      decimals: this.outputToken.decimals,
-      chain_uid: this.outputToken.chainUID,
-      chainUID: this.outputToken.chainUID, // legacy compatibility
-      address: this.outputToken.address,
-      logo: this.outputToken.logoUrl,
-      token_type: { native: { denom: this.outputToken.address } } // Default to native token
-    };
-
-    swapStore.setFromToken(fromTokenInfo);
-    swapStore.setToToken(toTokenInfo);
-    swapStore.setFromAmount(this.inputAmount);
-
-    // Emit event to trigger swap controller
+    // Emit event to trigger swap execution
     dispatchEuclidEvent(EUCLID_EVENTS.SWAP.EXECUTE_REQUEST);
 
-    // Also emit the legacy event for backward compatibility
+    // Emit the swap event with all the data for external listeners
     this.swapInitiated.emit({
       inputToken: this.inputToken,
       outputToken: this.outputToken,
@@ -573,7 +531,11 @@ export class EuclidSwapCard {
             token-selectable={false}
             onMaxClick={this.handleMaxClick}
           >
-            <div slot="token" class="token-selector" onClick={() => this.openTokenSelector('input')}>
+            <div slot="token" class="token-selector" onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              this.openTokenSelector('input');
+            }}>
               {this.inputToken ? (
                 <div class="selected-token">
                   {this.inputToken.logoUrl && (
@@ -632,7 +594,11 @@ export class EuclidSwapCard {
             loading={this.isQuoting}
             token-selectable={false}
           >
-            <div slot="token" class="token-selector" onClick={() => this.openTokenSelector('output')}>
+            <div slot="token" class="token-selector" onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              this.openTokenSelector('output');
+            }}>
               {this.outputToken ? (
                 <div class="selected-token">
                   {this.outputToken.logoUrl && (

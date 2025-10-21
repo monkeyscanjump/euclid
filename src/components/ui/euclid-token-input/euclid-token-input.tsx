@@ -263,33 +263,39 @@ export class EuclidTokenInput {
               )}
             </div>
 
-            <div class={tokenSelectorClass} onClick={this.handleTokenClick}>
-              {this.token ? (
-                <div class="token-info">
-                  {this.token.logoUrl && (
-                    <img
-                      src={this.token.logoUrl}
-                      alt={this.token.symbol}
-                      class="token-logo"
-                    />
-                  )}
-                  <span class="token-symbol">{this.token.symbol}</span>
-                  {this.tokenSelectable && !this.disabled && (
-                    <svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                    </svg>
-                  )}
-                </div>
-              ) : (
-                <div class="select-token">
-                  <span>Select Token</span>
-                  {this.tokenSelectable && !this.disabled && (
-                    <svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                    </svg>
-                  )}
-                </div>
-              )}
+            <div
+              class={tokenSelectorClass}
+              onClick={this.tokenSelectable && !this.disabled ? this.handleTokenClick : undefined}
+            >
+              {/* Slot content takes priority over default token display */}
+              <slot name="token">
+                {this.token ? (
+                  <div class="token-info">
+                    {this.token.logoUrl && (
+                      <img
+                        src={this.token.logoUrl}
+                        alt={this.token.symbol}
+                        class="token-logo"
+                      />
+                    )}
+                    <span class="token-symbol">{this.token.symbol}</span>
+                    {this.tokenSelectable && !this.disabled && (
+                      <svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                      </svg>
+                    )}
+                  </div>
+                ) : (
+                  <div class="select-token">
+                    <span>Select Token</span>
+                    {this.tokenSelectable && !this.disabled && (
+                      <svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                      </svg>
+                    )}
+                  </div>
+                )}
+              </slot>
             </div>
           </div>
 

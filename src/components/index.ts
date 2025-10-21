@@ -11,8 +11,7 @@ export { EuclidTxTrackerController } from './core/euclid-tx-tracker-controller/e
 export { EuclidUserDataController } from './core/euclid-user-data-controller/euclid-user-data-controller';
 export { EuclidWalletController } from './core/euclid-wallet-controller/euclid-wallet-controller';
 
-// Export configuration factory
-export { createTokensConfig, createChainsConfig, createPoolsConfig, createDataListConfig } from './core/euclid-data-list/config-factory';
+
 
 // UI Components
 export { EuclidButton } from './ui/euclid-button/euclid-button';
@@ -23,13 +22,11 @@ export { EuclidWalletContent } from './ui/euclid-wallet-content/euclid-wallet-co
 export { EuclidChainItem } from './ui/euclid-chain-item/euclid-chain-item';
 export { EuclidTokenItem } from './ui/euclid-token-item/euclid-token-item';
 export { EuclidListItems } from './ui/euclid-list-items/euclid-list-items';
+export { PoolItem } from './ui/pool-item/pool-item';
 
 // Feature Components
 export { EuclidSwapCard } from './features/euclid-swap-card/euclid-swap-card';
 export { EuclidLiquidityCard } from './features/euclid-liquidity-card/euclid-liquidity-card';
-export { EuclidPoolsList } from './features/euclid-pools-list/euclid-pools-list';
-export { EuclidTokensList } from './features/euclid-tokens-list/euclid-tokens-list';
-export { EuclidChainsList } from './features/euclid-chains-list/euclid-chains-list';
 export { EuclidPortfolioOverview } from './features/euclid-portfolio-overview/euclid-portfolio-overview';
 
 // Re-export component interfaces

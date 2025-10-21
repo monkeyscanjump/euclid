@@ -8,39 +8,29 @@ import { HTMLStencilElement, JSXBase } from "@stencil/core/internal";
 import { ButtonSize, ButtonVariant } from "./components/ui/euclid-button/euclid-button";
 import { EuclidChainConfig, PoolInfo, TokenMetadata } from "./utils/types/api.types";
 import { ChainDisplayMode, ChainField } from "./components/ui/euclid-chain-item/euclid-chain-item";
-import { ChainDisplayMode as ChainDisplayMode1, ChainField as ChainField1 } from "./components/ui/euclid-chain-item/euclid-chain-item";
 import { DataItem, DataType, DisplayMode, FilterState } from "./components/core/euclid-data-list/euclid-data-list";
 import { LiquidityPoolInfo, LiquidityPosition, LiquidityToken } from "./components/features/euclid-liquidity-card/euclid-liquidity-card";
 import { DisplayMode as DisplayMode1, FilterConfig, ListFilters, ListItemData, ListItemType, SortConfig } from "./components/ui/euclid-list-items/euclid-list-items";
-import { PoolFilters, UserPoolPosition } from "./components/features/euclid-pools-list/euclid-pools-list";
 import { ChartDataPoint, PoolPosition, PortfolioStats, StakingPosition, TokenBalance, Transaction } from "./components/features/euclid-portfolio-overview/euclid-portfolio-overview";
 import { SwapQuote, SwapSettings, SwapToken } from "./components/features/euclid-swap-card/euclid-swap-card";
 import { TokenInfo } from "./components/ui/euclid-token-content/euclid-token-content";
 import { TokenInfo as TokenInfo1 } from "./components/ui/euclid-token-input/euclid-token-input";
 import { TokenDisplayMode, TokenField } from "./components/ui/euclid-token-item/euclid-token-item";
-import { TokenDisplayMode as TokenDisplayMode1, TokenField as TokenField1 } from "./components/ui/euclid-token-item/euclid-token-item";
-import { TokenFilters } from "./components/features/euclid-tokens-list/euclid-tokens-list";
 import { WalletProvider } from "./components/ui/euclid-wallet-content/euclid-wallet-content";
-import { UserPoolPosition as UserPoolPosition1 } from "./components/features/euclid-pools-list/pool-item";
-import { PoolFilters as PoolFilters1 } from "./components/features/euclid-pools-list/pools-filters";
+import { UserPoolPosition } from "./components/ui/pool-item/pool-item";
 export { ButtonSize, ButtonVariant } from "./components/ui/euclid-button/euclid-button";
 export { EuclidChainConfig, PoolInfo, TokenMetadata } from "./utils/types/api.types";
 export { ChainDisplayMode, ChainField } from "./components/ui/euclid-chain-item/euclid-chain-item";
-export { ChainDisplayMode as ChainDisplayMode1, ChainField as ChainField1 } from "./components/ui/euclid-chain-item/euclid-chain-item";
 export { DataItem, DataType, DisplayMode, FilterState } from "./components/core/euclid-data-list/euclid-data-list";
 export { LiquidityPoolInfo, LiquidityPosition, LiquidityToken } from "./components/features/euclid-liquidity-card/euclid-liquidity-card";
 export { DisplayMode as DisplayMode1, FilterConfig, ListFilters, ListItemData, ListItemType, SortConfig } from "./components/ui/euclid-list-items/euclid-list-items";
-export { PoolFilters, UserPoolPosition } from "./components/features/euclid-pools-list/euclid-pools-list";
 export { ChartDataPoint, PoolPosition, PortfolioStats, StakingPosition, TokenBalance, Transaction } from "./components/features/euclid-portfolio-overview/euclid-portfolio-overview";
 export { SwapQuote, SwapSettings, SwapToken } from "./components/features/euclid-swap-card/euclid-swap-card";
 export { TokenInfo } from "./components/ui/euclid-token-content/euclid-token-content";
 export { TokenInfo as TokenInfo1 } from "./components/ui/euclid-token-input/euclid-token-input";
 export { TokenDisplayMode, TokenField } from "./components/ui/euclid-token-item/euclid-token-item";
-export { TokenDisplayMode as TokenDisplayMode1, TokenField as TokenField1 } from "./components/ui/euclid-token-item/euclid-token-item";
-export { TokenFilters } from "./components/features/euclid-tokens-list/euclid-tokens-list";
 export { WalletProvider } from "./components/ui/euclid-wallet-content/euclid-wallet-content";
-export { UserPoolPosition as UserPoolPosition1 } from "./components/features/euclid-pools-list/pool-item";
-export { PoolFilters as PoolFilters1 } from "./components/features/euclid-pools-list/pools-filters";
+export { UserPoolPosition } from "./components/ui/pool-item/pool-item";
 export namespace Components {
     interface EuclidButton {
         /**
@@ -99,53 +89,6 @@ export namespace Components {
           * @default ['logo', 'name', 'type']
          */
         "showFields": ChainField[];
-    }
-    interface EuclidChainsList {
-        /**
-          * Component card title
-          * @default 'Select Chain'
-         */
-        "cardTitle": string;
-        /**
-          * Chain data (gets from market store automatically)
-          * @default []
-         */
-        "chains": EuclidChainConfig[];
-        /**
-          * Display mode for chain items
-          * @default 'list-item'
-         */
-        "displayMode": ChainDisplayMode1;
-        /**
-          * Whether to show filters
-          * @default true
-         */
-        "filterable": boolean;
-        /**
-          * Items per page (0 = no pagination)
-          * @default 0
-         */
-        "itemsPerPage": number;
-        /**
-          * Whether component is loading
-          * @default false
-         */
-        "loading": boolean;
-        /**
-          * Whether to show search functionality
-          * @default true
-         */
-        "searchable": boolean;
-        /**
-          * Whether chains are selectable
-          * @default true
-         */
-        "selectable": boolean;
-        /**
-          * Fields to show for each chain
-          * @default ['logo', 'name', 'type']
-         */
-        "showFields": ChainField1[];
     }
     interface EuclidCoreProvider {
     }
@@ -357,45 +300,6 @@ export namespace Components {
     }
     interface EuclidModal {
     }
-    interface EuclidPoolsList {
-        /**
-          * Card title
-          * @default 'Liquidity Pools'
-         */
-        "cardTitle": string;
-        /**
-          * Items per page for pagination
-          * @default 10
-         */
-        "itemsPerPage": number;
-        /**
-          * Whether the component is in loading state (overrides store loading)
-          * @default false
-         */
-        "loading": boolean;
-        /**
-          * Available pools data (gets from market store automatically)
-          * @deprecated Use store instead
-          * @default []
-         */
-        "pools": PoolInfo[];
-        /**
-          * User's positions in pools
-          * @default []
-         */
-        "positions": UserPoolPosition[];
-        /**
-          * Token metadata for logos and display names (gets from market store automatically)
-          * @deprecated Use store instead
-          * @default []
-         */
-        "tokenMetadata": TokenMetadata[];
-        /**
-          * Connected wallet address
-          * @default ''
-         */
-        "walletAddress": string;
-    }
     interface EuclidPortfolioOverview {
         /**
           * Card title
@@ -578,54 +482,6 @@ export namespace Components {
         "showFields": TokenField[];
         "token": TokenMetadata;
     }
-    interface EuclidTokensList {
-        /**
-          * Card title
-          * @default 'Available Tokens'
-         */
-        "cardTitle": string;
-        /**
-          * Display mode for token items
-          * @default 'card'
-         */
-        "displayMode": TokenDisplayMode1;
-        /**
-          * Whether to show filters
-          * @default true
-         */
-        "filterable": boolean;
-        /**
-          * Items per page for pagination (0 = no pagination)
-          * @default 12
-         */
-        "itemsPerPage": number;
-        /**
-          * Whether the component is in loading state (overrides store loading)
-          * @default false
-         */
-        "loading": boolean;
-        /**
-          * Whether to show search functionality
-          * @default true
-         */
-        "searchable": boolean;
-        /**
-          * Whether tokens are selectable
-          * @default true
-         */
-        "selectable": boolean;
-        /**
-          * Fields to show for each token
-          * @default ['logo', 'name', 'price', 'change', 'volume24h', 'decimals', 'chains', 'tags', 'verified']
-         */
-        "showFields": TokenField1[];
-        /**
-          * Available tokens data (gets from market store automatically)
-          * @deprecated Use store instead
-          * @default []
-         */
-        "tokens": TokenMetadata[];
-    }
     interface EuclidTxTrackerController {
     }
     interface EuclidUserDataController {
@@ -636,53 +492,17 @@ export namespace Components {
     }
     interface PoolItem {
         "pool": PoolInfo;
-        "position"?: UserPoolPosition1;
+        "position"?: UserPoolPosition;
         /**
           * @default []
          */
         "tokens": TokenMetadata[];
         "walletAddress"?: string;
     }
-    interface PoolsFilters {
-        "filters": PoolFilters1;
-        /**
-          * @default ''
-         */
-        "walletAddress": string;
-    }
-    interface PoolsLoading {
-        /**
-          * @default 6
-         */
-        "count": number;
-    }
-    interface PoolsStats {
-        /**
-          * @default 0
-         */
-        "filteredPools": number;
-        /**
-          * @default 0
-         */
-        "totalPools": number;
-        /**
-          * @default 0
-         */
-        "totalTvl": number;
-        /**
-          * @default 0
-         */
-        "userPositions": number;
-        "walletAddress"?: string;
-    }
 }
 export interface EuclidChainItemCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLEuclidChainItemElement;
-}
-export interface EuclidChainsListCustomEvent<T> extends CustomEvent<T> {
-    detail: T;
-    target: HTMLEuclidChainsListElement;
 }
 export interface EuclidDataListCustomEvent<T> extends CustomEvent<T> {
     detail: T;
@@ -695,10 +515,6 @@ export interface EuclidLiquidityCardCustomEvent<T> extends CustomEvent<T> {
 export interface EuclidListItemsCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLEuclidListItemsElement;
-}
-export interface EuclidPoolsListCustomEvent<T> extends CustomEvent<T> {
-    detail: T;
-    target: HTMLEuclidPoolsListElement;
 }
 export interface EuclidPortfolioOverviewCustomEvent<T> extends CustomEvent<T> {
     detail: T;
@@ -720,10 +536,6 @@ export interface EuclidTokenItemCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLEuclidTokenItemElement;
 }
-export interface EuclidTokensListCustomEvent<T> extends CustomEvent<T> {
-    detail: T;
-    target: HTMLEuclidTokensListElement;
-}
 export interface EuclidWalletContentCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLEuclidWalletContentElement;
@@ -731,10 +543,6 @@ export interface EuclidWalletContentCustomEvent<T> extends CustomEvent<T> {
 export interface PoolItemCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLPoolItemElement;
-}
-export interface PoolsFiltersCustomEvent<T> extends CustomEvent<T> {
-    detail: T;
-    target: HTMLPoolsFiltersElement;
 }
 declare global {
     interface HTMLEuclidButtonElement extends Components.EuclidButton, HTMLStencilElement {
@@ -760,24 +568,6 @@ declare global {
     var HTMLEuclidChainItemElement: {
         prototype: HTMLEuclidChainItemElement;
         new (): HTMLEuclidChainItemElement;
-    };
-    interface HTMLEuclidChainsListElementEventMap {
-        "chainSelected": EuclidChainConfig;
-        "chainHover": EuclidChainConfig;
-    }
-    interface HTMLEuclidChainsListElement extends Components.EuclidChainsList, HTMLStencilElement {
-        addEventListener<K extends keyof HTMLEuclidChainsListElementEventMap>(type: K, listener: (this: HTMLEuclidChainsListElement, ev: EuclidChainsListCustomEvent<HTMLEuclidChainsListElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
-        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
-        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
-        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
-        removeEventListener<K extends keyof HTMLEuclidChainsListElementEventMap>(type: K, listener: (this: HTMLEuclidChainsListElement, ev: EuclidChainsListCustomEvent<HTMLEuclidChainsListElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
-        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
-        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
-        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
-    }
-    var HTMLEuclidChainsListElement: {
-        prototype: HTMLEuclidChainsListElement;
-        new (): HTMLEuclidChainsListElement;
     };
     interface HTMLEuclidCoreProviderElement extends Components.EuclidCoreProvider, HTMLStencilElement {
     }
@@ -879,28 +669,6 @@ declare global {
     var HTMLEuclidModalElement: {
         prototype: HTMLEuclidModalElement;
         new (): HTMLEuclidModalElement;
-    };
-    interface HTMLEuclidPoolsListElementEventMap {
-        "poolSelected": PoolInfo;
-        "addLiquidity": PoolInfo;
-        "removeLiquidity": { pool: PoolInfo; position: UserPoolPosition };
-        "stakeTokens": { pool: PoolInfo; position?: UserPoolPosition };
-        "claimRewards": { pool: PoolInfo; position: UserPoolPosition };
-        "filtersChanged": PoolFilters;
-    }
-    interface HTMLEuclidPoolsListElement extends Components.EuclidPoolsList, HTMLStencilElement {
-        addEventListener<K extends keyof HTMLEuclidPoolsListElementEventMap>(type: K, listener: (this: HTMLEuclidPoolsListElement, ev: EuclidPoolsListCustomEvent<HTMLEuclidPoolsListElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
-        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
-        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
-        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
-        removeEventListener<K extends keyof HTMLEuclidPoolsListElementEventMap>(type: K, listener: (this: HTMLEuclidPoolsListElement, ev: EuclidPoolsListCustomEvent<HTMLEuclidPoolsListElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
-        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
-        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
-        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
-    }
-    var HTMLEuclidPoolsListElement: {
-        prototype: HTMLEuclidPoolsListElement;
-        new (): HTMLEuclidPoolsListElement;
     };
     interface HTMLEuclidPortfolioOverviewElementEventMap {
         "positionSelected": PoolPosition;
@@ -1021,24 +789,6 @@ declare global {
         prototype: HTMLEuclidTokenItemElement;
         new (): HTMLEuclidTokenItemElement;
     };
-    interface HTMLEuclidTokensListElementEventMap {
-        "tokenSelected": TokenMetadata;
-        "filtersChanged": TokenFilters;
-    }
-    interface HTMLEuclidTokensListElement extends Components.EuclidTokensList, HTMLStencilElement {
-        addEventListener<K extends keyof HTMLEuclidTokensListElementEventMap>(type: K, listener: (this: HTMLEuclidTokensListElement, ev: EuclidTokensListCustomEvent<HTMLEuclidTokensListElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
-        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
-        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
-        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
-        removeEventListener<K extends keyof HTMLEuclidTokensListElementEventMap>(type: K, listener: (this: HTMLEuclidTokensListElement, ev: EuclidTokensListCustomEvent<HTMLEuclidTokensListElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
-        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
-        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
-        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
-    }
-    var HTMLEuclidTokensListElement: {
-        prototype: HTMLEuclidTokensListElement;
-        new (): HTMLEuclidTokensListElement;
-    };
     interface HTMLEuclidTxTrackerControllerElement extends Components.EuclidTxTrackerController, HTMLStencilElement {
     }
     var HTMLEuclidTxTrackerControllerElement: {
@@ -1076,9 +826,9 @@ declare global {
     };
     interface HTMLPoolItemElementEventMap {
         "addLiquidity": PoolInfo;
-        "removeLiquidity": { pool: PoolInfo; position: UserPoolPosition1 };
-        "stakeTokens": { pool: PoolInfo; position?: UserPoolPosition1 };
-        "claimRewards": { pool: PoolInfo; position: UserPoolPosition1 };
+        "removeLiquidity": { pool: PoolInfo; position: UserPoolPosition };
+        "stakeTokens": { pool: PoolInfo; position?: UserPoolPosition };
+        "claimRewards": { pool: PoolInfo; position: UserPoolPosition };
     }
     interface HTMLPoolItemElement extends Components.PoolItem, HTMLStencilElement {
         addEventListener<K extends keyof HTMLPoolItemElementEventMap>(type: K, listener: (this: HTMLPoolItemElement, ev: PoolItemCustomEvent<HTMLPoolItemElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -1094,39 +844,9 @@ declare global {
         prototype: HTMLPoolItemElement;
         new (): HTMLPoolItemElement;
     };
-    interface HTMLPoolsFiltersElementEventMap {
-        "filtersChanged": PoolFilters1;
-    }
-    interface HTMLPoolsFiltersElement extends Components.PoolsFilters, HTMLStencilElement {
-        addEventListener<K extends keyof HTMLPoolsFiltersElementEventMap>(type: K, listener: (this: HTMLPoolsFiltersElement, ev: PoolsFiltersCustomEvent<HTMLPoolsFiltersElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
-        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
-        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
-        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
-        removeEventListener<K extends keyof HTMLPoolsFiltersElementEventMap>(type: K, listener: (this: HTMLPoolsFiltersElement, ev: PoolsFiltersCustomEvent<HTMLPoolsFiltersElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
-        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
-        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
-        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
-    }
-    var HTMLPoolsFiltersElement: {
-        prototype: HTMLPoolsFiltersElement;
-        new (): HTMLPoolsFiltersElement;
-    };
-    interface HTMLPoolsLoadingElement extends Components.PoolsLoading, HTMLStencilElement {
-    }
-    var HTMLPoolsLoadingElement: {
-        prototype: HTMLPoolsLoadingElement;
-        new (): HTMLPoolsLoadingElement;
-    };
-    interface HTMLPoolsStatsElement extends Components.PoolsStats, HTMLStencilElement {
-    }
-    var HTMLPoolsStatsElement: {
-        prototype: HTMLPoolsStatsElement;
-        new (): HTMLPoolsStatsElement;
-    };
     interface HTMLElementTagNameMap {
         "euclid-button": HTMLEuclidButtonElement;
         "euclid-chain-item": HTMLEuclidChainItemElement;
-        "euclid-chains-list": HTMLEuclidChainsListElement;
         "euclid-core-provider": HTMLEuclidCoreProviderElement;
         "euclid-data-list": HTMLEuclidDataListElement;
         "euclid-liquidity-card": HTMLEuclidLiquidityCardElement;
@@ -1134,22 +854,17 @@ declare global {
         "euclid-list-items": HTMLEuclidListItemsElement;
         "euclid-market-data-controller": HTMLEuclidMarketDataControllerElement;
         "euclid-modal": HTMLEuclidModalElement;
-        "euclid-pools-list": HTMLEuclidPoolsListElement;
         "euclid-portfolio-overview": HTMLEuclidPortfolioOverviewElement;
         "euclid-swap-card": HTMLEuclidSwapCardElement;
         "euclid-swap-controller": HTMLEuclidSwapControllerElement;
         "euclid-token-content": HTMLEuclidTokenContentElement;
         "euclid-token-input": HTMLEuclidTokenInputElement;
         "euclid-token-item": HTMLEuclidTokenItemElement;
-        "euclid-tokens-list": HTMLEuclidTokensListElement;
         "euclid-tx-tracker-controller": HTMLEuclidTxTrackerControllerElement;
         "euclid-user-data-controller": HTMLEuclidUserDataControllerElement;
         "euclid-wallet-content": HTMLEuclidWalletContentElement;
         "euclid-wallet-controller": HTMLEuclidWalletControllerElement;
         "pool-item": HTMLPoolItemElement;
-        "pools-filters": HTMLPoolsFiltersElement;
-        "pools-loading": HTMLPoolsLoadingElement;
-        "pools-stats": HTMLPoolsStatsElement;
     }
 }
 declare namespace LocalJSX {
@@ -1218,55 +933,6 @@ declare namespace LocalJSX {
           * @default ['logo', 'name', 'type']
          */
         "showFields"?: ChainField[];
-    }
-    interface EuclidChainsList {
-        /**
-          * Component card title
-          * @default 'Select Chain'
-         */
-        "cardTitle"?: string;
-        /**
-          * Chain data (gets from market store automatically)
-          * @default []
-         */
-        "chains"?: EuclidChainConfig[];
-        /**
-          * Display mode for chain items
-          * @default 'list-item'
-         */
-        "displayMode"?: ChainDisplayMode1;
-        /**
-          * Whether to show filters
-          * @default true
-         */
-        "filterable"?: boolean;
-        /**
-          * Items per page (0 = no pagination)
-          * @default 0
-         */
-        "itemsPerPage"?: number;
-        /**
-          * Whether component is loading
-          * @default false
-         */
-        "loading"?: boolean;
-        "onChainHover"?: (event: EuclidChainsListCustomEvent<EuclidChainConfig>) => void;
-        "onChainSelected"?: (event: EuclidChainsListCustomEvent<EuclidChainConfig>) => void;
-        /**
-          * Whether to show search functionality
-          * @default true
-         */
-        "searchable"?: boolean;
-        /**
-          * Whether chains are selectable
-          * @default true
-         */
-        "selectable"?: boolean;
-        /**
-          * Fields to show for each chain
-          * @default ['logo', 'name', 'type']
-         */
-        "showFields"?: ChainField1[];
     }
     interface EuclidCoreProvider {
     }
@@ -1507,51 +1173,6 @@ declare namespace LocalJSX {
     }
     interface EuclidModal {
     }
-    interface EuclidPoolsList {
-        /**
-          * Card title
-          * @default 'Liquidity Pools'
-         */
-        "cardTitle"?: string;
-        /**
-          * Items per page for pagination
-          * @default 10
-         */
-        "itemsPerPage"?: number;
-        /**
-          * Whether the component is in loading state (overrides store loading)
-          * @default false
-         */
-        "loading"?: boolean;
-        "onAddLiquidity"?: (event: EuclidPoolsListCustomEvent<PoolInfo>) => void;
-        "onClaimRewards"?: (event: EuclidPoolsListCustomEvent<{ pool: PoolInfo; position: UserPoolPosition }>) => void;
-        "onFiltersChanged"?: (event: EuclidPoolsListCustomEvent<PoolFilters>) => void;
-        "onPoolSelected"?: (event: EuclidPoolsListCustomEvent<PoolInfo>) => void;
-        "onRemoveLiquidity"?: (event: EuclidPoolsListCustomEvent<{ pool: PoolInfo; position: UserPoolPosition }>) => void;
-        "onStakeTokens"?: (event: EuclidPoolsListCustomEvent<{ pool: PoolInfo; position?: UserPoolPosition }>) => void;
-        /**
-          * Available pools data (gets from market store automatically)
-          * @deprecated Use store instead
-          * @default []
-         */
-        "pools"?: PoolInfo[];
-        /**
-          * User's positions in pools
-          * @default []
-         */
-        "positions"?: UserPoolPosition[];
-        /**
-          * Token metadata for logos and display names (gets from market store automatically)
-          * @deprecated Use store instead
-          * @default []
-         */
-        "tokenMetadata"?: TokenMetadata[];
-        /**
-          * Connected wallet address
-          * @default ''
-         */
-        "walletAddress"?: string;
-    }
     interface EuclidPortfolioOverview {
         /**
           * Card title
@@ -1776,56 +1397,6 @@ declare namespace LocalJSX {
         "showFields"?: TokenField[];
         "token": TokenMetadata;
     }
-    interface EuclidTokensList {
-        /**
-          * Card title
-          * @default 'Available Tokens'
-         */
-        "cardTitle"?: string;
-        /**
-          * Display mode for token items
-          * @default 'card'
-         */
-        "displayMode"?: TokenDisplayMode1;
-        /**
-          * Whether to show filters
-          * @default true
-         */
-        "filterable"?: boolean;
-        /**
-          * Items per page for pagination (0 = no pagination)
-          * @default 12
-         */
-        "itemsPerPage"?: number;
-        /**
-          * Whether the component is in loading state (overrides store loading)
-          * @default false
-         */
-        "loading"?: boolean;
-        "onFiltersChanged"?: (event: EuclidTokensListCustomEvent<TokenFilters>) => void;
-        "onTokenSelected"?: (event: EuclidTokensListCustomEvent<TokenMetadata>) => void;
-        /**
-          * Whether to show search functionality
-          * @default true
-         */
-        "searchable"?: boolean;
-        /**
-          * Whether tokens are selectable
-          * @default true
-         */
-        "selectable"?: boolean;
-        /**
-          * Fields to show for each token
-          * @default ['logo', 'name', 'price', 'change', 'volume24h', 'decimals', 'chains', 'tags', 'verified']
-         */
-        "showFields"?: TokenField1[];
-        /**
-          * Available tokens data (gets from market store automatically)
-          * @deprecated Use store instead
-          * @default []
-         */
-        "tokens"?: TokenMetadata[];
-    }
     interface EuclidTxTrackerController {
     }
     interface EuclidUserDataController {
@@ -1837,54 +1408,20 @@ declare namespace LocalJSX {
     }
     interface PoolItem {
         "onAddLiquidity"?: (event: PoolItemCustomEvent<PoolInfo>) => void;
-        "onClaimRewards"?: (event: PoolItemCustomEvent<{ pool: PoolInfo; position: UserPoolPosition1 }>) => void;
-        "onRemoveLiquidity"?: (event: PoolItemCustomEvent<{ pool: PoolInfo; position: UserPoolPosition1 }>) => void;
-        "onStakeTokens"?: (event: PoolItemCustomEvent<{ pool: PoolInfo; position?: UserPoolPosition1 }>) => void;
+        "onClaimRewards"?: (event: PoolItemCustomEvent<{ pool: PoolInfo; position: UserPoolPosition }>) => void;
+        "onRemoveLiquidity"?: (event: PoolItemCustomEvent<{ pool: PoolInfo; position: UserPoolPosition }>) => void;
+        "onStakeTokens"?: (event: PoolItemCustomEvent<{ pool: PoolInfo; position?: UserPoolPosition }>) => void;
         "pool": PoolInfo;
-        "position"?: UserPoolPosition1;
+        "position"?: UserPoolPosition;
         /**
           * @default []
          */
         "tokens"?: TokenMetadata[];
         "walletAddress"?: string;
     }
-    interface PoolsFilters {
-        "filters": PoolFilters1;
-        "onFiltersChanged"?: (event: PoolsFiltersCustomEvent<PoolFilters1>) => void;
-        /**
-          * @default ''
-         */
-        "walletAddress"?: string;
-    }
-    interface PoolsLoading {
-        /**
-          * @default 6
-         */
-        "count"?: number;
-    }
-    interface PoolsStats {
-        /**
-          * @default 0
-         */
-        "filteredPools"?: number;
-        /**
-          * @default 0
-         */
-        "totalPools"?: number;
-        /**
-          * @default 0
-         */
-        "totalTvl"?: number;
-        /**
-          * @default 0
-         */
-        "userPositions"?: number;
-        "walletAddress"?: string;
-    }
     interface IntrinsicElements {
         "euclid-button": EuclidButton;
         "euclid-chain-item": EuclidChainItem;
-        "euclid-chains-list": EuclidChainsList;
         "euclid-core-provider": EuclidCoreProvider;
         "euclid-data-list": EuclidDataList;
         "euclid-liquidity-card": EuclidLiquidityCard;
@@ -1892,22 +1429,17 @@ declare namespace LocalJSX {
         "euclid-list-items": EuclidListItems;
         "euclid-market-data-controller": EuclidMarketDataController;
         "euclid-modal": EuclidModal;
-        "euclid-pools-list": EuclidPoolsList;
         "euclid-portfolio-overview": EuclidPortfolioOverview;
         "euclid-swap-card": EuclidSwapCard;
         "euclid-swap-controller": EuclidSwapController;
         "euclid-token-content": EuclidTokenContent;
         "euclid-token-input": EuclidTokenInput;
         "euclid-token-item": EuclidTokenItem;
-        "euclid-tokens-list": EuclidTokensList;
         "euclid-tx-tracker-controller": EuclidTxTrackerController;
         "euclid-user-data-controller": EuclidUserDataController;
         "euclid-wallet-content": EuclidWalletContent;
         "euclid-wallet-controller": EuclidWalletController;
         "pool-item": PoolItem;
-        "pools-filters": PoolsFilters;
-        "pools-loading": PoolsLoading;
-        "pools-stats": PoolsStats;
     }
 }
 export { LocalJSX as JSX };
@@ -1916,7 +1448,6 @@ declare module "@stencil/core" {
         interface IntrinsicElements {
             "euclid-button": LocalJSX.EuclidButton & JSXBase.HTMLAttributes<HTMLEuclidButtonElement>;
             "euclid-chain-item": LocalJSX.EuclidChainItem & JSXBase.HTMLAttributes<HTMLEuclidChainItemElement>;
-            "euclid-chains-list": LocalJSX.EuclidChainsList & JSXBase.HTMLAttributes<HTMLEuclidChainsListElement>;
             "euclid-core-provider": LocalJSX.EuclidCoreProvider & JSXBase.HTMLAttributes<HTMLEuclidCoreProviderElement>;
             "euclid-data-list": LocalJSX.EuclidDataList & JSXBase.HTMLAttributes<HTMLEuclidDataListElement>;
             "euclid-liquidity-card": LocalJSX.EuclidLiquidityCard & JSXBase.HTMLAttributes<HTMLEuclidLiquidityCardElement>;
@@ -1924,22 +1455,17 @@ declare module "@stencil/core" {
             "euclid-list-items": LocalJSX.EuclidListItems & JSXBase.HTMLAttributes<HTMLEuclidListItemsElement>;
             "euclid-market-data-controller": LocalJSX.EuclidMarketDataController & JSXBase.HTMLAttributes<HTMLEuclidMarketDataControllerElement>;
             "euclid-modal": LocalJSX.EuclidModal & JSXBase.HTMLAttributes<HTMLEuclidModalElement>;
-            "euclid-pools-list": LocalJSX.EuclidPoolsList & JSXBase.HTMLAttributes<HTMLEuclidPoolsListElement>;
             "euclid-portfolio-overview": LocalJSX.EuclidPortfolioOverview & JSXBase.HTMLAttributes<HTMLEuclidPortfolioOverviewElement>;
             "euclid-swap-card": LocalJSX.EuclidSwapCard & JSXBase.HTMLAttributes<HTMLEuclidSwapCardElement>;
             "euclid-swap-controller": LocalJSX.EuclidSwapController & JSXBase.HTMLAttributes<HTMLEuclidSwapControllerElement>;
             "euclid-token-content": LocalJSX.EuclidTokenContent & JSXBase.HTMLAttributes<HTMLEuclidTokenContentElement>;
             "euclid-token-input": LocalJSX.EuclidTokenInput & JSXBase.HTMLAttributes<HTMLEuclidTokenInputElement>;
             "euclid-token-item": LocalJSX.EuclidTokenItem & JSXBase.HTMLAttributes<HTMLEuclidTokenItemElement>;
-            "euclid-tokens-list": LocalJSX.EuclidTokensList & JSXBase.HTMLAttributes<HTMLEuclidTokensListElement>;
             "euclid-tx-tracker-controller": LocalJSX.EuclidTxTrackerController & JSXBase.HTMLAttributes<HTMLEuclidTxTrackerControllerElement>;
             "euclid-user-data-controller": LocalJSX.EuclidUserDataController & JSXBase.HTMLAttributes<HTMLEuclidUserDataControllerElement>;
             "euclid-wallet-content": LocalJSX.EuclidWalletContent & JSXBase.HTMLAttributes<HTMLEuclidWalletContentElement>;
             "euclid-wallet-controller": LocalJSX.EuclidWalletController & JSXBase.HTMLAttributes<HTMLEuclidWalletControllerElement>;
             "pool-item": LocalJSX.PoolItem & JSXBase.HTMLAttributes<HTMLPoolItemElement>;
-            "pools-filters": LocalJSX.PoolsFilters & JSXBase.HTMLAttributes<HTMLPoolsFiltersElement>;
-            "pools-loading": LocalJSX.PoolsLoading & JSXBase.HTMLAttributes<HTMLPoolsLoadingElement>;
-            "pools-stats": LocalJSX.PoolsStats & JSXBase.HTMLAttributes<HTMLPoolsStatsElement>;
         }
     }
 }

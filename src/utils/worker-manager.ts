@@ -9,6 +9,7 @@ export interface WorkerManagerConfig {
   workerPath?: string;
   batchSize?: number;
   debounceTime?: number;
+  timeout?: number;
 }
 
 export class DataListWorkerManager {
@@ -24,10 +25,11 @@ export class DataListWorkerManager {
 
   constructor(config: WorkerManagerConfig = {}) {
     this.config = {
-      workerPath: '/build/workers/data-list.worker.js',
-      batchSize: 20,
-      debounceTime: 150,
-      ...config
+      workerPath: './build/workers/data-list.worker.js',
+      batchSize: 50,
+      debounceTime: 200,
+      timeout: 5000,
+      ...config,
     };
 
     this.initializeWorker();

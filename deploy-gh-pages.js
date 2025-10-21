@@ -40,7 +40,15 @@ if (fs.existsSync(assetsSrc)) {
   console.log('✅ Copied assets/');
 }
 
-// 3. Copy essential build files only
+// 3. Copy workers folder if it exists
+const workersSrc = path.join(distWwwPath, 'build', 'workers');
+const workersDest = path.join(docsBuildPath, 'workers');
+if (fs.existsSync(workersSrc)) {
+  fs.cpSync(workersSrc, workersDest, { recursive: true });
+  console.log('✅ Copied workers/');
+}
+
+// 4. Copy essential build files only
 const buildFiles = fs.readdirSync(distBuildPath);
 const essentialFiles = buildFiles.filter(file => {
   // Include core bundles
@@ -65,7 +73,7 @@ essentialFiles.forEach(file => {
   console.log(`   ✓ ${file}`);
 });
 
-// 4. Fix paths for GitHub Pages (relative URLs)
+// 5. Fix paths for GitHub Pages (relative URLs)
 console.log('🔧 Fixing paths for GitHub Pages...');
 let html = fs.readFileSync(indexDest, 'utf8');
 
@@ -78,7 +86,7 @@ html = html.replace(/data-resources-url="\/build\/"/g, 'data-resources-url="./bu
 fs.writeFileSync(indexDest, html);
 console.log('✅ Fixed GitHub Pages paths in index.html');
 
-// 5. Fix asset paths in JavaScript files
+// 6. Fix asset paths in JavaScript files
 console.log('🔧 Fixing asset paths in JavaScript files...');
 essentialFiles.forEach(file => {
   if (file.endsWith('.js')) {

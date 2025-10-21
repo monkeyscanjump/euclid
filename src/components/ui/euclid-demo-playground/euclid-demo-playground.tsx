@@ -1,5 +1,6 @@
 import { Component, Prop, h, State, Element, Watch } from '@stencil/core';
 import type { DataType, DisplayMode } from '../../core/euclid-data-list/types';
+import { DEFAULT_CONFIG, ENVIRONMENT_PRESETS } from '../../../utils/env';
 
 type PropValue = string | number | boolean;
 
@@ -15,10 +16,10 @@ interface ComponentDemo {
 
 interface PropDefinition {
   name: string;
-  type: 'string' | 'number' | 'boolean' | 'select';
+  type: 'string' | 'number' | 'boolean' | 'select' | 'text';
   defaultValue: PropValue;
   description?: string;
-  options?: Array<{ value: PropValue; label: string }>;
+  options?: { value: PropValue; label: string }[];
   min?: number;
   max?: number;
 }
@@ -32,6 +33,7 @@ export class EuclidDemoPlayground {
   @Element() el!: HTMLElement;
 
   @Prop() selectedDemo: string = 'data-list-tokens';
+  @Prop() environment: 'mainnet' | 'testnet' | 'devnet' = 'testnet';
 
   @State() activeTab: string = 'data-list-tokens';
   @State() currentProps: Record<string, PropValue> = {};
@@ -340,6 +342,97 @@ export class EuclidDemoPlayground {
           ]
         }
       ]
+    },
+    {
+      id: 'core-provider-config',
+      name: 'Core Provider - Configuration',
+      description: 'Configure API endpoints, environment, and feature flags for the entire component system',
+      category: 'Core',
+      tagName: 'euclid-core-provider',
+      defaultProps: {
+        environment: 'testnet',
+        graphqlEndpoint: '',
+        restEndpoint: '',
+        apiTimeout: 10000,
+        defaultSlippage: 0.5,
+        refreshIntervals: JSON.stringify({
+          marketData: 30000,
+          balances: 60000,
+          routes: 300000
+        }),
+        featureFlags: JSON.stringify({
+          darkMode: true,
+          transactionHistory: true,
+          advancedRouting: true
+        }),
+        supportedChains: 'cosmoshub-4,osmosis-1,juno-1,stargaze-1,ethereum,polygon',
+        supportedWallets: 'keplr,metamask,walletconnect,coinbase',
+        defaultChain: 'osmosis-1',
+        defaultWallet: 'keplr'
+      },
+      propDefinitions: [
+        {
+          name: 'environment',
+          type: 'select',
+          defaultValue: 'testnet',
+          description: 'Environment preset for API endpoints',
+          options: [
+            { value: 'mainnet', label: 'Mainnet' },
+            { value: 'testnet', label: 'Testnet' },
+            { value: 'devnet', label: 'Devnet' }
+          ]
+        },
+        {
+          name: 'graphqlEndpoint',
+          type: 'text',
+          defaultValue: '',
+          description: 'Custom GraphQL endpoint (overrides environment preset)'
+        },
+        {
+          name: 'restEndpoint',
+          type: 'text',
+          defaultValue: '',
+          description: 'Custom REST endpoint (overrides environment preset)'
+        },
+        {
+          name: 'apiTimeout',
+          type: 'number',
+          defaultValue: 10000,
+          description: 'API request timeout in milliseconds'
+        },
+        {
+          name: 'defaultSlippage',
+          type: 'number',
+          defaultValue: 0.5,
+          description: 'Default slippage tolerance percentage'
+        },
+        {
+          name: 'defaultChain',
+          type: 'select',
+          defaultValue: 'osmosis-1',
+          description: 'Default blockchain network',
+          options: [
+            { value: 'cosmoshub-4', label: 'Cosmos Hub' },
+            { value: 'osmosis-1', label: 'Osmosis' },
+            { value: 'juno-1', label: 'Juno' },
+            { value: 'stargaze-1', label: 'Stargaze' },
+            { value: 'ethereum', label: 'Ethereum' },
+            { value: 'polygon', label: 'Polygon' }
+          ]
+        },
+        {
+          name: 'defaultWallet',
+          type: 'select',
+          defaultValue: 'keplr',
+          description: 'Default wallet adapter',
+          options: [
+            { value: 'keplr', label: 'Keplr' },
+            { value: 'metamask', label: 'MetaMask' },
+            { value: 'walletconnect', label: 'WalletConnect' },
+            { value: 'coinbase', label: 'Coinbase Wallet' }
+          ]
+        }
+      ]
     }
   ];
 
@@ -622,6 +715,7 @@ export class EuclidDemoPlayground {
       case 'euclid-data-list':
         componentElement = (
           <euclid-data-list
+            key={`${demo.id}-${JSON.stringify(props)}`}
             dataType={props.dataType as DataType || 'tokens'}
             displayMode={props.displayMode as DisplayMode || 'list-item'}
             cardTitle={String(props.cardTitle || 'Available Tokens')}
@@ -646,12 +740,12 @@ export class EuclidDemoPlayground {
       case 'euclid-swap-card':
         componentElement = (
           <euclid-swap-card
+            key={`${demo.id}-${JSON.stringify(props)}`}
             cardTitle={String(props.cardTitle || 'Swap Tokens')}
             showAdvanced={Boolean(props.showAdvanced)}
             loading={Boolean(props.loading)}
             disabled={Boolean(props.disabled)}
             walletAddress={String(props.walletAddress || '')}
-            defaultSlippage={Number(props.defaultSlippage || 0.5)}
           />
         );
         break;
@@ -659,12 +753,12 @@ export class EuclidDemoPlayground {
       case 'euclid-liquidity-card':
         componentElement = (
           <euclid-liquidity-card
+            key={`${demo.id}-${JSON.stringify(props)}`}
             cardTitle={String(props.cardTitle || 'Manage Liquidity')}
             mode={props.mode as 'add' | 'remove' || 'add'}
             loading={Boolean(props.loading)}
             disabled={Boolean(props.disabled)}
             walletAddress={String(props.walletAddress || '')}
-            defaultSlippage={Number(props.defaultSlippage || 0.5)}
           />
         );
         break;
@@ -672,12 +766,64 @@ export class EuclidDemoPlayground {
       case 'euclid-portfolio-overview':
         componentElement = (
           <euclid-portfolio-overview
+            key={`${demo.id}-${JSON.stringify(props)}`}
             cardTitle={String(props.cardTitle || 'Portfolio Overview')}
             showAnalytics={Boolean(props.showAnalytics)}
             loading={Boolean(props.loading)}
             walletAddress={String(props.walletAddress || '')}
             timePeriod={props.timePeriod as '1D' | '1W' | '1M' | '3M' | '1Y' | 'ALL' || '1W'}
           />
+        );
+        break;
+
+      case 'euclid-core-provider':
+        componentElement = (
+          <div class="core-provider-demo">
+            <div class="provider-info">
+              <h3>🌌 Core Provider Configuration</h3>
+              <p>This component provides configuration to all child components. Configure the settings to see how they affect the entire system.</p>
+
+              <div class="config-summary">
+                <h4>Current Configuration:</h4>
+                <div class="config-details">
+                  <div><strong>Environment:</strong> {props.environment || 'testnet'}</div>
+                  <div><strong>GraphQL Endpoint:</strong> {props.graphqlEndpoint || ENVIRONMENT_PRESETS[String(props.environment || 'testnet')]?.graphqlEndpoint || DEFAULT_CONFIG.graphqlEndpoint}</div>
+                  <div><strong>REST Endpoint:</strong> {props.restEndpoint || ENVIRONMENT_PRESETS[String(props.environment || 'testnet')]?.restEndpoint || DEFAULT_CONFIG.restEndpoint}</div>
+                  <div><strong>API Timeout:</strong> {props.apiTimeout || DEFAULT_CONFIG.apiTimeout}ms</div>
+                  <div><strong>Default Chain:</strong> {props.defaultChain || DEFAULT_CONFIG.defaultChain}</div>
+                  <div><strong>Default Wallet:</strong> {props.defaultWallet || DEFAULT_CONFIG.defaultWallet}</div>
+                </div>
+              </div>
+            </div>
+
+            <euclid-core-provider
+              environment={String(props.environment) as 'mainnet' | 'testnet' | 'devnet'}
+              graphqlEndpoint={String(props.graphqlEndpoint || '')}
+              restEndpoint={String(props.restEndpoint || '')}
+              apiTimeout={Number(props.apiTimeout)}
+              defaultSlippage={Number(props.defaultSlippage)}
+              refreshIntervals={String(props.refreshIntervals)}
+              featureFlags={String(props.featureFlags)}
+              supportedChains={String(props.supportedChains)}
+              supportedWallets={String(props.supportedWallets)}
+              defaultChain={String(props.defaultChain)}
+              defaultWallet={String(props.defaultWallet)}
+            >
+              <div class="provider-children">
+                <h4>💡 Configured Components Preview:</h4>
+                <p>Here you would see child components using the configuration above.</p>
+                <div class="demo-components">
+                  <euclid-data-list
+                    dataType="tokens"
+                    displayMode="compact"
+                    cardTitle="Tokens (using configured endpoints)"
+                    itemsPerPage={5}
+                    searchable={false}
+                  />
+                </div>
+              </div>
+            </euclid-core-provider>
+          </div>
         );
         break;
 
@@ -697,7 +843,9 @@ export class EuclidDemoPlayground {
           </div>
 
           <div class="demo-section">
-            {this.renderDemo()}
+            <euclid-config-provider environment={this.environment}>
+              {this.renderDemo()}
+            </euclid-config-provider>
           </div>
         </div>
       </div>

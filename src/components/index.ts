@@ -3,6 +3,7 @@ export { Components, JSX } from '../components.d';
 
 // Core components
 export { EuclidCoreProvider } from './core/euclid-core-provider/euclid-core-provider';
+export { EuclidConfigProvider } from './core/euclid-config-provider/euclid-config-provider';
 export { EuclidDataList } from './core/euclid-data-list/euclid-data-list';
 export { EuclidLiquidityController } from './core/euclid-liquidity-controller/euclid-liquidity-controller';
 export { EuclidMarketDataController } from './core/euclid-market-data-controller/euclid-market-data-controller';

@@ -1,4 +1,4 @@
-import { Component, Listen, State, Watch } from '@stencil/core';
+import { Component, Listen, State, Watch, Prop } from '@stencil/core';
 import { walletStore } from '../../../store/wallet.store';
 import { apiClient } from '../../../utils/api-client';
 import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
@@ -8,6 +8,8 @@ import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
 })
 export class EuclidTxTrackerController {
   @State() isInitialized = false;
+  @Prop() config?: string; // JSON string of EuclidConfig
+
   private trackingTransactions: Map<string, { chainUID: string; type: string; pollCount: number }> = new Map();
   private trackingInterval: number;
 

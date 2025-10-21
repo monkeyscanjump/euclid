@@ -1,15 +1,28 @@
-import { Component, h, State, Listen } from '@stencil/core';
+import { Component, h, State, Listen, Prop } from '@stencil/core';
 import { marketStore } from '../../../store/market.store';
-import { apiClient } from '../../../utils/api-client';
-import { DEFAULTS } from '../../../utils/constants';
+import { createAPIClient } from '../../../utils/api-client';
 import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
+import type { EuclidConfig } from '../../../utils/env';
+import { DEFAULT_CONFIG } from '../../../utils/env';
 
 @Component({
   tag: 'euclid-market-data-controller',
 })
 export class EuclidMarketDataController {
   @State() isInitialized = false;
+  @Prop() config?: string; // JSON string of EuclidConfig
+
   private refreshInterval: number;
+  private euclidConfig: EuclidConfig;
+  private apiClient: ReturnType<typeof createAPIClient>;
+
+  async componentWillLoad() {
+    // Parse configuration
+    this.euclidConfig = this.config ? JSON.parse(this.config) : DEFAULT_CONFIG;
+
+    // Create configured API client
+    this.apiClient = createAPIClient(this.euclidConfig);
+  }
 
   async componentDidLoad() {
     await this.initialize();
@@ -41,7 +54,7 @@ export class EuclidMarketDataController {
       console.log('📊 Loading initial market data...');
 
       // Load chains
-      const chainsResponse = await apiClient.getAllChains(false);
+      const chainsResponse = await this.apiClient.getAllChains(false);
       if (chainsResponse.success && chainsResponse.data) {
         // Store the EuclidChainConfig[] data directly
         marketStore.setChains(chainsResponse.data);
@@ -51,7 +64,7 @@ export class EuclidMarketDataController {
       }
 
       // Load tokens
-      const tokensResponse = await apiClient.getAllTokens();
+      const tokensResponse = await this.apiClient.getAllTokens();
       if (tokensResponse.success && tokensResponse.data) {
         // Store the TokenMetadata[] data directly
         marketStore.setTokens(tokensResponse.data);
@@ -61,7 +74,7 @@ export class EuclidMarketDataController {
       }
 
       // Load pools
-      const poolsResponse = await apiClient.getAllPools();
+      const poolsResponse = await this.apiClient.getAllPools();
       if (poolsResponse.success && poolsResponse.data) {
         marketStore.setPools(poolsResponse.data);
         console.log('🏊 Loaded pools:', poolsResponse.data.length);
@@ -77,13 +90,17 @@ export class EuclidMarketDataController {
   }
 
   private setupPeriodicRefresh() {
-    // Refresh market data every 5 minutes
+    // Use configured refresh interval
+    const refreshInterval = this.euclidConfig.refreshIntervals.marketData;
+
     this.refreshInterval = window.setInterval(async () => {
       if (marketStore.isDataStale()) {
         console.log('🔄 Refreshing stale market data...');
         await this.refreshMarketData();
       }
-    }, DEFAULTS.MARKET_DATA_REFRESH_INTERVAL);
+    }, refreshInterval);
+
+    console.log(`📊 Market data refresh interval set to ${refreshInterval}ms`);
   }
 
   private async refreshMarketData() {
@@ -91,13 +108,13 @@ export class EuclidMarketDataController {
       marketStore.setLoading(true);
 
       // Refresh chains data
-      const chainsResponse = await apiClient.getAllChains(false);
+      const chainsResponse = await this.apiClient.getAllChains(false);
       if (chainsResponse.success && chainsResponse.data) {
         marketStore.setChains(chainsResponse.data);
       }
 
       // Refresh tokens data
-      const tokensResponse = await apiClient.getAllTokens();
+      const tokensResponse = await this.apiClient.getAllTokens();
       if (tokensResponse.success && tokensResponse.data) {
         marketStore.setTokens(tokensResponse.data);
       }
@@ -129,7 +146,7 @@ export class EuclidMarketDataController {
 
     try {
       // Get token denominations across all chains
-      const denomsResponse = await apiClient.getTokenDenoms(tokenId);
+      const denomsResponse = await this.apiClient.getTokenDenoms(tokenId);
       if (denomsResponse.success && denomsResponse.data) {
         const denoms = denomsResponse.data.router.token_denoms.denoms;
 
@@ -141,7 +158,7 @@ export class EuclidMarketDataController {
       }
 
       // Get escrow information
-      const escrowsResponse = await apiClient.getEscrows(tokenId);
+      const escrowsResponse = await this.apiClient.getEscrows(tokenId);
       if (escrowsResponse.success && escrowsResponse.data) {
         const escrows = escrowsResponse.data.router.escrows;
 

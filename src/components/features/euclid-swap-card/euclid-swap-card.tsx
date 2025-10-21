@@ -95,10 +95,7 @@ export class EuclidSwapCard {
    */
   @Prop() showAdvanced: boolean = false;
 
-  /**
-   * Default slippage tolerance (0.1 = 0.1%)
-   */
-  @Prop() defaultSlippage: number = 0.5;
+
 
   /**
    * Card title
@@ -112,7 +109,7 @@ export class EuclidSwapCard {
   @State() currentQuote: SwapQuote | null = null;
   @State() isQuoting: boolean = false;
   @State() swapSettings: SwapSettings = {
-    slippage: this.defaultSlippage,
+    slippage: 0.5,
     deadline: 20,
     infiniteApproval: false,
   };

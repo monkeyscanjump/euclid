@@ -1,4 +1,4 @@
-import { Component, Listen, State, Watch } from '@stencil/core';
+import { Component, Listen, State, Watch, Prop } from '@stencil/core';
 import { swapStore } from '../../../store/swap.store';
 import { walletStore } from '../../../store/wallet.store';
 import { apiClient } from '../../../utils/api-client';
@@ -11,6 +11,8 @@ import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
 })
 export class EuclidSwapController {
   @State() isInitialized = false;
+  @Prop() config?: string; // JSON string of EuclidConfig
+
   private routePollingInterval: number;
   private routePollingActive = false;
 

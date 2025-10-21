@@ -1,7 +1,8 @@
-import { Component, Host, h, State, Listen } from '@stencil/core';
+import { Component, Host, h, State, Listen, Prop } from '@stencil/core';
 import { walletStore } from '../../../store/wallet.store';
 import { appStore } from '../../../store/app.store';
 import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
+import { DEFAULT_CONFIG, ENVIRONMENT_PRESETS, mergeConfig, type EuclidConfig } from '../../../utils/env';
 
 @Component({
   tag: 'euclid-core-provider',
@@ -11,8 +12,78 @@ import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
 export class EuclidCoreProvider {
   @State() isInitialized = false;
 
+  // Configuration Props
+  @Prop() environment?: 'mainnet' | 'testnet' | 'devnet' = 'testnet';
+  @Prop() graphqlEndpoint?: string;
+  @Prop() restEndpoint?: string;
+  @Prop() apiTimeout?: number;
+  @Prop() defaultSlippage?: number;
+  @Prop() refreshIntervals?: string; // JSON string for complex object
+  @Prop() featureFlags?: string; // JSON string for feature flags
+  @Prop() supportedChains?: string; // Comma-separated list
+  @Prop() supportedWallets?: string; // Comma-separated list
+  @Prop() defaultChain?: string;
+  @Prop() defaultWallet?: string;
+
+  // Computed configuration for child components
+  private euclidConfig: EuclidConfig;
+
+  async componentWillLoad() {
+    this.euclidConfig = this.computeConfiguration();
+  }
+
   async componentDidLoad() {
     await this.initialize();
+  }
+
+  private computeConfiguration(): EuclidConfig {
+    // Start with default config
+    let config = { ...DEFAULT_CONFIG };
+
+    // Apply environment preset if specified
+    if (this.environment && ENVIRONMENT_PRESETS[this.environment]) {
+      config = mergeConfig(config, ENVIRONMENT_PRESETS[this.environment]);
+    }
+
+    // Apply individual prop overrides
+    const overrides: Partial<EuclidConfig> = {};
+
+    if (this.graphqlEndpoint) overrides.graphqlEndpoint = this.graphqlEndpoint;
+    if (this.restEndpoint) overrides.restEndpoint = this.restEndpoint;
+    if (this.apiTimeout !== undefined) overrides.apiTimeout = this.apiTimeout;
+    if (this.defaultChain) overrides.defaultChain = this.defaultChain;
+    if (this.defaultWallet) overrides.defaultWallet = this.defaultWallet;
+
+    if (this.supportedChains) {
+      overrides.supportedChains = this.supportedChains.split(',').map(s => s.trim());
+    }
+
+    if (this.supportedWallets) {
+      overrides.supportedWallets = this.supportedWallets.split(',').map(s => s.trim());
+    }
+
+    if (this.defaultSlippage !== undefined) {
+      overrides.ui = { ...config.ui, defaultSlippage: this.defaultSlippage };
+    }
+
+    // Parse JSON props
+    if (this.refreshIntervals) {
+      try {
+        overrides.refreshIntervals = JSON.parse(this.refreshIntervals);
+      } catch (e) {
+        console.warn('Invalid refreshIntervals JSON, using defaults:', e);
+      }
+    }
+
+    if (this.featureFlags) {
+      try {
+        overrides.features = JSON.parse(this.featureFlags);
+      } catch (e) {
+        console.warn('Invalid featureFlags JSON, using defaults:', e);
+      }
+    }
+
+    return mergeConfig(config, overrides);
   }
 
   private async initialize() {
@@ -61,14 +132,26 @@ export class EuclidCoreProvider {
         )}
 
         {/* Core controllers - these manage data and state */}
-        <euclid-wallet-controller />
-        <euclid-market-data-controller />
-        <euclid-user-data-controller />
+        <euclid-wallet-controller
+          config={JSON.stringify(this.euclidConfig)}
+        />
+        <euclid-market-data-controller
+          config={JSON.stringify(this.euclidConfig)}
+        />
+        <euclid-user-data-controller
+          config={JSON.stringify(this.euclidConfig)}
+        />
 
         {/* Feature controllers - these handle business logic */}
-        <euclid-swap-controller />
-        <euclid-liquidity-controller />
-        <euclid-tx-tracker-controller />
+        <euclid-swap-controller
+          config={JSON.stringify(this.euclidConfig)}
+        />
+        <euclid-liquidity-controller
+          config={JSON.stringify(this.euclidConfig)}
+        />
+        <euclid-tx-tracker-controller
+          config={JSON.stringify(this.euclidConfig)}
+        />
 
         {/* Global modal - controlled by appStore */}
         <euclid-modal />

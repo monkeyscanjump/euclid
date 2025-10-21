@@ -1,14 +1,24 @@
-import { Component, h, State, Listen } from '@stencil/core';
+import { Component, h, State, Listen, Prop } from '@stencil/core';
 import { walletStore } from '../../../store/wallet.store';
 import { marketStore } from '../../../store/market.store';
 import { WalletAdapterFactory } from '../../../utils/wallet-adapter';
 import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
+import type { EuclidConfig } from '../../../utils/env';
+import { DEFAULT_CONFIG } from '../../../utils/env';
 
 @Component({
   tag: 'euclid-wallet-controller',
 })
 export class EuclidWalletController {
   @State() isInitialized = false;
+  @Prop() config?: string; // JSON string of EuclidConfig
+
+  private euclidConfig: EuclidConfig;
+
+  async componentWillLoad() {
+    // Parse configuration
+    this.euclidConfig = this.config ? JSON.parse(this.config) : DEFAULT_CONFIG;
+  }
 
   async componentDidLoad() {
     await this.initialize();

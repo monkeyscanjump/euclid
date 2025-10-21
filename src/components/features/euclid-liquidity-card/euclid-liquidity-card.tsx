@@ -131,11 +131,6 @@ export class EuclidLiquidityCard {
   @Prop() walletAddress: string = '';
 
   /**
-   * Default slippage tolerance (0.5 = 0.5%)
-   */
-  @Prop() defaultSlippage: number = 0.5;
-
-  /**
    * Card title
    */
   @Prop() cardTitle: string = 'Manage Liquidity';
@@ -146,7 +141,7 @@ export class EuclidLiquidityCard {
   @State() currentQuote: LiquidityQuote | null = null;
   @State() removeQuote: RemoveLiquidityQuote | null = null;
   @State() isQuoting: boolean = false;
-  @State() slippage: number = this.defaultSlippage;
+  @State() slippage: number = 0.5;
   @State() isAdvancedOpen: boolean = false;
   @State() lpPercentage: number = 0;
 
@@ -180,7 +175,7 @@ export class EuclidLiquidityCard {
   // Quote update timer
   private quoteTimer: NodeJS.Timeout | null = null;
 
-  componentWillLoad() {
+  async componentWillLoad() {
     // Connect to market store for automatic data updates
     this.syncWithStore();
 
@@ -197,9 +192,7 @@ export class EuclidLiquidityCard {
   componentDidLoad() {
     // Auto-quote when inputs change
     this.startQuoteTimer();
-  }
-
-  disconnectedCallback() {
+  }  disconnectedCallback() {
     if (this.quoteTimer) {
       clearTimeout(this.quoteTimer);
     }

@@ -1,4 +1,4 @@
-import { Component, Listen, State, Watch } from '@stencil/core';
+import { Component, Listen, State, Watch, Prop } from '@stencil/core';
 import { liquidityStore } from '../../../store/liquidity.store';
 import { marketStore } from '../../../store/market.store';
 import { walletStore } from '../../../store/wallet.store';
@@ -15,6 +15,7 @@ interface TransactionResponse {
 })
 export class EuclidLiquidityController {
   @State() isInitialized = false;
+  @Prop() config?: string; // JSON string of EuclidConfig
 
   async componentDidLoad() {
     await this.initialize();

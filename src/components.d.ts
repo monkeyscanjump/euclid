@@ -90,7 +90,42 @@ export namespace Components {
          */
         "showFields": ChainField[];
     }
+    /**
+     * Lightweight configuration provider that only provides configuration context
+     * without automatically loading controllers. This allows for more granular control
+     * over which controllers are loaded.
+     */
+    interface EuclidConfigProvider {
+        "apiTimeout"?: number;
+        "defaultChain"?: string;
+        "defaultSlippage"?: number;
+        "defaultWallet"?: string;
+        /**
+          * @default 'testnet'
+         */
+        "environment"?: 'mainnet' | 'testnet' | 'devnet';
+        "featureFlags"?: string;
+        "graphqlEndpoint"?: string;
+        "refreshIntervals"?: string;
+        "restEndpoint"?: string;
+        "supportedChains"?: string;
+        "supportedWallets"?: string;
+    }
     interface EuclidCoreProvider {
+        "apiTimeout"?: number;
+        "defaultChain"?: string;
+        "defaultSlippage"?: number;
+        "defaultWallet"?: string;
+        /**
+          * @default 'testnet'
+         */
+        "environment"?: 'mainnet' | 'testnet' | 'devnet';
+        "featureFlags"?: string;
+        "graphqlEndpoint"?: string;
+        "refreshIntervals"?: string;
+        "restEndpoint"?: string;
+        "supportedChains"?: string;
+        "supportedWallets"?: string;
     }
     interface EuclidDataList {
         /**
@@ -165,6 +200,10 @@ export namespace Components {
     }
     interface EuclidDemoPlayground {
         /**
+          * @default 'testnet'
+         */
+        "environment": 'mainnet' | 'testnet' | 'devnet';
+        /**
           * @default 'data-list-tokens'
          */
         "selectedDemo": string;
@@ -175,11 +214,6 @@ export namespace Components {
           * @default 'Manage Liquidity'
          */
         "cardTitle": string;
-        /**
-          * Default slippage tolerance (0.5 = 0.5%)
-          * @default 0.5
-         */
-        "defaultSlippage": number;
         /**
           * Whether the liquidity functionality is disabled
           * @default false
@@ -239,6 +273,7 @@ export namespace Components {
         "walletAddress": string;
     }
     interface EuclidLiquidityController {
+        "config"?: string;
     }
     interface EuclidListItems {
         /**
@@ -313,6 +348,7 @@ export namespace Components {
         "sortConfigs": SortConfig[];
     }
     interface EuclidMarketDataController {
+        "config"?: string;
     }
     interface EuclidModal {
     }
@@ -405,11 +441,6 @@ export namespace Components {
          */
         "cardTitle": string;
         /**
-          * Default slippage tolerance (0.1 = 0.1%)
-          * @default 0.5
-         */
-        "defaultSlippage": number;
-        /**
           * Whether the swap functionality is disabled
           * @default false
          */
@@ -452,6 +483,7 @@ export namespace Components {
         "walletAddress": string;
     }
     interface EuclidSwapController {
+        "config"?: string;
     }
     interface EuclidTokenContent {
     }
@@ -524,12 +556,15 @@ export namespace Components {
         "token": TokenMetadata;
     }
     interface EuclidTxTrackerController {
+        "config"?: string;
     }
     interface EuclidUserDataController {
+        "config"?: string;
     }
     interface EuclidWalletContent {
     }
     interface EuclidWalletController {
+        "config"?: string;
     }
 }
 export interface EuclidChainItemCustomEvent<T> extends CustomEvent<T> {
@@ -600,6 +635,17 @@ declare global {
     var HTMLEuclidChainItemElement: {
         prototype: HTMLEuclidChainItemElement;
         new (): HTMLEuclidChainItemElement;
+    };
+    /**
+     * Lightweight configuration provider that only provides configuration context
+     * without automatically loading controllers. This allows for more granular control
+     * over which controllers are loaded.
+     */
+    interface HTMLEuclidConfigProviderElement extends Components.EuclidConfigProvider, HTMLStencilElement {
+    }
+    var HTMLEuclidConfigProviderElement: {
+        prototype: HTMLEuclidConfigProviderElement;
+        new (): HTMLEuclidConfigProviderElement;
     };
     interface HTMLEuclidCoreProviderElement extends Components.EuclidCoreProvider, HTMLStencilElement {
     }
@@ -890,6 +936,7 @@ declare global {
     interface HTMLElementTagNameMap {
         "euclid-button": HTMLEuclidButtonElement;
         "euclid-chain-item": HTMLEuclidChainItemElement;
+        "euclid-config-provider": HTMLEuclidConfigProviderElement;
         "euclid-core-provider": HTMLEuclidCoreProviderElement;
         "euclid-data-list": HTMLEuclidDataListElement;
         "euclid-demo-playground": HTMLEuclidDemoPlaygroundElement;
@@ -978,7 +1025,42 @@ declare namespace LocalJSX {
          */
         "showFields"?: ChainField[];
     }
+    /**
+     * Lightweight configuration provider that only provides configuration context
+     * without automatically loading controllers. This allows for more granular control
+     * over which controllers are loaded.
+     */
+    interface EuclidConfigProvider {
+        "apiTimeout"?: number;
+        "defaultChain"?: string;
+        "defaultSlippage"?: number;
+        "defaultWallet"?: string;
+        /**
+          * @default 'testnet'
+         */
+        "environment"?: 'mainnet' | 'testnet' | 'devnet';
+        "featureFlags"?: string;
+        "graphqlEndpoint"?: string;
+        "refreshIntervals"?: string;
+        "restEndpoint"?: string;
+        "supportedChains"?: string;
+        "supportedWallets"?: string;
+    }
     interface EuclidCoreProvider {
+        "apiTimeout"?: number;
+        "defaultChain"?: string;
+        "defaultSlippage"?: number;
+        "defaultWallet"?: string;
+        /**
+          * @default 'testnet'
+         */
+        "environment"?: 'mainnet' | 'testnet' | 'devnet';
+        "featureFlags"?: string;
+        "graphqlEndpoint"?: string;
+        "refreshIntervals"?: string;
+        "restEndpoint"?: string;
+        "supportedChains"?: string;
+        "supportedWallets"?: string;
     }
     interface EuclidDataList {
         /**
@@ -1060,6 +1142,10 @@ declare namespace LocalJSX {
     }
     interface EuclidDemoPlayground {
         /**
+          * @default 'testnet'
+         */
+        "environment"?: 'mainnet' | 'testnet' | 'devnet';
+        /**
           * @default 'data-list-tokens'
          */
         "selectedDemo"?: string;
@@ -1070,11 +1156,6 @@ declare namespace LocalJSX {
           * @default 'Manage Liquidity'
          */
         "cardTitle"?: string;
-        /**
-          * Default slippage tolerance (0.5 = 0.5%)
-          * @default 0.5
-         */
-        "defaultSlippage"?: number;
         /**
           * Whether the liquidity functionality is disabled
           * @default false
@@ -1156,6 +1237,7 @@ declare namespace LocalJSX {
         "walletAddress"?: string;
     }
     interface EuclidLiquidityController {
+        "config"?: string;
     }
     interface EuclidListItems {
         /**
@@ -1233,6 +1315,7 @@ declare namespace LocalJSX {
         "sortConfigs"?: SortConfig[];
     }
     interface EuclidMarketDataController {
+        "config"?: string;
     }
     interface EuclidModal {
     }
@@ -1338,11 +1421,6 @@ declare namespace LocalJSX {
          */
         "cardTitle"?: string;
         /**
-          * Default slippage tolerance (0.1 = 0.1%)
-          * @default 0.5
-         */
-        "defaultSlippage"?: number;
-        /**
           * Whether the swap functionality is disabled
           * @default false
          */
@@ -1403,6 +1481,7 @@ declare namespace LocalJSX {
         "walletAddress"?: string;
     }
     interface EuclidSwapController {
+        "config"?: string;
     }
     interface EuclidTokenContent {
         "onTokenSelect"?: (event: EuclidTokenContentCustomEvent<{
@@ -1492,17 +1571,21 @@ declare namespace LocalJSX {
         "token": TokenMetadata;
     }
     interface EuclidTxTrackerController {
+        "config"?: string;
     }
     interface EuclidUserDataController {
+        "config"?: string;
     }
     interface EuclidWalletContent {
         "onWalletConnect"?: (event: EuclidWalletContentCustomEvent<WalletProvider>) => void;
     }
     interface EuclidWalletController {
+        "config"?: string;
     }
     interface IntrinsicElements {
         "euclid-button": EuclidButton;
         "euclid-chain-item": EuclidChainItem;
+        "euclid-config-provider": EuclidConfigProvider;
         "euclid-core-provider": EuclidCoreProvider;
         "euclid-data-list": EuclidDataList;
         "euclid-demo-playground": EuclidDemoPlayground;
@@ -1530,6 +1613,12 @@ declare module "@stencil/core" {
         interface IntrinsicElements {
             "euclid-button": LocalJSX.EuclidButton & JSXBase.HTMLAttributes<HTMLEuclidButtonElement>;
             "euclid-chain-item": LocalJSX.EuclidChainItem & JSXBase.HTMLAttributes<HTMLEuclidChainItemElement>;
+            /**
+             * Lightweight configuration provider that only provides configuration context
+             * without automatically loading controllers. This allows for more granular control
+             * over which controllers are loaded.
+             */
+            "euclid-config-provider": LocalJSX.EuclidConfigProvider & JSXBase.HTMLAttributes<HTMLEuclidConfigProviderElement>;
             "euclid-core-provider": LocalJSX.EuclidCoreProvider & JSXBase.HTMLAttributes<HTMLEuclidCoreProviderElement>;
             "euclid-data-list": LocalJSX.EuclidDataList & JSXBase.HTMLAttributes<HTMLEuclidDataListElement>;
             "euclid-demo-playground": LocalJSX.EuclidDemoPlayground & JSXBase.HTMLAttributes<HTMLEuclidDemoPlaygroundElement>;

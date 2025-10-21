@@ -19,5 +19,6 @@ export type * from './utils/types';
 
 // Export utilities
 export { apiClient } from './utils/api-client';
-export { env } from './utils/env';
+export { DEFAULT_CONFIG, ENVIRONMENT_PRESETS, mergeConfig } from './utils/env';
+export type { EuclidConfig } from './utils/env';
 export * from './utils/constants';

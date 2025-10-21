@@ -1,9 +1,10 @@
-import { Component, h, State, Listen, Watch } from '@stencil/core';
+import { Component, h, State, Listen, Watch, Prop } from '@stencil/core';
 import { walletStore } from '../../../store/wallet.store';
-import { apiClient } from '../../../utils/api-client';
-import { DEFAULTS } from '../../../utils/constants';
+import { createAPIClient } from '../../../utils/api-client';
 import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
 import type { UserBalance, WalletInfo } from '../../../utils/types';
+import type { EuclidConfig } from '../../../utils/env';
+import { DEFAULT_CONFIG } from '../../../utils/env';
 
 interface BalanceItem {
   denom: string;
@@ -23,10 +24,21 @@ export class EuclidUserDataController {
   @State() isInitialized = false;
   @State() isLoading = false;
   @State() error: string | null = null;
+  @Prop() config?: string; // JSON string of EuclidConfig
 
   private refreshTimer: number;
   private retryCount = 0;
   private maxRetries = 3;
+  private euclidConfig: EuclidConfig;
+  private apiClient: ReturnType<typeof createAPIClient>;
+
+  async componentWillLoad() {
+    // Parse configuration
+    this.euclidConfig = this.config ? JSON.parse(this.config) : DEFAULT_CONFIG;
+
+    // Create configured API client
+    this.apiClient = createAPIClient(this.euclidConfig);
+  }
 
   async componentDidLoad() {
     await this.initialize();
@@ -105,7 +117,7 @@ export class EuclidUserDataController {
       try {
         console.log(`💰 Loading balances for ${wallet.chainUID}:${wallet.address.slice(0, 8)}...`);
 
-        const balanceResponse = await apiClient.getBalance(wallet.address, wallet.chainUID);
+        const balanceResponse = await this.apiClient.getBalance(wallet.address, wallet.chainUID);
 
         if (balanceResponse.success && balanceResponse.data) {
           const balanceData = balanceResponse.data as BalanceData;
@@ -215,7 +227,9 @@ export class EuclidUserDataController {
         console.log('🔄 Refreshing wallet data...');
         await this.refreshUserData();
       }
-    }, DEFAULTS.BALANCE_REFRESH_INTERVAL);
+    }, this.euclidConfig.refreshIntervals.balances);
+
+    console.log(`👤 User data refresh interval set to ${this.euclidConfig.refreshIntervals.balances}ms`);
   }
 
   private clearPeriodicRefresh() {

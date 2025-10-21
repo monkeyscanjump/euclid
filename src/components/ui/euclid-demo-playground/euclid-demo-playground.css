@@ -413,3 +413,88 @@ input[type="checkbox"]:focus {
   font-weight: var(--euclid-font-medium);
   color: var(--euclid-text-secondary);
 }
+
+/* Core Provider Demo Styles */
+.core-provider-demo {
+  padding: var(--euclid-spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--euclid-spacing-lg);
+}
+
+.provider-info {
+  background: var(--euclid-surface-secondary);
+  padding: var(--euclid-spacing-lg);
+  border-radius: var(--euclid-radius-md);
+  border: 1px solid var(--euclid-border-default);
+}
+
+.provider-info h3 {
+  color: var(--euclid-text-primary);
+  margin: 0 0 var(--euclid-spacing-md) 0;
+  font-size: var(--euclid-text-lg);
+  font-weight: var(--euclid-font-semibold);
+}
+
+.provider-info p {
+  color: var(--euclid-text-secondary);
+  margin: 0 0 var(--euclid-spacing-lg) 0;
+  line-height: var(--euclid-line-height-relaxed);
+}
+
+.config-summary {
+  background: var(--euclid-surface-primary);
+  padding: var(--euclid-spacing-md);
+  border-radius: var(--euclid-radius-sm);
+  border: 1px solid var(--euclid-border-subtle);
+}
+
+.config-summary h4 {
+  color: var(--euclid-text-primary);
+  margin: 0 0 var(--euclid-spacing-md) 0;
+  font-size: var(--euclid-text-base);
+  font-weight: var(--euclid-font-medium);
+}
+
+.config-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--euclid-spacing-xs);
+}
+
+.config-details > div {
+  font-family: var(--euclid-font-mono);
+  font-size: var(--euclid-text-sm);
+  color: var(--euclid-text-secondary);
+}
+
+.config-details strong {
+  color: var(--euclid-text-primary);
+  font-weight: var(--euclid-font-medium);
+}
+
+.provider-children {
+  background: var(--euclid-surface-secondary);
+  padding: var(--euclid-spacing-lg);
+  border-radius: var(--euclid-radius-md);
+  border: 1px solid var(--euclid-border-default);
+}
+
+.provider-children h4 {
+  color: var(--euclid-text-primary);
+  margin: 0 0 var(--euclid-spacing-sm) 0;
+  font-size: var(--euclid-text-base);
+  font-weight: var(--euclid-font-medium);
+}
+
+.provider-children p {
+  color: var(--euclid-text-secondary);
+  margin: 0 0 var(--euclid-spacing-md) 0;
+  font-size: var(--euclid-text-sm);
+}
+
+.demo-components {
+  border: 1px solid var(--euclid-border-subtle);
+  border-radius: var(--euclid-radius-sm);
+  overflow: hidden;
+}

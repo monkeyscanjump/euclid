@@ -8,7 +8,7 @@
   background: var(--euclid-surface);
   border: 1px solid var(--euclid-border);
   border-radius: var(--euclid-radius-2xl);
-  overflow: hidden;
+  overflow: visible; /* Allow content to overflow for scrolling */
   box-shadow: var(--euclid-shadow-sm);
 }
 
@@ -170,11 +170,6 @@
   font-size: 18px;
   font-weight: 700;
   color: var(--euclid-text-primary);
-}
-
-/* Content */
-.data-content {
-  min-height: 400px;
 }
 
 /* Grid Layout (for cards) */

@@ -49,8 +49,8 @@ export class EuclidTokenContent {
     };
   }
 
-  private handleTokenSelected = (event: CustomEvent<TokenMetadata>) => {
-    const tokenMetadata = event.detail;
+  private handleTokenSelected = (event: CustomEvent<{ item: unknown; id: string }>) => {
+    const tokenMetadata = event.detail.item as TokenMetadata;
     const tokenInfo = this.convertTokenMetadataToTokenInfo(tokenMetadata);
     const selectorType = appStore.state.tokenSelectorType || 'input';
 
@@ -65,10 +65,14 @@ export class EuclidTokenContent {
   render() {
     return (
       <div class="token-content">
-        <euclid-tokens-list
-          cardTitle="Select Token"
+        <euclid-data-list
+          dataType="tokens"
+          displayMode="list-item"
           itemsPerPage={20}
-          onTokenSelected={this.handleTokenSelected}
+          searchable={true}
+          sortable={true}
+          showStats={false}
+          onItemSelected={this.handleTokenSelected}
         />
       </div>
     );

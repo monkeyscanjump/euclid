@@ -80,6 +80,7 @@
   padding: var(--euclid-space-6);
   overflow-y: auto;
   flex: 1;
+  min-height: 0; /* Important for flex containers with overflow */
 }
 
 /* Animations */

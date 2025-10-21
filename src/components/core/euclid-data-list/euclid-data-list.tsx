@@ -124,15 +124,8 @@ export class EuclidDataList {
     return this.showFields ? this.showFields.split(',').map(f => f.trim()) : this.getDefaultFields();
   }
 
-  private get effectiveCardTitle(): string {
-    if (this.cardTitle) return this.cardTitle;
-
-    switch (this.dataType) {
-      case 'tokens': return 'Tokens';
-      case 'chains': return 'Chains';
-      case 'pools': return 'Pools';
-      default: return 'Data';
-    }
+  private get effectiveCardTitle(): string | null {
+    return this.cardTitle || null;
   }
 
   componentWillLoad() {
@@ -704,9 +697,11 @@ export class EuclidDataList {
     return (
       <div class="data-list">
         {/* Header */}
-        <div class="data-header">
-          <h3 class="data-title">{this.effectiveCardTitle}</h3>
-        </div>
+        {this.effectiveCardTitle && (
+          <div class="data-header">
+            <h3 class="data-title">{this.effectiveCardTitle}</h3>
+          </div>
+        )}
 
         {/* Controls */}
         {(this.searchable || this.filterable || this.sortable) && (

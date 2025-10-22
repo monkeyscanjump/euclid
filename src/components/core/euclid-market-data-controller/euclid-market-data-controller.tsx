@@ -23,10 +23,13 @@ export class EuclidMarketDataController {
 
     // Create configured API client
     this.apiClient = createAPIClient(this.euclidConfig);
+
+    // Initialize everything here to avoid re-renders
+    await this.initialize();
   }
 
   async componentDidLoad() {
-    await this.initialize();
+    // Component is ready, no state changes needed here
   }
 
   disconnectedCallback() {
@@ -100,6 +103,8 @@ export class EuclidMarketDataController {
   }
 
   private setupPeriodicRefresh() {
+    console.log(`📊 Setting up polling - Active: ${this.euclidConfig.performance.polling.active.marketData}ms, Cache TTL: ${this.euclidConfig.performance.cache.marketData}ms`);
+
     // Register polling task with the coordinator
     pollingCoordinator.register(
       'market-data-refresh',
@@ -107,7 +112,6 @@ export class EuclidMarketDataController {
       {
         activeInterval: this.euclidConfig.performance.polling.active.marketData,
         backgroundInterval: this.euclidConfig.performance.polling.background.marketData,
-        pauseOnHidden: this.euclidConfig.performance.pauseOnHidden
       }
     );
 
@@ -115,10 +119,19 @@ export class EuclidMarketDataController {
   }
 
   private async refreshMarketData() {
-    // Only refresh if data is actually stale
-    if (!marketStore.isDataStale(this.euclidConfig.performance.cache.marketData)) {
+    console.log('🔄 Refresh market data called - checking what needs updating...');
+
+    // Check chains separately (less frequent updates)
+    const shouldRefreshChains = marketStore.isChainsStale(this.euclidConfig.performance.cache.chains);
+    // Check tokens (frequent updates)
+    const shouldRefreshTokens = marketStore.isTokensStale(this.euclidConfig.performance.cache.tokens);
+
+    if (!shouldRefreshChains && !shouldRefreshTokens) {
+      console.log('⏭️ Neither chains nor tokens are stale, skipping API calls');
       return;
     }
+
+    console.log(`🌐 Refreshing: ${shouldRefreshChains ? 'chains ' : ''}${shouldRefreshTokens ? 'tokens' : ''}`);
 
     return requestManager.request(
       'market-refresh',
@@ -126,21 +139,38 @@ export class EuclidMarketDataController {
         try {
           marketStore.setLoading(true);
 
-          // Refresh chains and tokens data in parallel using new API methods
-          const [chains, tokens] = await Promise.all([
-            this.apiClient.getChains({ showAllChains: false }),
-            this.apiClient.getTokenMetadata()
-          ]);
+          // Execute API calls only for what needs refreshing
+          if (shouldRefreshChains && shouldRefreshTokens) {
+            // Both need updating - parallel fetch
+            const [chains, tokens] = await Promise.all([
+              this.apiClient.getChains({ showAllChains: false }),
+              this.apiClient.getTokenMetadata()
+            ]);
 
-          if (chains && chains.length > 0) {
-            marketStore.setChains(chains);
-          }
+            if (chains && chains.length > 0) {
+              marketStore.setChains(chains);
+              console.log('📡 Refreshed chains:', chains.length);
+            }
 
-          if (tokens && tokens.length > 0) {
-            marketStore.setTokens(tokens);
-          }
-
-          console.log('✅ Market data refreshed successfully');
+            if (tokens && tokens.length > 0) {
+              marketStore.setTokens(tokens);
+              console.log('💰 Refreshed tokens:', tokens.length);
+            }
+          } else if (shouldRefreshChains) {
+            // Only chains need updating
+            const chains = await this.apiClient.getChains({ showAllChains: false });
+            if (chains && chains.length > 0) {
+              marketStore.setChains(chains);
+              console.log('📡 Refreshed chains only:', chains.length);
+            }
+          } else if (shouldRefreshTokens) {
+            // Only tokens need updating
+            const tokens = await this.apiClient.getTokenMetadata();
+            if (tokens && tokens.length > 0) {
+              marketStore.setTokens(tokens);
+              console.log('💰 Refreshed tokens only:', tokens.length);
+            }
+          }          console.log('✅ Market data refreshed successfully');
           return { success: true };
         } catch (error) {
           console.error('❌ Failed to refresh market data:', error);

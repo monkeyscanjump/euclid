@@ -38,6 +38,11 @@ export class EuclidDataList {
   @Prop() loading: boolean = false;
   @Prop() enableWorker: boolean = false;
   @Prop() walletAddress: string = '';
+  /**
+   * Whether to show the "All items loaded" message when infinite scroll reaches the end
+   * @default true
+   */
+  @Prop() showEndMessage: boolean = true;
 
   // State
   @State() filteredData: DataItem[] = [];
@@ -58,6 +63,8 @@ export class EuclidDataList {
   @State() storeError: string | null = null;
   @State() isWorkerProcessing: boolean = false;
   @State() workerProcessingTime: number = 0;
+  @State() componentPoolVersion: number = 0; // Force re-render trigger
+  @State() isTransitioning: boolean = false; // Smooth transitions
 
   // Events
   @Event() itemSelected: EventEmitter<{ item: DataItem; id: string }>;
@@ -73,6 +80,12 @@ export class EuclidDataList {
   private paginationManager?: PaginationManager;
   private infiniteScrollManager?: InfiniteScrollManager;
   private contentElement?: HTMLElement;
+
+  // Memoization for stable rendering
+  private memoizedItems: Map<string, { item: DataItem; props: Record<string, unknown>; hash: string }> = new Map();
+  private lastRenderHash: string = '';
+  private updateTimeout: number | null = null;
+  private isConnected: boolean = true;
 
   // Computed properties
   private get storeKey(): 'tokens' | 'pools' | 'chains' {
@@ -109,8 +122,7 @@ export class EuclidDataList {
 
     // Listen for store changes
     marketStore.onChange(this.storeKey, () => {
-      this.syncWithStore();
-      this.applyFilters();
+      this.scheduleDataUpdate();
     });    marketStore.onChange('loading', () => {
       this.storeLoading = marketStore.state.loading;
     });
@@ -120,7 +132,42 @@ export class EuclidDataList {
     });
   }
 
-  componentDidLoad() {
+  private scheduleDataUpdate() {
+    if (!this.isConnected) return;
+
+    if (this.updateTimeout) {
+      clearTimeout(this.updateTimeout);
+    }
+
+    this.updateTimeout = window.setTimeout(() => {
+      if (!this.isConnected) return;
+
+      if (this.isTransitioning) {
+        // Reschedule if still transitioning
+        this.scheduleDataUpdate();
+        return;
+      }
+
+      this.isTransitioning = true;
+
+      // Use requestAnimationFrame to batch updates
+      requestAnimationFrame(() => {
+        if (!this.isConnected) {
+          this.isTransitioning = false;
+          return;
+        }
+
+        this.syncWithStore();
+        this.applyFilters();
+
+        // Small delay to prevent rapid re-renders
+        setTimeout(() => {
+          this.isTransitioning = false;
+          this.updateTimeout = null;
+        }, 50); // Slightly longer for stability
+      });
+    }, 100); // Debounce rapid updates
+  }  componentDidLoad() {
     if (this.infiniteScroll) {
       this.infiniteScrollManager?.initialize(this.contentElement);
     }
@@ -133,12 +180,19 @@ export class EuclidDataList {
   }
 
   disconnectedCallback() {
+    // Mark component as disconnected
+    this.isConnected = false;
+
     // Clean up managers
     this.filterManager?.destroy();
     this.infiniteScrollManager?.destroy();
-  }
 
-  private getDefaultFields(): string[] {
+    // Clean up timeout
+    if (this.updateTimeout) {
+      clearTimeout(this.updateTimeout);
+      this.updateTimeout = null;
+    }
+  }  private getDefaultFields(): string[] {
     switch (this.dataType) {
       case 'tokens': return ['logo', 'name', 'price', 'change', 'volume24h', 'chains', 'verified'];
       case 'chains': return ['logo', 'name', 'type', 'chain_id'];
@@ -167,19 +221,34 @@ export class EuclidDataList {
 
     this.filterManager = new FilterManager(this.dataType, filterConfig, {
       onFilterComplete: (data, processingTime) => {
+        // Safety check: only emit events if component is still connected
+        if (!this.isConnected) return;
+
         this.filteredData = data;
         this.workerProcessingTime = processingTime || 0;
         this.paginationManager?.updateData(data);
-        this.filtersChanged.emit({
-          filters: { ...this.filterState },
-          resultCount: data.length,
-        });
+
+        try {
+          this.filtersChanged.emit({
+            filters: { ...this.filterState },
+            resultCount: data.length,
+          });
+        } catch (error) {
+          console.warn('Failed to emit filtersChanged event:', error);
+        }
       },
       onWorkerStateChange: (isProcessing) => {
+        if (!this.isConnected) return;
         this.isWorkerProcessing = isProcessing;
       },
       onPerformanceMetric: (metric) => {
-        this.workerPerformance.emit(metric);
+        if (!this.isConnected) return;
+
+        try {
+          this.workerPerformance.emit(metric);
+        } catch (error) {
+          console.warn('Failed to emit workerPerformance event:', error);
+        }
       },
     });
 
@@ -192,6 +261,8 @@ export class EuclidDataList {
 
     this.paginationManager = new PaginationManager(paginationConfig, {
       onStateChange: (state) => {
+        if (!this.isConnected) return;
+
         // Only sync non-infinite scroll state
         if (!this.infiniteScroll) {
           this.currentPage = state.currentPage;
@@ -199,14 +270,26 @@ export class EuclidDataList {
         }
       },
       onPageChange: (page, totalPages, itemsPerPage) => {
-        this.pageChanged.emit({ page, totalPages, itemsPerPage });
+        if (!this.isConnected) return;
+
+        try {
+          this.pageChanged.emit({ page, totalPages, itemsPerPage });
+        } catch (error) {
+          console.warn('Failed to emit pageChanged event:', error);
+        }
       },
       onInfiniteScrollStateChange: (isLoading, hasMore, displayedCount) => {
-        this.infiniteScrollStateChanged.emit({
-          isLoading,
-          hasMore,
-          displayedCount,
-        });
+        if (!this.isConnected) return;
+
+        try {
+          this.infiniteScrollStateChanged.emit({
+            isLoading,
+            hasMore,
+            displayedCount,
+          });
+        } catch (error) {
+          console.warn('Failed to emit infiniteScrollStateChanged event:', error);
+        }
       },
     });
 
@@ -244,13 +327,11 @@ export class EuclidDataList {
   }
 
   private syncWithStore() {
-    const storeData = marketStore.state[this.storeKey] || [];
-    this.storeData = storeData;
+    const storeData = (marketStore.state[this.storeKey] as DataItem[]) || [];
+    this.storeData = Array.isArray(storeData) ? storeData : [];
     this.storeLoading = marketStore.state.loading;
     this.storeError = marketStore.state.error;
-  }
-
-  @Watch('dataType')
+  }  @Watch('dataType')
   @Watch('showFields')
   @Watch('infiniteScroll')
   watchPropsChange() {
@@ -301,6 +382,76 @@ export class EuclidDataList {
         }
       }
     }
+  }
+
+  private getStableKey(item: DataItem): string {
+    // Create stable keys based on actual data identity, not array position
+    switch (this.dataType) {
+      case 'tokens': {
+        const token = item as TokenMetadata;
+        return `token-${token.symbol || token.name || 'unknown'}`;
+      }
+      case 'chains': {
+        const chain = item as EuclidChainConfig;
+        return `chain-${chain.chain_uid || chain.chain_id || 'unknown'}`;
+      }
+      case 'pools': {
+        const pool = item as PoolInfo;
+        return `pool-${pool.pool_id || 'unknown'}`;
+      }
+      default:
+        return `item-${JSON.stringify(item).slice(0, 50)}`;
+    }
+  }
+
+  private createItemHash(item: DataItem): string {
+    // Create a hash that changes only when the actual data changes
+    return JSON.stringify({
+      item: item,
+      selected: this.selectedItemId === this.getItemId(item),
+      displayMode: this.displayMode,
+      showFields: this.showFieldsArray
+    });
+  }
+
+  private shouldRenderItem(stableKey: string, item: DataItem): boolean {
+    const currentHash = this.createItemHash(item);
+    const cached = this.memoizedItems.get(stableKey);
+
+    if (!cached || cached.hash !== currentHash) {
+      // Update cache
+      this.memoizedItems.set(stableKey, {
+        item: item,
+        props: this.getItemProps(item),
+        hash: currentHash
+      });
+      return true;
+    }
+
+    return false;
+  }
+
+  private getItemProps(item: DataItem): Record<string, unknown> {
+    const itemId = this.getItemId(item);
+    const isSelected = this.selectedItemId === itemId;
+
+    // Prepare props for the item component
+    const baseProps = {
+      [this.dataType.slice(0, -1)]: item,
+      selected: isSelected,
+      displayMode: this.displayMode,
+      showFields: this.showFieldsArray,
+      selectable: this.selectable,
+    };
+
+    // Add type-specific props
+    return this.dataType === 'pools'
+      ? {
+          ...baseProps,
+          tokens: marketStore.state.tokens || [],
+          walletAddress: this.walletAddress
+        }
+      : baseProps;
   }
 
   private getPaginatedData(): DataItem[] {
@@ -376,18 +527,31 @@ export class EuclidDataList {
   };
 
   private handleItemSelect = (event: CustomEvent) => {
+    if (!this.isConnected) return;
+
     const item = event.detail as DataItem;
     const itemId = this.getItemId(item);
 
     this.selectedItemId = itemId;
-    this.itemSelected.emit({ item, id: itemId });
+
+    try {
+      this.itemSelected.emit({ item, id: itemId });
+    } catch (error) {
+      console.warn('Failed to emit itemSelected event:', error);
+    }
   };
 
   private handleItemHover = (event: CustomEvent) => {
+    if (!this.isConnected) return;
+
     const item = event.detail as DataItem;
     const itemId = this.getItemId(item);
 
-    this.itemHover.emit({ item, id: itemId });
+    try {
+      this.itemHover.emit({ item, id: itemId });
+    } catch (error) {
+      console.warn('Failed to emit itemHover event:', error);
+    }
   };
 
   private handlePageChange = (page: number) => {
@@ -395,7 +559,7 @@ export class EuclidDataList {
   };
 
   private handleLoadMore() {
-    if (this.isLoadingMore || !this.hasMoreData) return;
+    if (!this.isConnected || this.isLoadingMore || !this.hasMoreData) return;
 
     const currentCount = this.displayedItemsCount;
     const totalAvailable = this.filteredData.length;
@@ -411,10 +575,14 @@ export class EuclidDataList {
     this.emitInfiniteScrollState();
 
     // Emit event for external data loading if needed
-    this.loadMoreRequested.emit({
-      currentCount,
-      requestedCount
-    });
+    try {
+      this.loadMoreRequested.emit({
+        currentCount,
+        requestedCount
+      });
+    } catch (error) {
+      console.warn('Failed to emit loadMoreRequested event:', error);
+    }
 
     // Simulate async loading (in real scenario, this would be triggered by store updates)
     setTimeout(() => {
@@ -438,11 +606,17 @@ export class EuclidDataList {
   }
 
   private emitInfiniteScrollState() {
-    this.infiniteScrollStateChanged.emit({
-      isLoading: this.isLoadingMore,
-      hasMore: this.hasMoreData,
-      displayedCount: this.displayedItemsCount
-    });
+    if (!this.isConnected) return;
+
+    try {
+      this.infiniteScrollStateChanged.emit({
+        isLoading: this.isLoadingMore,
+        hasMore: this.hasMoreData,
+        displayedCount: this.displayedItemsCount
+      });
+    } catch (error) {
+      console.warn('Failed to emit infiniteScrollStateChanged event:', error);
+    }
   }
 
   // Render methods
@@ -662,6 +836,9 @@ export class EuclidDataList {
   private renderInfiniteScrollLoader() {
     if (!this.infiniteScroll) return null;
 
+    // Don't render footer at all if showEndMessage is false and we're not loading
+    if (!this.showEndMessage && !this.isLoadingMore) return null;
+
     return (
       <div class="infinite-scroll-footer">
         {this.isLoadingMore && (
@@ -671,7 +848,7 @@ export class EuclidDataList {
           </div>
         )}
 
-        {!this.hasMoreData && this.displayedItemsCount > 0 && (
+        {!this.hasMoreData && this.displayedItemsCount > 0 && this.showEndMessage && (
           <div class="infinite-scroll-end">
             <span>All {this.dataType} loaded ({this.displayedItemsCount} of {this.filteredData.length})</span>
           </div>
@@ -742,32 +919,17 @@ export class EuclidDataList {
               </button>
             </div>
           ) : (
-            <div class={{
-              'data-grid': this.displayMode === 'card' || this.displayMode === 'grid',
-              'data-list-container': this.displayMode === 'list-item',
-              'data-compact-container': this.displayMode === 'compact'
-            }}>
+            <div
+              class={{
+                'data-grid': this.displayMode === 'card' || this.displayMode === 'grid',
+                'data-list-container': this.displayMode === 'list-item',
+                'data-compact-container': this.displayMode === 'compact',
+                'data-container--transitioning': this.isTransitioning
+              }}
+            >
               {paginatedData.map((item) => {
-                const itemId = this.getItemId(item);
-                const isSelected = this.selectedItemId === itemId;
-
-                // Prepare props for the item component
-                const baseProps = {
-                  [this.dataType.slice(0, -1)]: item, // Remove 's' from dataType (tokens -> token)
-                  selected: isSelected,
-                  displayMode: this.displayMode,
-                  showFields: this.showFieldsArray,
-                  selectable: this.selectable,
-                };
-
-                // Add type-specific props
-                const itemProps = this.dataType === 'pools'
-                  ? {
-                      ...baseProps,
-                      tokens: marketStore.state.tokens || [],
-                      walletAddress: this.walletAddress
-                    }
-                  : baseProps;
+                const stableKey = this.getStableKey(item);
+                const itemProps = this.getItemProps(item);
 
                 // Event handlers
                 const eventHandlers: Record<string, (event: CustomEvent) => void> = {};
@@ -786,8 +948,11 @@ export class EuclidDataList {
 
                 return (
                   <ItemComponent
-                    key={itemId}
-                    class="data-item"
+                    key={stableKey}
+                    class={{
+                      'data-item': true,
+                      'data-item--updating': this.isTransitioning
+                    }}
                     {...itemProps}
                     {...eventHandlers}
                   />

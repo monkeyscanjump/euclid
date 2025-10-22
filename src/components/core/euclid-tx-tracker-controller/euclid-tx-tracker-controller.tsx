@@ -13,8 +13,12 @@ export class EuclidTxTrackerController {
   private trackingTransactions: Map<string, { chainUID: string; type: string; pollCount: number }> = new Map();
   private trackingInterval: number;
 
-  async componentDidLoad() {
+  async componentWillLoad() {
     await this.initialize();
+  }
+
+  async componentDidLoad() {
+    // Component is ready, no state changes needed here
   }
 
   disconnectedCallback() {

@@ -39,10 +39,13 @@ export class EuclidUserDataController {
 
     // Create configured API client
     this.apiClient = createAPIClient(this.euclidConfig);
+
+    // Initialize everything here to avoid re-renders
+    await this.initialize();
   }
 
   async componentDidLoad() {
-    await this.initialize();
+    // Component is ready, no state changes needed here
   }
 
   disconnectedCallback() {

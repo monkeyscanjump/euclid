@@ -16,8 +16,12 @@ export class EuclidSwapController {
   private routePollingInterval: number;
   private routePollingActive = false;
 
-  async componentDidLoad() {
+  async componentWillLoad() {
     await this.initialize();
+  }
+
+  async componentDidLoad() {
+    // Component is ready, no state changes needed here
   }
 
   disconnectedCallback() {

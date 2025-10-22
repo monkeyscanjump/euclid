@@ -192,9 +192,9 @@ export class EuclidListItems {
 
   private syncWithStore() {
     const storeKey = this.getStoreKey();
-    const storeData = marketStore.state[storeKey] || [];
+    const storeData = (marketStore.state[storeKey] as ListItemData[]) || [];
 
-    this.storeItems = storeData.length > 0 ? storeData : this.items;
+    this.storeItems = Array.isArray(storeData) && storeData.length > 0 ? storeData : this.items;
     this.storeLoading = marketStore.state.loading;
 
     console.log(`🔄 ${this.itemType} store sync:`, {

@@ -1,6 +1,8 @@
 import { Component, h, State, Event, EventEmitter, Prop, Listen } from '@stencil/core';
 import { walletStore } from '../../../store/wallet.store';
 import { appStore } from '../../../store/app.store';
+import { marketStore } from '../../../store/market.store';
+import { walletStorage } from '../../../utils/storage/indexdb-storage';
 
 export interface SavedAddress {
   id: string;
@@ -64,27 +66,53 @@ export class EuclidAddressBook {
     this.syncWithConnectedWallets();
   }
 
-  private loadSavedAddresses() {
+  private async loadSavedAddresses() {
     try {
-      const saved = localStorage.getItem('euclid-address-book');
-      if (saved) {
-        this.savedAddresses = JSON.parse(saved).map((addr: SavedAddress) => ({
-          ...addr,
-          addedAt: new Date(addr.addedAt),
-          lastUsed: addr.lastUsed ? new Date(addr.lastUsed) : undefined,
-        }));
-      }
+      // Try to load from IndexedDB first
+      const addresses = await walletStorage.getAddressBook() as SavedAddress[];
+      this.savedAddresses = addresses.map(addr => ({
+        ...addr,
+        addedAt: new Date(addr.addedAt),
+        lastUsed: addr.lastUsed ? new Date(addr.lastUsed) : undefined,
+      }));
     } catch (error) {
-      console.error('Failed to load saved addresses:', error);
-      this.savedAddresses = [];
+      console.error('Failed to load saved addresses from IndexedDB:', error);
+
+      // Fallback to localStorage for migration
+      try {
+        const saved = localStorage.getItem('euclid-address-book');
+        if (saved) {
+          this.savedAddresses = JSON.parse(saved).map((addr: SavedAddress) => ({
+            ...addr,
+            addedAt: new Date(addr.addedAt),
+            lastUsed: addr.lastUsed ? new Date(addr.lastUsed) : undefined,
+          }));
+
+          // Migrate to IndexedDB and remove from localStorage
+          await this.saveAddresses();
+          localStorage.removeItem('euclid-address-book');
+          console.log('📇 Migrated address book from localStorage to IndexedDB');
+        }
+      } catch (legacyError) {
+        console.error('Failed to load addresses from localStorage:', legacyError);
+        this.savedAddresses = [];
+      }
     }
   }
 
-  private saveAddresses() {
+  private async saveAddresses() {
     try {
-      localStorage.setItem('euclid-address-book', JSON.stringify(this.savedAddresses));
+      await walletStorage.setAddressBook(this.savedAddresses);
     } catch (error) {
-      console.error('Failed to save addresses:', error);
+      console.error('Failed to save addresses to IndexedDB:', error);
+
+      // Fallback to localStorage if IndexedDB fails
+      try {
+        localStorage.setItem('euclid-address-book', JSON.stringify(this.savedAddresses));
+        console.warn('📇 Fallback: Saved addresses to localStorage instead');
+      } catch (fallbackError) {
+        console.error('Failed to save addresses to localStorage fallback:', fallbackError);
+      }
     }
   }
 
@@ -278,7 +306,23 @@ export class EuclidAddressBook {
     console.log('- Full state:', walletStore.state);
   };
 
-  private formatAddress(address: string): string {
+  private debugMarketStore = () => {
+    console.log('🌐 DEBUG: Market Store - Available Chains');
+    console.log('- chains:', marketStore.state.chains);
+    console.log('- chains count:', marketStore.state.chains.length);
+    console.log('- tokens count:', marketStore.state.tokens.length);
+    console.log('- loading:', marketStore.state.loading);
+
+    marketStore.state.chains.forEach((chain, index) => {
+      console.log(`Chain ${index + 1}:`, {
+        chainUID: chain.chain_uid,
+        displayName: chain.display_name,
+        chainId: chain.chain_id,
+        logo: chain.logo,
+        type: chain.type
+      });
+    });
+  };  private formatAddress(address: string): string {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   }
 
@@ -291,15 +335,39 @@ export class EuclidAddressBook {
 
     // Sort by: active first, then by last used, then by added date
     return addresses.sort((a, b) => {
-      if (a.isActive && !b.isActive) return -1;
-      if (!a.isActive && b.isActive) return 1;
+      // Active addresses first
+      if (a.isActive !== b.isActive) {
+        return b.isActive ? 1 : -1;
+      }
 
-      const aLastUsed = a.lastUsed?.getTime() || 0;
-      const bLastUsed = b.lastUsed?.getTime() || 0;
-      if (aLastUsed !== bLastUsed) return bLastUsed - aLastUsed;
+      // Then by last used (most recent first)
+      if (a.lastUsed && b.lastUsed) {
+        return b.lastUsed.getTime() - a.lastUsed.getTime();
+      }
+      if (a.lastUsed && !b.lastUsed) return -1;
+      if (!a.lastUsed && b.lastUsed) return 1;
 
+      // Finally by added date (most recent first)
       return b.addedAt.getTime() - a.addedAt.getTime();
     });
+  }
+
+  private getChainInfo(chainUID: string) {
+    return marketStore.state.chains.find(chain => chain.chain_uid === chainUID);
+  }
+
+  private getGroupedAddresses(): Record<string, SavedAddress[]> {
+    const addresses = this.getDisplayedAddresses();
+    const grouped: Record<string, SavedAddress[]> = {};
+
+    addresses.forEach(address => {
+      if (!grouped[address.chainUID]) {
+        grouped[address.chainUID] = [];
+      }
+      grouped[address.chainUID].push(address);
+    });
+
+    return grouped;
   }
 
   private renderAddressForm() {
@@ -387,8 +455,6 @@ export class EuclidAddressBook {
   }
 
   render() {
-    const displayedAddresses = this.getDisplayedAddresses();
-
     return (
       <div class="address-book">
         <div class="address-book-header">
@@ -406,7 +472,14 @@ export class EuclidAddressBook {
               size="sm"
               onClick={this.debugWalletStore}
             >
-              🔍 Debug
+              🔍 Wallet Debug
+            </euclid-button>
+            <euclid-button
+              variant="ghost"
+              size="sm"
+              onClick={this.debugMarketStore}
+            >
+              🌐 Chains Debug
             </euclid-button>
             <euclid-button
               variant="secondary"
@@ -430,7 +503,7 @@ export class EuclidAddressBook {
         {this.isEditing && this.renderAddressForm()}
 
         <div class="address-list">
-          {displayedAddresses.length === 0 ? (
+          {this.getDisplayedAddresses().length === 0 ? (
             <div class="empty-state">
               <svg viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,17A1.5,1.5 0 0,0 13.5,15.5A1.5,1.5 0 0,0 12,14A1.5,1.5 0 0,0 10.5,15.5A1.5,1.5 0 0,0 12,17M12,10.5C12.8,10.5 13.5,9.8 13.5,9C13.5,8.2 12.8,7.5 12,7.5C11.2,7.5 10.5,8.2 10.5,9C10.5,9.8 11.2,10.5 12,10.5Z"/>
@@ -454,76 +527,103 @@ export class EuclidAddressBook {
               </div>
             </div>
           ) : (
-            displayedAddresses.map(address => (
-              <div
-                key={address.id}
-                class={{
-                  'address-item': true,
-                  'address-item--active': address.isActive,
-                }}
-                onClick={() => this.handleSelectAddress(address)}
-              >
-                <div class="address-main">
-                  <div class="address-info">
-                    <div class="address-label">
-                      {address.label}
-                      {address.isActive && <span class="active-badge">Active</span>}
-                    </div>
-                    <div class="address-value">{this.formatAddress(address.address)}</div>
-                    <div class="address-meta">
-                      <span class="chain">{address.chainUID}</span>
-                      <span class="wallet-type">{address.walletType}</span>
-                      {address.lastUsed && (
-                        <span class="last-used">
-                          Last used {address.lastUsed.toLocaleDateString()}
-                        </span>
+            Object.entries(this.getGroupedAddresses()).map(([chainUID, addresses]) => {
+              const chainInfo = this.getChainInfo(chainUID);
+              return (
+                <div key={chainUID} class="chain-group">
+                  <div class="chain-header">
+                    <div class="chain-info">
+                      {chainInfo ? (
+                        <img src={chainInfo.logo} alt={chainInfo.display_name} class="chain-logo" />
+                      ) : (
+                        <div class="chain-logo-placeholder">⛓️</div>
                       )}
+                      <div class="chain-details">
+                        <div class="chain-name">
+                          {chainInfo ? chainInfo.display_name : chainUID}
+                        </div>
+                        <div class="chain-type">
+                          {chainInfo ? chainInfo.type.toUpperCase() : 'UNKNOWN'}
+                        </div>
+                      </div>
                     </div>
+                    <div class="chain-count">{addresses.length} wallet{addresses.length !== 1 ? 's' : ''}</div>
                   </div>
 
-                  {this.showBalances && address.balance && (
-                    <div class="address-balance">
-                      <span class="balance-value">{address.balance}</span>
-                    </div>
-                  )}
+                  <div class="chain-addresses">
+                    {addresses.map(address => (
+                      <div
+                        key={address.id}
+                        class={{
+                          'address-item': true,
+                          'address-item--active': address.isActive,
+                        }}
+                        onClick={() => this.handleSelectAddress(address)}
+                      >
+                        <div class="address-main">
+                          <div class="address-info">
+                            <div class="address-label">
+                              {address.label}
+                              {address.isActive && <span class="active-badge">Active</span>}
+                            </div>
+                            <div class="address-value">{this.formatAddress(address.address)}</div>
+                            <div class="address-meta">
+                              <span class="wallet-type">{address.walletType}</span>
+                              {address.lastUsed && (
+                                <span class="last-used">
+                                  Last used {address.lastUsed.toLocaleDateString()}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {this.showBalances && address.balance && (
+                            <div class="address-balance">
+                              <span class="balance-value">{address.balance}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {this.allowEditing && (
+                          <div class="address-actions">
+                            <button
+                              class="action-btn"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                this.handleEditAddress(address);
+                              }}
+                              type="button"
+                              title="Edit address"
+                            >
+                              ✎
+                            </button>
+                            <button
+                              class="action-btn action-btn--danger"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                this.handleRemoveAddress(address);
+                              }}
+                              type="button"
+                              title="Remove address"
+                            >
+                              🗑
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-
-                {this.allowEditing && (
-                  <div class="address-actions">
-                    <button
-                      class="action-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        this.handleEditAddress(address);
-                      }}
-                      type="button"
-                      title="Edit address"
-                    >
-                      ✎
-                    </button>
-                    <button
-                      class="action-btn action-btn--danger"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        this.handleRemoveAddress(address);
-                      }}
-                      type="button"
-                      title="Remove address"
-                    >
-                      🗑
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))
+              );
+            })
           )}
         </div>
 
         <div class="address-book-footer">
           <div class="stats">
-            <span>{displayedAddresses.length} addresses</span>
-            {displayedAddresses.filter(a => a.isActive).length > 0 && (
-              <span>• {displayedAddresses.filter(a => a.isActive).length} active</span>
+            <span>{this.getDisplayedAddresses().length} addresses</span>
+            {this.getDisplayedAddresses().filter(a => a.isActive).length > 0 && (
+              <span>• {this.getDisplayedAddresses().filter(a => a.isActive).length} active</span>
             )}
           </div>
         </div>

@@ -108,11 +108,88 @@
   overflow-y: auto;
 }
 
+/* Chain Groups */
+.chain-group {
+  margin-bottom: var(--euclid-space-4);
+}
+
+.chain-group:last-child {
+  margin-bottom: 0;
+}
+
+.chain-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--euclid-space-3) var(--euclid-space-4);
+  background: var(--euclid-surface-secondary);
+  border-bottom: var(--euclid-border-1) solid var(--euclid-border);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.chain-info {
+  display: flex;
+  align-items: center;
+  gap: var(--euclid-space-3);
+}
+
+.chain-logo {
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--euclid-radius-md);
+  object-fit: cover;
+}
+
+.chain-logo-placeholder {
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--euclid-surface-tertiary);
+  border-radius: var(--euclid-radius-md);
+  font-size: var(--euclid-text-sm);
+}
+
+.chain-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--euclid-space-1);
+}
+
+.chain-name {
+  font-weight: var(--euclid-font-semibold);
+  color: var(--euclid-text-primary);
+  font-size: var(--euclid-text-sm);
+}
+
+.chain-type {
+  font-size: var(--euclid-text-xs);
+  color: var(--euclid-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.chain-count {
+  font-size: var(--euclid-text-xs);
+  color: var(--euclid-text-tertiary);
+  background: var(--euclid-surface-tertiary);
+  padding: var(--euclid-space-1) var(--euclid-space-2);
+  border-radius: var(--euclid-radius-full);
+  font-weight: var(--euclid-font-medium);
+}
+
+.chain-addresses {
+  background: var(--euclid-surface);
+}
+
 .address-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--euclid-space-3);
+  padding: var(--euclid-space-3) var(--euclid-space-4);
   border-bottom: var(--euclid-border-1) solid var(--euclid-border-subtle);
   cursor: pointer;
   transition: background-color var(--euclid-transition-fast);

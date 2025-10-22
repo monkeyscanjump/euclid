@@ -55,7 +55,7 @@ export class EuclidDemoPlayground {
         searchable: true,
         sortable: true,
         showStats: true,
-        enableWorker: true,
+        enableWorker: false,
         filterable: true,
         selectable: true,
         loading: false,

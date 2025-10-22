@@ -18,7 +18,6 @@ import { SwapQuote, SwapSettings, SwapToken } from "./components/features/euclid
 import { TokenInfo } from "./components/ui/euclid-token-content/euclid-token-content";
 import { TokenInfo as TokenInfo1 } from "./components/ui/euclid-token-input/euclid-token-input";
 import { TokenDisplayMode, TokenField } from "./components/ui/euclid-token-item/euclid-token-item";
-import { WalletProvider } from "./components/ui/euclid-wallet-content/euclid-wallet-content";
 export { SavedAddress } from "./components/ui/euclid-address-book/euclid-address-book";
 export { ButtonSize, ButtonVariant } from "./components/ui/euclid-button/euclid-button";
 export { EuclidChainConfig, PoolInfo, TokenMetadata } from "./utils/types/api.types";
@@ -32,7 +31,6 @@ export { SwapQuote, SwapSettings, SwapToken } from "./components/features/euclid
 export { TokenInfo } from "./components/ui/euclid-token-content/euclid-token-content";
 export { TokenInfo as TokenInfo1 } from "./components/ui/euclid-token-input/euclid-token-input";
 export { TokenDisplayMode, TokenField } from "./components/ui/euclid-token-item/euclid-token-item";
-export { WalletProvider } from "./components/ui/euclid-wallet-content/euclid-wallet-content";
 export namespace Components {
     interface EuclidAddressBook {
         /**
@@ -193,6 +191,11 @@ export namespace Components {
           * @default true
          */
         "selectable": boolean;
+        /**
+          * Whether to show the "All items loaded" message when infinite scroll reaches the end
+          * @default true
+         */
+        "showEndMessage": boolean;
         /**
           * @default ''
          */
@@ -627,10 +630,6 @@ export interface EuclidTokenItemCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLEuclidTokenItemElement;
 }
-export interface EuclidWalletContentCustomEvent<T> extends CustomEvent<T> {
-    detail: T;
-    target: HTMLEuclidWalletContentElement;
-}
 declare global {
     interface HTMLEuclidAddressBookElementEventMap {
         "addressSelected": SavedAddress;
@@ -950,18 +949,7 @@ declare global {
         prototype: HTMLEuclidUserDataControllerElement;
         new (): HTMLEuclidUserDataControllerElement;
     };
-    interface HTMLEuclidWalletContentElementEventMap {
-        "walletConnect": WalletProvider;
-    }
     interface HTMLEuclidWalletContentElement extends Components.EuclidWalletContent, HTMLStencilElement {
-        addEventListener<K extends keyof HTMLEuclidWalletContentElementEventMap>(type: K, listener: (this: HTMLEuclidWalletContentElement, ev: EuclidWalletContentCustomEvent<HTMLEuclidWalletContentElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
-        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
-        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
-        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
-        removeEventListener<K extends keyof HTMLEuclidWalletContentElementEventMap>(type: K, listener: (this: HTMLEuclidWalletContentElement, ev: EuclidWalletContentCustomEvent<HTMLEuclidWalletContentElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
-        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
-        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
-        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
     }
     var HTMLEuclidWalletContentElement: {
         prototype: HTMLEuclidWalletContentElement;
@@ -1178,6 +1166,11 @@ declare namespace LocalJSX {
           * @default true
          */
         "selectable"?: boolean;
+        /**
+          * Whether to show the "All items loaded" message when infinite scroll reaches the end
+          * @default true
+         */
+        "showEndMessage"?: boolean;
         /**
           * @default ''
          */
@@ -1636,7 +1629,6 @@ declare namespace LocalJSX {
         "config"?: string;
     }
     interface EuclidWalletContent {
-        "onWalletConnect"?: (event: EuclidWalletContentCustomEvent<WalletProvider>) => void;
     }
     interface EuclidWalletController {
         "config"?: string;

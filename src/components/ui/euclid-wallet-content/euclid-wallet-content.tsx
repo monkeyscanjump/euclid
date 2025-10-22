@@ -1,6 +1,8 @@
-import { Component, h, State, Event, EventEmitter } from '@stencil/core';
+import { Component, h, State } from '@stencil/core';
 import { appStore } from '../../../store/app.store';
 import { WalletAdapterFactory } from '../../../utils/wallet-adapter';
+import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
+import type { EuclidChainConfig } from '../../../utils/types/api.types';
 
 export interface WalletProvider {
   id: string;
@@ -17,8 +19,8 @@ export interface WalletProvider {
 })
 export class EuclidWalletContent {
   @State() private walletProviders: WalletProvider[] = [];
-
-  @Event() walletConnect!: EventEmitter<WalletProvider>;
+  @State() private selectedChain: EuclidChainConfig | null = null;
+  @State() private step: 'chains' | 'wallets' = 'chains';
 
   componentWillLoad() {
     this.detectWallets();
@@ -56,7 +58,23 @@ export class EuclidWalletContent {
     console.log('🔍 Detected wallets:', this.walletProviders);
   }
 
-  private handleWalletConnect = (provider: WalletProvider) => {
+  private handleChainSelect = (chain: EuclidChainConfig) => {
+    console.log('🌐 Chain selected:', chain.display_name, chain.chain_uid);
+    this.selectedChain = chain;
+    this.step = 'wallets';
+  };
+
+  private handleChainSelected = (event: CustomEvent<{ item: unknown; id: string }>) => {
+    const chain = event.detail.item as EuclidChainConfig;
+    this.handleChainSelect(chain);
+  };
+
+  private handleBackToChains = () => {
+    this.step = 'chains';
+    this.selectedChain = null;
+  };
+
+  private handleWalletConnect = async (provider: WalletProvider) => {
     console.log('🔗 Wallet clicked:', provider);
 
     if (!provider.installed) {
@@ -65,8 +83,23 @@ export class EuclidWalletContent {
       return;
     }
 
-    console.log('✅ Emitting walletConnect event for:', provider.id);
-    this.walletConnect.emit(provider);
+    if (!this.selectedChain) {
+      console.error('❌ No chain selected');
+      return;
+    }
+
+    console.log('📡 Dispatching wallet connection request:', {
+      chainUID: this.selectedChain.chain_uid,
+      walletType: provider.id
+    });
+
+    // The wallet content component handles its own business logic!
+    dispatchEuclidEvent(EUCLID_EVENTS.WALLET.CONNECT_REQUEST, {
+      chainUID: this.selectedChain.chain_uid,
+      walletType: provider.id
+    });
+
+    // Close the modal after dispatching the connection request
     appStore.closeWalletModal();
   };
 
@@ -84,11 +117,74 @@ export class EuclidWalletContent {
     }
   }
 
+  private getCompatibleWallets(): WalletProvider[] {
+    if (!this.selectedChain) return [];
+
+    // Filter wallets based on chain type
+    const chainType = this.selectedChain.type.toLowerCase();
+    const isEvmChain = chainType === 'evm';
+    const isCosmwasmChain = chainType === 'cosmwasm';
+
+    return this.walletProviders.filter(wallet => {
+      if (isEvmChain) {
+        // EVM chains support MetaMask, Phantom, WalletConnect
+        return ['metamask', 'phantom', 'walletconnect'].includes(wallet.id);
+      } else if (isCosmwasmChain) {
+        // CosmWasm chains support Keplr, Cosmostation, WalletConnect
+        return ['keplr', 'cosmostation', 'walletconnect'].includes(wallet.id);
+      }
+      return false;
+    });
+  }
+
   render() {
+    if (this.step === 'chains') {
+      return this.renderChainSelection();
+    } else {
+      return this.renderWalletSelection();
+    }
+  }
+
+  private renderChainSelection() {
     return (
       <div class="wallet-content">
+        <div class="step-header">
+          <h3>Select Blockchain Network</h3>
+          <p>Choose the blockchain network you want to connect to</p>
+        </div>
+
+        <euclid-data-list
+          dataType="chains"
+          displayMode="compact"
+          itemsPerPage={20}
+          infiniteScroll={true}
+          useParentScroll={true}
+          searchable={true}
+          sortable={false}
+          showStats={false}
+          filterable={false}
+          showEndMessage={false}
+          onItemSelected={this.handleChainSelected}
+        />
+      </div>
+    );
+  }
+
+  private renderWalletSelection() {
+    const compatibleWallets = this.getCompatibleWallets();
+
+    return (
+      <div class="wallet-content">
+        <div class="step-header">
+          <button class="back-button" onClick={this.handleBackToChains}>
+            ← Back to Chains
+          </button>
+          <h3>Connect Wallet to {this.selectedChain?.display_name}</h3>
+          <p>Choose a compatible wallet for this {this.selectedChain?.type.toUpperCase()} network</p>
+        </div>
+
         <div class="wallet-grid">
-          {this.walletProviders.map(provider => (
+          {compatibleWallets.map(provider => (
             <button
               key={provider.id}
               class={{
@@ -113,6 +209,13 @@ export class EuclidWalletContent {
             </button>
           ))}
         </div>
+
+        {compatibleWallets.length === 0 && (
+          <div class="no-wallets">
+            <p>No compatible wallets found for {this.selectedChain?.type.toUpperCase()} networks.</p>
+            <p>Please install a compatible wallet extension.</p>
+          </div>
+        )}
       </div>
     );
   }

@@ -24,7 +24,7 @@ export type ChainInfo = EuclidChainConfig;
 // INTERNAL STORE TYPES
 // ============================================================================
 
-export interface WalletState {
+export interface WalletState extends Record<string, unknown> {
   isConnected: boolean;
   address: string | null;
   chainId: string | null;
@@ -46,7 +46,7 @@ export interface WalletInfo {
   balances: UserBalance[];
 }
 
-export interface SwapState {
+export interface SwapState extends Record<string, unknown> {
   tokenIn: TokenMetadata | null;
   tokenOut: TokenMetadata | null;
   fromToken: TokenMetadata | null; // alias for backward compatibility
@@ -62,7 +62,7 @@ export interface SwapState {
   error: string | null;
 }
 
-export interface LiquidityState {
+export interface LiquidityState extends Record<string, unknown> {
   token1: TokenMetadata | null;
   token2: TokenMetadata | null;
   amount1: string;
@@ -76,7 +76,7 @@ export interface LiquidityState {
   error: string | null;
 }
 
-export interface MarketState {
+export interface MarketState extends Record<string, unknown> {
   chains: EuclidChainConfig[];
   tokens: TokenMetadata[];
   pools: PoolInfo[];
@@ -84,6 +84,8 @@ export interface MarketState {
   loading: boolean;
   error: string | null;
   lastUpdated: number;
+  lastChainsUpdate: number;
+  lastTokensUpdate: number;
 }
 
 // ============================================================================

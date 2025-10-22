@@ -22,6 +22,9 @@ export class DataListWorkerManager {
   }>();
   private config: Required<WorkerManagerConfig>;
   private debounceTimers = new Map<string, NodeJS.Timeout>();
+  private retryCount = 0;
+  private maxRetries = 3;
+  private workerDisabled = false;
 
   constructor(config: WorkerManagerConfig = {}) {
     this.config = {
@@ -33,15 +36,19 @@ export class DataListWorkerManager {
     };
 
     this.initializeWorker();
-  }  private initializeWorker() {
-    if (!this.worker) {
+  }
+
+  private initializeWorker() {
+    if (!this.worker && !this.workerDisabled) {
       try {
         this.worker = new Worker(this.config.workerPath);
         this.worker.addEventListener('message', this.handleWorkerMessage.bind(this));
         this.worker.addEventListener('error', this.handleWorkerError.bind(this));
         console.log('🚀 DataListWorker initialized successfully');
+        this.retryCount = 0; // Reset retry count on successful initialization
       } catch (error) {
         console.error('❌ Failed to initialize DataListWorker:', error);
+        this.handleWorkerFailure();
       }
     }
   }
@@ -78,16 +85,34 @@ export class DataListWorkerManager {
     });
     this.pendingMessages.clear();
 
-    // Attempt to restart worker
+    // Handle worker failure with retry limit
+    this.handleWorkerFailure();
+  }
+
+  private handleWorkerFailure() {
+    this.retryCount++;
+    console.warn(`⚠️ Worker failure ${this.retryCount}/${this.maxRetries}`);
+
     this.terminateWorker();
+
+    if (this.retryCount >= this.maxRetries) {
+      console.error('❌ Worker failed too many times, disabling worker permanently');
+      this.workerDisabled = true;
+      return;
+    }
+
+    // Attempt to restart worker with exponential backoff
+    const delay = Math.min(1000 * Math.pow(2, this.retryCount - 1), 10000);
     setTimeout(() => {
-      this.initializeWorker();
-    }, 1000);
+      if (!this.workerDisabled) {
+        this.initializeWorker();
+      }
+    }, delay);
   }
 
   private sendMessage<T = WorkerResponse['payload']>(message: Omit<WorkerMessage, 'id'>): Promise<T> {
-    if (!this.worker) {
-      return Promise.reject(new Error('Worker not initialized'));
+    if (!this.worker || this.workerDisabled) {
+      return Promise.reject(new Error('Worker not available'));
     }
 
     const id = `msg_${++this.messageId}`;
@@ -248,7 +273,7 @@ export class DataListWorkerManager {
    * Check if worker is available
    */
   isWorkerAvailable(): boolean {
-    return this.worker !== null && this.worker.constructor === Worker;
+    return !this.workerDisabled && this.worker !== null && this.worker.constructor === Worker;
   }
 
   /**

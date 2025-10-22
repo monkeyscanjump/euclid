@@ -21,6 +21,7 @@ export interface EuclidConfig {
   performance: {
     cache: {
       marketData: number;
+      chains: number;
       routes: number;
       balances: number;
       tokens: number;
@@ -28,11 +29,13 @@ export interface EuclidConfig {
     polling: {
       active: {
         marketData: number;
+        chains: number;
         balances: number;
         routes: number;
       };
       background: {
         marketData: number;
+        chains: number;
         balances: number;
         routes: number;
       };
@@ -85,22 +88,29 @@ export const DEFAULT_CONFIG: EuclidConfig = {
 
   // Performance Configuration
   performance: {
+    // CACHE: How long to reuse API data before making fresh requests
+    // If cache TTL hasn't expired, polling is ignored and cached data is used
     cache: {
-      marketData: 60000,     // 1 minute
-      routes: 30000,         // 30 seconds
-      balances: 120000,      // 2 minutes
-      tokens: 300000,        // 5 minutes
+      marketData: 5000,       // 5 seconds - cache dynamic market data (tokens)
+      chains: 300000,         // 5 minutes - cache static chain metadata
+      routes: 30000,          // 30 seconds - cache route data
+      balances: 60000,        // 1 minute - cache balance data
+      tokens: 5000,          // 5 seconds - cache dynamic token data
     },
+    // POLLING: How often the timer fires to CHECK if we should fetch new data
+    // Timer frequency - actual API calls depend on cache TTL above
     polling: {
       active: {
-        marketData: 30000,   // 30 seconds when tab active
-        balances: 60000,     // 1 minute when tab active
-        routes: 10000,       // 10 seconds when tab active
+        marketData: 5000,      // Check every 5 seconds when tab is active (tokens)
+        chains: 300000,        // Check every 5 minutes when tab is active (static data)
+        balances: 60000,       // Check every 1 minute when tab is active
+        routes: 10000,         // Check every 10 seconds when tab is active
       },
       background: {
-        marketData: 300000,  // 5 minutes when tab hidden
-        balances: 600000,    // 10 minutes when tab hidden
-        routes: 60000,       // 1 minute when tab hidden
+        marketData: 300000,    // Check every 5 minutes when tab is hidden
+        chains: 1800000,       // Check every 30 minutes when tab is hidden (very static)
+        balances: 600000,      // Check every 10 minutes when tab is hidden
+        routes: 60000,         // Check every 1 minute when tab is hidden
       },
     },
     requestDeduplication: true,

@@ -213,6 +213,21 @@
 .data-item {
   /* Base styling for intersection observer targeting */
   position: relative;
+  transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+
+/* Smooth transitions during updates */
+.data-container--transitioning .data-item {
+  transition: opacity 0.15s ease-in-out;
+}
+
+.data-item--updating {
+  opacity: 0.8;
+}
+
+/* Prevent layout jumps during transitions */
+.data-container--transitioning {
+  min-height: inherit;
 }
 
 /* Worker-related styles */

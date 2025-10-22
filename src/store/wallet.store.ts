@@ -3,9 +3,11 @@ import type { WalletState, WalletInfo } from '../utils/types/euclid-api.types';
 import type { UserBalance } from '../utils/types/api.types';
 import type { BaseStore } from './types';
 import { walletAdapterFactory } from '../utils/wallet-adapters';
+import { walletStorage, migrateFromLocalStorage } from '../utils/storage/indexdb-storage';
+import { wrapStoreWithSmartUpdates } from '../utils/store-update-coordinator';
 
 // Extended wallet state to support multiple wallets
-interface ExtendedWalletState extends WalletState {
+interface ExtendedWalletState extends WalletState, Record<string, unknown> {
   connectedWallets: Map<string, WalletInfo>; // chainUID -> WalletInfo
   wallets: Map<string, WalletInfo>; // alias for backward compatibility
 }
@@ -25,7 +27,18 @@ const initialState: ExtendedWalletState = {
 
 const { state, onChange, reset, dispose } = createStore(initialState);
 
-// Actions
+// Wrap store with smart updates
+const smartStore = wrapStoreWithSmartUpdates(
+  { state, onChange },
+  'wallet-store',
+  {
+    debounceMs: 100,
+    deepCompare: true,
+    skipFields: ['loading', 'error']
+  }
+);
+
+// Actions with IndexedDB persistence
 const actions = {
   setLoading(loading: boolean) {
     state.loading = loading;
@@ -33,6 +46,38 @@ const actions = {
 
   setError(error: string | null) {
     state.error = error;
+  },
+
+  async initialize() {
+    // Migrate from localStorage if needed
+    await migrateFromLocalStorage();
+
+    // Load persisted wallet connections
+    try {
+      const savedWallets = await walletStorage.getConnectedWallets();
+      if (savedWallets.size > 0) {
+        smartStore.smartUpdate({
+          connectedWallets: savedWallets,
+          wallets: savedWallets, // Keep alias synchronized
+        });
+
+        // Set primary wallet state from first connected wallet
+        const firstWallet = Array.from(savedWallets.values())[0];
+        if (firstWallet) {
+          smartStore.smartUpdate({
+            isConnected: true,
+            address: firstWallet.address,
+            chainUID: firstWallet.chainUID,
+            walletType: firstWallet.walletType,
+            balances: [...firstWallet.balances],
+          });
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to load persisted wallets:', error);
+    }
+
+    console.log('Wallet store initialized');
   },
 
   async connectWallet(walletType: 'metamask' | 'keplr' | 'phantom', chainId?: string) {
@@ -138,11 +183,6 @@ const actions = {
   },
 
   // Multi-wallet support methods
-  initialize() {
-    // Check for previously connected wallets and restore connections if possible
-    console.log('Wallet store initialized');
-  },
-
   addWallet(chainUID: string, walletInfo: Omit<WalletInfo, 'chainUID'>) {
     const fullWalletInfo: WalletInfo = {
       ...walletInfo,
@@ -151,52 +191,91 @@ const actions = {
       name: walletInfo.walletType, // Set legacy name
     };
 
-    state.connectedWallets.set(chainUID, fullWalletInfo);
-    state.wallets.set(chainUID, fullWalletInfo); // Keep alias synchronized
+    const newConnectedWallets = new Map(state.connectedWallets);
+    newConnectedWallets.set(chainUID, fullWalletInfo);
+
+    smartStore.smartUpdate({
+      connectedWallets: newConnectedWallets,
+      wallets: newConnectedWallets, // Keep alias synchronized
+    });
 
     // Update primary wallet state if this is the first connection
     if (!state.isConnected) {
-      state.isConnected = true;
-      state.address = walletInfo.address;
-      state.chainUID = chainUID;
-      state.walletType = walletInfo.walletType;
-      state.balances = [...walletInfo.balances];
+      smartStore.smartUpdate({
+        isConnected: true,
+        address: walletInfo.address,
+        chainUID: chainUID,
+        walletType: walletInfo.walletType,
+        balances: [...walletInfo.balances],
+      });
     }
+
+    // Persist to IndexedDB
+    walletStorage.setConnectedWallets(newConnectedWallets).catch(error => {
+      console.warn('Failed to persist wallet connections:', error);
+    });
   },
 
   removeWallet(chainUID: string) {
-    state.connectedWallets.delete(chainUID);
-    state.wallets.delete(chainUID); // Keep alias synchronized
+    const newConnectedWallets = new Map(state.connectedWallets);
+    newConnectedWallets.delete(chainUID);
+
+    smartStore.smartUpdate({
+      connectedWallets: newConnectedWallets,
+      wallets: newConnectedWallets, // Keep alias synchronized
+    });
 
     // Update primary wallet state if we removed the current primary
     if (state.chainUID === chainUID) {
-      const remaining = Array.from(state.connectedWallets.values());
+      const remaining = Array.from(newConnectedWallets.values());
       if (remaining.length > 0) {
         const newPrimary = remaining[0];
-        state.address = newPrimary.address;
-        state.chainUID = newPrimary.chainUID;
-        state.walletType = newPrimary.walletType;
-        state.balances = [...newPrimary.balances];
+        smartStore.smartUpdate({
+          address: newPrimary.address,
+          chainUID: newPrimary.chainUID,
+          walletType: newPrimary.walletType,
+          balances: [...newPrimary.balances],
+        });
       } else {
-        state.isConnected = false;
-        state.address = null;
-        state.chainUID = null;
-        state.walletType = null;
-        state.balances = [];
+        smartStore.smartUpdate({
+          isConnected: false,
+          address: null,
+          chainUID: null,
+          walletType: null,
+          balances: [],
+        });
       }
     }
+
+    // Persist to IndexedDB
+    walletStorage.setConnectedWallets(newConnectedWallets).catch(error => {
+      console.warn('Failed to persist wallet connections:', error);
+    });
   },
 
   updateWalletBalances(chainUID: string, balances: UserBalance[]) {
     const wallet = state.connectedWallets.get(chainUID);
     if (wallet) {
       const updatedWallet = { ...wallet, balances: [...balances] };
-      state.connectedWallets.set(chainUID, updatedWallet);
+      const newConnectedWallets = new Map(state.connectedWallets);
+      newConnectedWallets.set(chainUID, updatedWallet);
+
+      smartStore.smartUpdate({
+        connectedWallets: newConnectedWallets,
+        wallets: newConnectedWallets, // Keep alias synchronized
+      });
 
       // Update primary state if this is the current primary wallet
       if (state.chainUID === chainUID) {
-        state.balances = [...balances];
+        smartStore.smartUpdate({
+          balances: [...balances],
+        });
       }
+
+      // Persist to IndexedDB
+      walletStorage.setConnectedWallets(newConnectedWallets).catch(error => {
+        console.warn('Failed to persist wallet connections:', error);
+      });
     }
   },
 };

@@ -21,8 +21,12 @@ export class EuclidLiquidityController {
 
   private apiClient: ReturnType<typeof createAPIClient>;
 
-  async componentDidLoad() {
+  async componentWillLoad() {
     await this.initialize();
+  }
+
+  async componentDidLoad() {
+    // Component is ready, no state changes needed here
   }
 
   private async initialize() {

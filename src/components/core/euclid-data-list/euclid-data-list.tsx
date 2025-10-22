@@ -11,6 +11,8 @@ import {
 } from './managers';
 import type { DataType, DisplayMode, DataItem, FilterState } from './types';
 
+
+
 @Component({
   tag: 'euclid-data-list',
   styleUrl: 'euclid-data-list.css',
@@ -123,7 +125,9 @@ export class EuclidDataList {
     // Listen for store changes
     marketStore.onChange(this.storeKey, () => {
       this.scheduleDataUpdate();
-    });    marketStore.onChange('loading', () => {
+    });
+
+    marketStore.onChange('loading', () => {
       this.storeLoading = marketStore.state.loading;
     });
 
@@ -131,6 +135,8 @@ export class EuclidDataList {
       this.storeError = marketStore.state.error;
     });
   }
+
+
 
   private scheduleDataUpdate() {
     if (!this.isConnected) return;
@@ -224,8 +230,10 @@ export class EuclidDataList {
         // Safety check: only emit events if component is still connected
         if (!this.isConnected) return;
 
+        // Direct state assignment for immediate update
         this.filteredData = data;
         this.workerProcessingTime = processingTime || 0;
+
         this.paginationManager?.updateData(data);
 
         try {
@@ -239,6 +247,7 @@ export class EuclidDataList {
       },
       onWorkerStateChange: (isProcessing) => {
         if (!this.isConnected) return;
+        // Direct state assignment for worker processing state
         this.isWorkerProcessing = isProcessing;
       },
       onPerformanceMetric: (metric) => {
@@ -263,7 +272,7 @@ export class EuclidDataList {
       onStateChange: (state) => {
         if (!this.isConnected) return;
 
-        // Only sync non-infinite scroll state
+        // Only sync non-infinite scroll state directly
         if (!this.infiniteScroll) {
           this.currentPage = state.currentPage;
           this.totalPages = state.totalPages;
@@ -280,6 +289,11 @@ export class EuclidDataList {
       },
       onInfiniteScrollStateChange: (isLoading, hasMore, displayedCount) => {
         if (!this.isConnected) return;
+
+        // Direct state assignment for infinite scroll state
+        this.isLoadingMore = isLoading;
+        this.hasMoreData = hasMore;
+        this.displayedItemsCount = displayedCount;
 
         try {
           this.infiniteScrollStateChanged.emit({
@@ -307,6 +321,7 @@ export class EuclidDataList {
           this.handleLoadMore();
         },
         onStateChange: (state) => {
+          // Direct state assignment for infinite scroll visibility and loading state
           this.isComponentVisible = state.isComponentVisible;
           this.isLoadingMore = state.isLoadingMore;
         },
@@ -484,10 +499,13 @@ export class EuclidDataList {
     const target = event.target as HTMLInputElement;
     const searchQuery = target.value || '';
 
-    this.filterState = {
+    const newFilterState = {
       ...this.filterState,
       search: searchQuery,
     };
+
+    // Update filter state directly
+    this.filterState = newFilterState;
     this.paginationManager?.resetToFirstPage();
     this.applyFilters();
   };
@@ -496,12 +514,14 @@ export class EuclidDataList {
     const target = event.target as HTMLSelectElement;
     const [sortBy, sortOrder] = target.value.split('_');
 
-    this.filterState = {
+    const newFilterState = {
       ...this.filterState,
       sortBy,
       sortOrder: sortOrder as 'asc' | 'desc',
     };
 
+    // Update filter state directly
+    this.filterState = newFilterState;
     this.applyFilters();
   };
 
@@ -532,6 +552,7 @@ export class EuclidDataList {
     const item = event.detail as DataItem;
     const itemId = this.getItemId(item);
 
+    // Update selected item directly
     this.selectedItemId = itemId;
 
     try {

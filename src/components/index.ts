@@ -31,7 +31,7 @@ export { EuclidAPITester } from './ui/euclid-api-tester/euclid-api-tester';
 // Feature Components
 export { EuclidSwapCard } from './features/euclid-swap-card/euclid-swap-card';
 export { EuclidLiquidityCard } from './features/euclid-liquidity-card/euclid-liquidity-card';
-export { EuclidPortfolioOverview } from './features/euclid-portfolio-overview/euclid-portfolio-overview';
+export { EuclidPortfolio } from './features/euclid-portfolio/euclid-portfolio';
 
 // Re-export component interfaces
 export type {

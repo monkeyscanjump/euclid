@@ -1,6 +1,5 @@
 import { Component, Prop, h, State, Element, Watch } from '@stencil/core';
 import type { DataType, DisplayMode } from '../../core/euclid-data-list/types';
-import { DEFAULT_CONFIG, ENVIRONMENT_PRESETS } from '../../../utils/env';
 
 type PropValue = string | number | boolean;
 
@@ -80,8 +79,8 @@ export class EuclidDemoPlayground {
     },
     {
       id: 'data-list-tokens',
-      name: '🪙 Token List',
-      description: 'Interactive token list with search, filtering, and infinite scroll',
+      name: '📋 Data List',
+      description: 'Interactive data list with search, filtering, and infinite scroll - supports tokens, pools, and chains',
       category: 'Display',
       tagName: 'euclid-data-list',
       defaultProps: {
@@ -328,147 +327,68 @@ export class EuclidDemoPlayground {
       ]
     },
     {
-      id: 'portfolio-overview',
-      name: '📊 Portfolio',
-      description: 'Portfolio balance and position tracking',
+      id: 'portfolio',
+      name: '🌐 Portfolio',
+      description: 'Multi-chain portfolio tracking with connected and custom wallets',
       category: 'Portfolio',
-      tagName: 'euclid-portfolio-overview',
+      tagName: 'euclid-portfolio',
       defaultProps: {
-        cardTitle: 'Portfolio Overview',
-        showAnalytics: true,
-        loading: false,
+        cardTitle: 'Portfolio',
         walletAddress: '',
-        timePeriod: '1W'
+        customChainUID: 'osmosis-1',
+        includeCustomWallets: true,
+        autoRefresh: true,
+        refreshIntervalMs: 60000,
+        showAnalytics: true,
       },
       propDefinitions: [
         {
           name: 'cardTitle',
           type: 'string',
-          defaultValue: 'Portfolio Overview',
+          defaultValue: 'Portfolio',
           description: 'Title of the portfolio card'
-        },
-        {
-          name: 'showAnalytics',
-          type: 'boolean',
-          defaultValue: true,
-          description: 'Show detailed analytics'
-        },
-        {
-          name: 'loading',
-          type: 'boolean',
-          defaultValue: false,
-          description: 'Show loading state'
         },
         {
           name: 'walletAddress',
           type: 'string',
           defaultValue: '',
-          description: 'Wallet address to track'
+          description: 'Custom wallet addresses (comma-separated for multiple)'
         },
         {
-          name: 'timePeriod',
-          type: 'select',
-          defaultValue: '1W',
-          description: 'Time period for analytics',
-          options: [
-            { value: '1D', label: '1 Day' },
-            { value: '1W', label: '1 Week' },
-            { value: '1M', label: '1 Month' },
-            { value: '3M', label: '3 Months' },
-            { value: '1Y', label: '1 Year' },
-            { value: 'ALL', label: 'All Time' }
-          ]
-        }
-      ]
-    },
-    {
-      id: 'core-provider-config',
-      name: '⚙️ App Settings',
-      description: 'Configure app environment, API settings, and feature preferences',
-      category: 'Settings',
-      tagName: 'euclid-core-provider',
-      defaultProps: {
-        environment: 'testnet',
-        graphqlEndpoint: '',
-        restEndpoint: '',
-        apiTimeout: 10000,
-        defaultSlippage: 0.5,
-        refreshIntervals: JSON.stringify({
-          marketData: 30000,
-          balances: 60000,
-          routes: 300000
-        }),
-        featureFlags: JSON.stringify({
-          darkMode: true,
-          transactionHistory: true,
-          advancedRouting: true
-        }),
-        supportedChains: 'cosmoshub-4,osmosis-1,juno-1,stargaze-1,ethereum,polygon',
-        supportedWallets: 'keplr,metamask,walletconnect,coinbase',
-        defaultChain: 'osmosis-1',
-        defaultWallet: 'keplr'
-      },
-      propDefinitions: [
-        {
-          name: 'environment',
-          type: 'select',
-          defaultValue: 'testnet',
-          description: 'Environment preset for API endpoints',
-          options: [
-            { value: 'mainnet', label: 'Mainnet' },
-            { value: 'testnet', label: 'Testnet' },
-            { value: 'devnet', label: 'Devnet' }
-          ]
-        },
-        {
-          name: 'graphqlEndpoint',
-          type: 'text',
-          defaultValue: '',
-          description: 'Custom GraphQL endpoint (overrides environment preset)'
-        },
-        {
-          name: 'restEndpoint',
-          type: 'text',
-          defaultValue: '',
-          description: 'Custom REST endpoint (overrides environment preset)'
-        },
-        {
-          name: 'apiTimeout',
-          type: 'number',
-          defaultValue: 10000,
-          description: 'API request timeout in milliseconds'
-        },
-        {
-          name: 'defaultSlippage',
-          type: 'number',
-          defaultValue: 0.5,
-          description: 'Default slippage tolerance percentage'
-        },
-        {
-          name: 'defaultChain',
+          name: 'customChainUID',
           type: 'select',
           defaultValue: 'osmosis-1',
-          description: 'Default blockchain network',
+          description: 'Chain for custom wallet addresses',
           options: [
-            { value: 'cosmoshub-4', label: 'Cosmos Hub' },
             { value: 'osmosis-1', label: 'Osmosis' },
-            { value: 'juno-1', label: 'Juno' },
-            { value: 'stargaze-1', label: 'Stargaze' },
+            { value: 'cosmoshub-4', label: 'Cosmos Hub' },
             { value: 'ethereum', label: 'Ethereum' },
             { value: 'polygon', label: 'Polygon' }
           ]
         },
         {
-          name: 'defaultWallet',
-          type: 'select',
-          defaultValue: 'keplr',
-          description: 'Default wallet adapter',
-          options: [
-            { value: 'keplr', label: 'Keplr' },
-            { value: 'metamask', label: 'MetaMask' },
-            { value: 'walletconnect', label: 'WalletConnect' },
-            { value: 'coinbase', label: 'Coinbase Wallet' }
-          ]
+          name: 'includeCustomWallets',
+          type: 'boolean',
+          defaultValue: true,
+          description: 'Include custom wallet addresses'
+        },
+        {
+          name: 'autoRefresh',
+          type: 'boolean',
+          defaultValue: true,
+          description: 'Automatically refresh portfolio data'
+        },
+        {
+          name: 'refreshIntervalMs',
+          type: 'number',
+          defaultValue: 60000,
+          description: 'Auto-refresh interval in milliseconds'
+        },
+        {
+          name: 'showAnalytics',
+          type: 'boolean',
+          defaultValue: true,
+          description: 'Show analytics tab'
         }
       ]
     },
@@ -833,67 +753,17 @@ export class EuclidDemoPlayground {
         );
         break;
 
-      case 'euclid-portfolio-overview':
+      case 'euclid-portfolio':
         componentElement = (
-          <euclid-portfolio-overview
+          <euclid-portfolio
             key={`${demo.id}-${JSON.stringify(props)}`}
-            cardTitle={String(props.cardTitle || 'Portfolio Overview')}
-            showAnalytics={Boolean(props.showAnalytics)}
-            loading={Boolean(props.loading)}
+            cardTitle={String(props.cardTitle || 'Portfolio')}
             walletAddress={String(props.walletAddress || '')}
-            timePeriod={props.timePeriod as '1D' | '1W' | '1M' | '3M' | '1Y' | 'ALL' || '1W'}
+            customChainUID={String(props.customChainUID || 'osmosis-1')}
+            includeCustomWallets={Boolean(props.includeCustomWallets ?? true)}
+            autoRefresh={Boolean(props.autoRefresh ?? true)}
+            refreshIntervalMs={Number(props.refreshIntervalMs) || 60000}
           />
-        );
-        break;
-
-      case 'euclid-core-provider':
-        componentElement = (
-          <div class="core-provider-demo">
-            <div class="provider-info">
-              <h3>⚙️ App Settings Configuration</h3>
-              <p>This component provides configuration to all child components. Configure the settings to see how they affect the entire system.</p>
-
-              <div class="config-summary">
-                <h4>Current Configuration:</h4>
-                <div class="config-details">
-                  <div><strong>Environment:</strong> {props.environment || 'testnet'}</div>
-                  <div><strong>GraphQL Endpoint:</strong> {props.graphqlEndpoint || ENVIRONMENT_PRESETS[String(props.environment || 'testnet')]?.graphqlEndpoint || DEFAULT_CONFIG.graphqlEndpoint}</div>
-                  <div><strong>REST Endpoint:</strong> {props.restEndpoint || ENVIRONMENT_PRESETS[String(props.environment || 'testnet')]?.restEndpoint || DEFAULT_CONFIG.restEndpoint}</div>
-                  <div><strong>API Timeout:</strong> {props.apiTimeout || DEFAULT_CONFIG.apiTimeout}ms</div>
-                  <div><strong>Default Chain:</strong> {props.defaultChain || DEFAULT_CONFIG.defaultChain}</div>
-                  <div><strong>Default Wallet:</strong> {props.defaultWallet || DEFAULT_CONFIG.defaultWallet}</div>
-                </div>
-              </div>
-            </div>
-
-            <euclid-core-provider
-              environment={String(props.environment) as 'mainnet' | 'testnet' | 'devnet'}
-              graphqlEndpoint={String(props.graphqlEndpoint || '')}
-              restEndpoint={String(props.restEndpoint || '')}
-              apiTimeout={Number(props.apiTimeout)}
-              defaultSlippage={Number(props.defaultSlippage)}
-              refreshIntervals={String(props.refreshIntervals)}
-              featureFlags={String(props.featureFlags)}
-              supportedChains={String(props.supportedChains)}
-              supportedWallets={String(props.supportedWallets)}
-              defaultChain={String(props.defaultChain)}
-              defaultWallet={String(props.defaultWallet)}
-            >
-              <div class="provider-children">
-                <h4>💡 Configured Components Preview:</h4>
-                <p>Here you would see child components using the configuration above.</p>
-                <div class="demo-components">
-                  <euclid-data-list
-                    dataType="tokens"
-                    displayMode="compact"
-                    cardTitle="Tokens (using configured endpoints)"
-                    itemsPerPage={5}
-                    searchable={false}
-                  />
-                </div>
-              </div>
-            </euclid-core-provider>
-          </div>
         );
         break;
 

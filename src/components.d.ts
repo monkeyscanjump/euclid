@@ -13,7 +13,7 @@ import { DataItem, DataType, DisplayMode, FilterState } from "./components/core/
 import { LiquidityPoolInfo, LiquidityPosition, LiquidityToken } from "./components/features/euclid-liquidity-card/euclid-liquidity-card";
 import { DisplayMode as DisplayMode1, FilterConfig, ListFilters, ListItemData, ListItemType, SortConfig } from "./components/ui/euclid-list-items/euclid-list-items";
 import { UserPoolPosition } from "./components/ui/euclid-pool-item/euclid-pool-item";
-import { ChartDataPoint, PoolPosition, PortfolioStats, StakingPosition, TokenBalance, Transaction } from "./components/features/euclid-portfolio-overview/euclid-portfolio-overview";
+import { PortfolioData } from "./components/features/euclid-portfolio/euclid-portfolio";
 import { SwapQuote, SwapSettings, SwapToken } from "./components/features/euclid-swap-card/euclid-swap-card";
 import { TokenInfo } from "./components/ui/euclid-token-content/euclid-token-content";
 import { TokenInfo as TokenInfo1 } from "./components/ui/euclid-token-input/euclid-token-input";
@@ -26,7 +26,7 @@ export { DataItem, DataType, DisplayMode, FilterState } from "./components/core/
 export { LiquidityPoolInfo, LiquidityPosition, LiquidityToken } from "./components/features/euclid-liquidity-card/euclid-liquidity-card";
 export { DisplayMode as DisplayMode1, FilterConfig, ListFilters, ListItemData, ListItemType, SortConfig } from "./components/ui/euclid-list-items/euclid-list-items";
 export { UserPoolPosition } from "./components/ui/euclid-pool-item/euclid-pool-item";
-export { ChartDataPoint, PoolPosition, PortfolioStats, StakingPosition, TokenBalance, Transaction } from "./components/features/euclid-portfolio-overview/euclid-portfolio-overview";
+export { PortfolioData } from "./components/features/euclid-portfolio/euclid-portfolio";
 export { SwapQuote, SwapSettings, SwapToken } from "./components/features/euclid-swap-card/euclid-swap-card";
 export { TokenInfo } from "./components/ui/euclid-token-content/euclid-token-content";
 export { TokenInfo as TokenInfo1 } from "./components/ui/euclid-token-input/euclid-token-input";
@@ -398,59 +398,34 @@ export namespace Components {
         "tokens": TokenMetadata[];
         "walletAddress"?: string;
     }
-    interface EuclidPortfolioOverview {
+    interface EuclidPortfolio {
+        /**
+          * Whether to auto-refresh portfolio data
+          * @default true
+         */
+        "autoRefresh": boolean;
         /**
           * Card title
-          * @default 'Portfolio Overview'
+          * @default 'Portfolio'
          */
         "cardTitle": string;
         /**
-          * Chart data for portfolio value over time
-          * @default []
+          * Custom chain UID for the wallet address (defaults to osmosis-1 if not specified)
+          * @default 'osmosis-1'
          */
-        "chartData": ChartDataPoint[];
+        "customChainUID": string;
         /**
-          * Whether the component is in loading state
-          * @default false
-         */
-        "loading": boolean;
-        /**
-          * User's liquidity pool positions
-          * @default []
-         */
-        "poolPositions": PoolPosition[];
-        /**
-          * Portfolio statistics
-          * @default null
-         */
-        "portfolioStats": PortfolioStats | null;
-        /**
-          * Whether to show detailed analytics
+          * Whether to include custom wallet addresses in the portfolio
           * @default true
          */
-        "showAnalytics": boolean;
+        "includeCustomWallets": boolean;
         /**
-          * User's staking positions
-          * @default []
+          * Refresh interval in milliseconds
+          * @default 60000
          */
-        "stakingPositions": StakingPosition[];
+        "refreshIntervalMs": number;
         /**
-          * Time period for charts and stats
-          * @default '1W'
-         */
-        "timePeriod": '1D' | '1W' | '1M' | '3M' | '1Y' | 'ALL';
-        /**
-          * User's token balances
-          * @default []
-         */
-        "tokenBalances": TokenBalance[];
-        /**
-          * Recent transactions
-          * @default []
-         */
-        "transactions": Transaction[];
-        /**
-          * Connected wallet address
+          * Custom wallet address for testing (can be multiple addresses separated by comma)
           * @default ''
          */
         "walletAddress": string;
@@ -612,9 +587,9 @@ export interface EuclidPoolItemCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLEuclidPoolItemElement;
 }
-export interface EuclidPortfolioOverviewCustomEvent<T> extends CustomEvent<T> {
+export interface EuclidPortfolioCustomEvent<T> extends CustomEvent<T> {
     detail: T;
-    target: HTMLEuclidPortfolioOverviewElement;
+    target: HTMLEuclidPortfolioElement;
 }
 export interface EuclidSwapCardCustomEvent<T> extends CustomEvent<T> {
     detail: T;
@@ -826,28 +801,22 @@ declare global {
         prototype: HTMLEuclidPoolItemElement;
         new (): HTMLEuclidPoolItemElement;
     };
-    interface HTMLEuclidPortfolioOverviewElementEventMap {
-        "positionSelected": PoolPosition;
-        "managePosition": PoolPosition;
-        "stakeMore": StakingPosition;
-        "unstake": StakingPosition;
-        "claimRewards": PoolPosition | StakingPosition;
-        "viewTransaction": Transaction;
-        "timePeriodChanged": string;
+    interface HTMLEuclidPortfolioElementEventMap {
+        "portfolioUpdated": PortfolioData;
     }
-    interface HTMLEuclidPortfolioOverviewElement extends Components.EuclidPortfolioOverview, HTMLStencilElement {
-        addEventListener<K extends keyof HTMLEuclidPortfolioOverviewElementEventMap>(type: K, listener: (this: HTMLEuclidPortfolioOverviewElement, ev: EuclidPortfolioOverviewCustomEvent<HTMLEuclidPortfolioOverviewElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+    interface HTMLEuclidPortfolioElement extends Components.EuclidPortfolio, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLEuclidPortfolioElementEventMap>(type: K, listener: (this: HTMLEuclidPortfolioElement, ev: EuclidPortfolioCustomEvent<HTMLEuclidPortfolioElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
         addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
         addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
         addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
-        removeEventListener<K extends keyof HTMLEuclidPortfolioOverviewElementEventMap>(type: K, listener: (this: HTMLEuclidPortfolioOverviewElement, ev: EuclidPortfolioOverviewCustomEvent<HTMLEuclidPortfolioOverviewElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLEuclidPortfolioElementEventMap>(type: K, listener: (this: HTMLEuclidPortfolioElement, ev: EuclidPortfolioCustomEvent<HTMLEuclidPortfolioElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
         removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
         removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
         removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
     }
-    var HTMLEuclidPortfolioOverviewElement: {
-        prototype: HTMLEuclidPortfolioOverviewElement;
-        new (): HTMLEuclidPortfolioOverviewElement;
+    var HTMLEuclidPortfolioElement: {
+        prototype: HTMLEuclidPortfolioElement;
+        new (): HTMLEuclidPortfolioElement;
     };
     interface HTMLEuclidSwapCardElementEventMap {
         "swapInitiated": {
@@ -984,7 +953,7 @@ declare global {
         "euclid-market-data-controller": HTMLEuclidMarketDataControllerElement;
         "euclid-modal": HTMLEuclidModalElement;
         "euclid-pool-item": HTMLEuclidPoolItemElement;
-        "euclid-portfolio-overview": HTMLEuclidPortfolioOverviewElement;
+        "euclid-portfolio": HTMLEuclidPortfolioElement;
         "euclid-swap-card": HTMLEuclidSwapCardElement;
         "euclid-swap-controller": HTMLEuclidSwapControllerElement;
         "euclid-token-content": HTMLEuclidTokenContentElement;
@@ -1413,66 +1382,35 @@ declare namespace LocalJSX {
         "tokens"?: TokenMetadata[];
         "walletAddress"?: string;
     }
-    interface EuclidPortfolioOverview {
+    interface EuclidPortfolio {
+        /**
+          * Whether to auto-refresh portfolio data
+          * @default true
+         */
+        "autoRefresh"?: boolean;
         /**
           * Card title
-          * @default 'Portfolio Overview'
+          * @default 'Portfolio'
          */
         "cardTitle"?: string;
         /**
-          * Chart data for portfolio value over time
-          * @default []
+          * Custom chain UID for the wallet address (defaults to osmosis-1 if not specified)
+          * @default 'osmosis-1'
          */
-        "chartData"?: ChartDataPoint[];
+        "customChainUID"?: string;
         /**
-          * Whether the component is in loading state
-          * @default false
-         */
-        "loading"?: boolean;
-        "onClaimRewards"?: (event: EuclidPortfolioOverviewCustomEvent<PoolPosition | StakingPosition>) => void;
-        "onManagePosition"?: (event: EuclidPortfolioOverviewCustomEvent<PoolPosition>) => void;
-        "onPositionSelected"?: (event: EuclidPortfolioOverviewCustomEvent<PoolPosition>) => void;
-        "onStakeMore"?: (event: EuclidPortfolioOverviewCustomEvent<StakingPosition>) => void;
-        "onTimePeriodChanged"?: (event: EuclidPortfolioOverviewCustomEvent<string>) => void;
-        "onUnstake"?: (event: EuclidPortfolioOverviewCustomEvent<StakingPosition>) => void;
-        "onViewTransaction"?: (event: EuclidPortfolioOverviewCustomEvent<Transaction>) => void;
-        /**
-          * User's liquidity pool positions
-          * @default []
-         */
-        "poolPositions"?: PoolPosition[];
-        /**
-          * Portfolio statistics
-          * @default null
-         */
-        "portfolioStats"?: PortfolioStats | null;
-        /**
-          * Whether to show detailed analytics
+          * Whether to include custom wallet addresses in the portfolio
           * @default true
          */
-        "showAnalytics"?: boolean;
+        "includeCustomWallets"?: boolean;
+        "onPortfolioUpdated"?: (event: EuclidPortfolioCustomEvent<PortfolioData>) => void;
         /**
-          * User's staking positions
-          * @default []
+          * Refresh interval in milliseconds
+          * @default 60000
          */
-        "stakingPositions"?: StakingPosition[];
+        "refreshIntervalMs"?: number;
         /**
-          * Time period for charts and stats
-          * @default '1W'
-         */
-        "timePeriod"?: '1D' | '1W' | '1M' | '3M' | '1Y' | 'ALL';
-        /**
-          * User's token balances
-          * @default []
-         */
-        "tokenBalances"?: TokenBalance[];
-        /**
-          * Recent transactions
-          * @default []
-         */
-        "transactions"?: Transaction[];
-        /**
-          * Connected wallet address
+          * Custom wallet address for testing (can be multiple addresses separated by comma)
           * @default ''
          */
         "walletAddress"?: string;
@@ -1659,7 +1597,7 @@ declare namespace LocalJSX {
         "euclid-market-data-controller": EuclidMarketDataController;
         "euclid-modal": EuclidModal;
         "euclid-pool-item": EuclidPoolItem;
-        "euclid-portfolio-overview": EuclidPortfolioOverview;
+        "euclid-portfolio": EuclidPortfolio;
         "euclid-swap-card": EuclidSwapCard;
         "euclid-swap-controller": EuclidSwapController;
         "euclid-token-content": EuclidTokenContent;
@@ -1694,7 +1632,7 @@ declare module "@stencil/core" {
             "euclid-market-data-controller": LocalJSX.EuclidMarketDataController & JSXBase.HTMLAttributes<HTMLEuclidMarketDataControllerElement>;
             "euclid-modal": LocalJSX.EuclidModal & JSXBase.HTMLAttributes<HTMLEuclidModalElement>;
             "euclid-pool-item": LocalJSX.EuclidPoolItem & JSXBase.HTMLAttributes<HTMLEuclidPoolItemElement>;
-            "euclid-portfolio-overview": LocalJSX.EuclidPortfolioOverview & JSXBase.HTMLAttributes<HTMLEuclidPortfolioOverviewElement>;
+            "euclid-portfolio": LocalJSX.EuclidPortfolio & JSXBase.HTMLAttributes<HTMLEuclidPortfolioElement>;
             "euclid-swap-card": LocalJSX.EuclidSwapCard & JSXBase.HTMLAttributes<HTMLEuclidSwapCardElement>;
             "euclid-swap-controller": LocalJSX.EuclidSwapController & JSXBase.HTMLAttributes<HTMLEuclidSwapControllerElement>;
             "euclid-token-content": LocalJSX.EuclidTokenContent & JSXBase.HTMLAttributes<HTMLEuclidTokenContentElement>;

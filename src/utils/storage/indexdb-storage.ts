@@ -27,7 +27,6 @@ export class IndexedDBStorage {
   private db: IDBDatabase | null = null;
   private cryptoKey: CryptoKey | null = null;
   private initPromise: Promise<void> | null = null;
-  private fallbackToLocalStorage = false;
 
   constructor(dbName: string = 'euclid-storage', options: StorageOptions = {}) {
     this.dbName = dbName;
@@ -47,50 +46,33 @@ export class IndexedDBStorage {
   }
 
   private async _init(): Promise<void> {
-    try {
-      await Promise.all([
-        this.initDatabase(),
-        this.initCrypto()
-      ]);
-    } catch (error) {
-      console.error('[IndexedDB] Initialization failed, falling back to localStorage:', error);
-      this.fallbackToLocalStorage = true;
-    }
+    await Promise.all([
+      this.initDatabase(),
+      this.initCrypto()
+    ]);
   }
 
   private async initDatabase(): Promise<void> {
     return new Promise((resolve, reject) => {
-      // Check if IndexedDB is available
-      if (!window.indexedDB) {
-        reject(new Error('IndexedDB is not supported in this environment'));
-        return;
-      }
-
-      console.log(`[IndexedDB] Opening database: ${this.dbName} v${this.version}`);
       const request = indexedDB.open(this.dbName, this.version);
 
       request.onerror = () => {
-        const error = request.error;
-        console.error('[IndexedDB] Failed to open database:', error);
-        reject(new Error(`Failed to open database: ${error?.message || 'Unknown error'}`));
+        reject(new Error(`Failed to open database: ${request.error?.message}`));
       };
 
       request.onsuccess = () => {
         this.db = request.result;
-        console.log('[IndexedDB] Database opened successfully');
         resolve();
       };
 
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
-        console.log(`[IndexedDB] Upgrading database from version ${event.oldVersion} to ${event.newVersion}`);
 
         // Create object stores if they don't exist
         const storeNames = ['wallet-data', 'user-preferences', 'app-state', 'cache'];
 
         for (const storeName of storeNames) {
           if (!db.objectStoreNames.contains(storeName)) {
-            console.log(`[IndexedDB] Creating object store: ${storeName}`);
             const store = db.createObjectStore(storeName, { keyPath: 'key' });
             store.createIndex('timestamp', 'timestamp', { unique: false });
           }
@@ -101,17 +83,15 @@ export class IndexedDBStorage {
 
   private async initCrypto(): Promise<void> {
     if (!window.crypto?.subtle) {
-      console.warn('[IndexedDB] Web Crypto API not available - storage will not be encrypted');
+      console.warn('Web Crypto API not available - storage will not be encrypted');
       return;
     }
 
     try {
-      console.log('[IndexedDB] Initializing crypto...');
       // Check if we have a stored key
       const keyData = await this.getStoredCryptoKey();
 
       if (!keyData) {
-        console.log('[IndexedDB] Generating new crypto key...');
         // Generate new key
         this.cryptoKey = await window.crypto.subtle.generateKey(
           {
@@ -124,9 +104,7 @@ export class IndexedDBStorage {
 
         // Store the key
         await this.storeCryptoKey(this.cryptoKey);
-        console.log('[IndexedDB] New crypto key generated and stored');
       } else {
-        console.log('[IndexedDB] Importing existing crypto key...');
         // Import stored key
         this.cryptoKey = await window.crypto.subtle.importKey(
           'jwk',
@@ -135,10 +113,9 @@ export class IndexedDBStorage {
           true,
           ['encrypt', 'decrypt']
         );
-        console.log('[IndexedDB] Crypto key imported successfully');
       }
     } catch (error) {
-      console.error('[IndexedDB] Failed to initialize encryption:', error);
+      console.warn('Failed to initialize encryption:', error);
     }
   }
 
@@ -203,24 +180,6 @@ export class IndexedDBStorage {
   ): Promise<void> {
     await this.init();
 
-    // Fallback to localStorage if IndexedDB failed
-    if (this.fallbackToLocalStorage) {
-      console.warn('[IndexedDB] Using localStorage fallback for setItem');
-      try {
-        const storageKey = `${this.dbName}-${store}-${key}`;
-        const item: StorageItem = {
-          key,
-          value,
-          timestamp: Date.now(),
-          encrypted: false
-        };
-        localStorage.setItem(storageKey, JSON.stringify(item));
-        return;
-      } catch (error) {
-        throw new Error(`Failed to store item in localStorage: ${error}`);
-      }
-    }
-
     if (!this.db) {
       throw new Error('Database not initialized');
     }
@@ -267,22 +226,6 @@ export class IndexedDBStorage {
     key: string
   ): Promise<T | null> {
     await this.init();
-
-    // Fallback to localStorage if IndexedDB failed
-    if (this.fallbackToLocalStorage) {
-      console.warn('[IndexedDB] Using localStorage fallback for getItem');
-      try {
-        const storageKey = `${this.dbName}-${store}-${key}`;
-        const stored = localStorage.getItem(storageKey);
-        if (!stored) return null;
-        
-        const item = JSON.parse(stored) as StorageItem;
-        return item.value as T;
-      } catch (error) {
-        console.error(`Failed to retrieve item from localStorage: ${error}`);
-        return null;
-      }
-    }
 
     if (!this.db) {
       throw new Error('Database not initialized');

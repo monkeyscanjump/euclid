@@ -473,5 +473,7 @@ export type {
   AddLiquidityRequest,
   RemoveLiquidityRequest,
   GetRoutesRequest,
-  CrossChainUser
+  CrossChainUser,
+  RoutePath,
+  UserBalance
 } from './types/api.types';

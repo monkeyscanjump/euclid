@@ -5,19 +5,12 @@
 
 import { DEFAULT_CONFIG } from '../env';
 
+// Import the proper types
+import type { CrossChainUser, UserBalance } from '../types/api.types';
+
 interface UserConfig {
   graphqlEndpoint: string;
   apiTimeout: number;
-}
-
-interface CrossChainUser {
-  address: string;
-  chain_uid: string;
-}
-
-interface UserBalance {
-  amount: string;
-  token_id: string;
 }
 
 /**

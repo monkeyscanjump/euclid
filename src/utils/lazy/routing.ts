@@ -5,25 +5,12 @@
 
 import { DEFAULT_CONFIG } from '../env';
 
-// Import the proper type
-import type { GetRoutesRequest } from '../types/api.types';
+// Import the proper types
+import type { GetRoutesRequest, RoutePath } from '../types/api.types';
 
 interface RoutingConfig {
   restEndpoint: string;
   apiTimeout: number;
-}
-
-interface RoutePath {
-  total_price_impact: string;
-  estimated_amount_out: string;
-  steps: Array<{
-    pool_id: string;
-    token_in: string;
-    token_out: string;
-    amount_in: string;
-    amount_out: string;
-    price_impact: string;
-  }>;
 }
 
 /**

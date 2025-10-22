@@ -365,3 +365,97 @@
     gap: 12px;
   }
 }
+
+/* Bundle Statistics */
+.bundle-stats {
+  flex-shrink: 0;
+  padding: 16px 24px;
+  background: #f0f9ff;
+  border-bottom: 1px solid #e1e5e9;
+}
+
+.bundle-stats h3 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  color: #1e40af;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: white;
+  border: 1px solid #dbeafe;
+  border-radius: 6px;
+}
+
+.stat-label {
+  font-weight: 500;
+  color: #374151;
+  font-size: 14px;
+}
+
+.stat-value {
+  font-weight: 600;
+  color: #1e40af;
+  font-size: 14px;
+}
+
+/* Lazy loading indicators */
+.lazy-info {
+  color: #059669;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.endpoint-type.lazy {
+  background: #059669;
+}
+
+.endpoint-type.core {
+  background: #7c3aed;
+}
+
+/* Bundle impact indicators */
+.bundle-impact {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+  padding: 8px;
+  background: #f0f9ff;
+  border-radius: 4px;
+  border: 1px solid #dbeafe;
+}
+
+.impact-label {
+  font-weight: 500;
+  color: #1e40af;
+  font-size: 12px;
+}
+
+.impact-status {
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.impact-status.loaded {
+  color: #059669;
+}
+
+.impact-status.cached {
+  color: #7c3aed;
+}
+
+.impact-details {
+  color: #6b7280;
+  font-size: 11px;
+  font-family: monospace;
+}

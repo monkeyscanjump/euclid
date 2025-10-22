@@ -32,14 +32,52 @@ interface PropDefinition {
 export class EuclidDemoPlayground {
   @Element() el!: HTMLElement;
 
-  @Prop() selectedDemo: string = 'data-list-tokens';
+  @Prop() selectedDemo: string = 'api-tester';
   @Prop() environment: 'mainnet' | 'testnet' | 'devnet' = 'testnet';
 
-  @State() activeTab: string = 'data-list-tokens';
+  @State() activeTab: string = 'api-tester';
   @State() currentProps: Record<string, PropValue> = {};
   @State() showCode: boolean = false;
 
   private componentDemos: ComponentDemo[] = [
+    {
+      id: 'api-tester',
+      name: '🧪 API Tester',
+      description: 'Test and explore all Euclid Protocol API endpoints with live data',
+      category: 'Developer Tools',
+      tagName: 'euclid-api-tester',
+      defaultProps: {
+        selectedCategory: 'all',
+        showImplementedOnly: false
+      },
+      propDefinitions: [
+        {
+          name: 'selectedCategory',
+          type: 'select',
+          defaultValue: 'all',
+          description: 'Filter endpoints by category',
+          options: [
+            { value: 'all', label: 'All Categories' },
+            { value: 'Chain', label: 'Chain' },
+            { value: 'Token', label: 'Token' },
+            { value: 'Pool', label: 'Pool' },
+            { value: 'Factory', label: 'Factory' },
+            { value: 'Router', label: 'Router' },
+            { value: 'VLP', label: 'VLP' },
+            { value: 'Virtual Balance', label: 'Virtual Balance' },
+            { value: 'CosmWasm', label: 'CosmWasm' },
+            { value: 'Routes', label: 'Routes' },
+            { value: 'Transactions', label: 'Transactions' }
+          ]
+        },
+        {
+          name: 'showImplementedOnly',
+          type: 'boolean',
+          defaultValue: false,
+          description: 'Show only implemented endpoints'
+        }
+      ]
+    },
     {
       id: 'data-list-tokens',
       name: '🪙 Token List',
@@ -465,44 +503,6 @@ export class EuclidDemoPlayground {
           description: 'Display wallet balances when available'
         }
       ]
-    },
-    {
-      id: 'api-tester',
-      name: '🧪 API Tester',
-      description: 'Test and explore all Euclid Protocol API endpoints with live data',
-      category: 'Developer Tools',
-      tagName: 'euclid-api-tester',
-      defaultProps: {
-        selectedCategory: 'all',
-        showImplementedOnly: false
-      },
-      propDefinitions: [
-        {
-          name: 'selectedCategory',
-          type: 'select',
-          defaultValue: 'all',
-          description: 'Filter endpoints by category',
-          options: [
-            { value: 'all', label: 'All Categories' },
-            { value: 'Chain', label: 'Chain' },
-            { value: 'Token', label: 'Token' },
-            { value: 'Pool', label: 'Pool' },
-            { value: 'Factory', label: 'Factory' },
-            { value: 'Router', label: 'Router' },
-            { value: 'VLP', label: 'VLP' },
-            { value: 'Virtual Balance', label: 'Virtual Balance' },
-            { value: 'CosmWasm', label: 'CosmWasm' },
-            { value: 'Routes', label: 'Routes' },
-            { value: 'Transactions', label: 'Transactions' }
-          ]
-        },
-        {
-          name: 'showImplementedOnly',
-          type: 'boolean',
-          defaultValue: false,
-          description: 'Show only implemented endpoints'
-        }
-      ]
     }
   ];
 
@@ -546,7 +546,7 @@ export class EuclidDemoPlayground {
     }
 
     // Fallback to prop or first demo
-    return this.selectedDemo || this.componentDemos[0]?.id || 'data-list-tokens';
+    return this.selectedDemo || this.componentDemos[0]?.id || 'api-tester';
   }
 
   private savePropsToStorage() {

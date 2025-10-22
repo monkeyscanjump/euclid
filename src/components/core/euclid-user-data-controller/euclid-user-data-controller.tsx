@@ -1,21 +1,10 @@
 import { Component, h, State, Listen, Watch, Prop } from '@stencil/core';
 import { walletStore } from '../../../store/wallet.store';
-import { createAPIClient } from '../../../utils/api-client';
+import { euclidAPI } from '../../../utils/core-api';
 import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
 import type { UserBalance, WalletInfo } from '../../../utils/types';
 import type { EuclidConfig } from '../../../utils/env';
 import { DEFAULT_CONFIG } from '../../../utils/env';
-
-interface BalanceItem {
-  denom: string;
-  amount: string;
-}
-
-interface BalanceData {
-  balance?: {
-    all?: BalanceItem[];
-  };
-}
 
 @Component({
   tag: 'euclid-user-data-controller',
@@ -30,15 +19,11 @@ export class EuclidUserDataController {
   private retryCount = 0;
   private maxRetries = 3;
   private euclidConfig: EuclidConfig;
-  private apiClient: ReturnType<typeof createAPIClient>;
   private walletChangeTimeout: number | null = null;
 
   async componentWillLoad() {
     // Parse configuration
     this.euclidConfig = this.config ? JSON.parse(this.config) : DEFAULT_CONFIG;
-
-    // Create configured API client
-    this.apiClient = createAPIClient(this.euclidConfig);
 
     // Initialize everything here to avoid re-renders
     await this.initialize();
@@ -133,24 +118,21 @@ export class EuclidUserDataController {
       try {
         console.log(`💰 Loading balances for ${wallet.chainUID}:${wallet.address.slice(0, 8)}...`);
 
-        const balanceResponse = await this.apiClient.getBalance(wallet.address, wallet.chainUID);
+        const balanceResponse = await euclidAPI.getBalances(wallet.address, wallet.chainUID);
 
-        if (balanceResponse.success && balanceResponse.data) {
-          const balanceData = balanceResponse.data as BalanceData;
-          if (balanceData.balance?.all) {
-            const chainBalances: UserBalance[] = balanceData.balance.all.map(item => ({
-              amount: item.amount,
-              token_id: item.denom,
-              // Legacy compatibility fields
-              token: item.denom,
-              balance: item.amount,
-              chain_uid: wallet.chainUID,
-              token_type: { native: { denom: item.denom } }
-            }));
+        if (balanceResponse.balances && balanceResponse.balances.length > 0) {
+          const chainBalances: UserBalance[] = balanceResponse.balances.map(item => ({
+            amount: item.amount,
+            token_id: item.denom,
+            // Legacy compatibility fields
+            token: item.denom,
+            balance: item.amount,
+            chain_uid: item.chain_uid,
+            token_type: { native: { denom: item.denom } }
+          }));
 
-            // Update wallet store with balances for this chain
-            walletStore.updateWalletBalances(wallet.chainUID, chainBalances);
-          }
+          // Update wallet store with balances for this chain
+          walletStore.updateWalletBalances(wallet.chainUID, chainBalances);
         }
       } catch (error) {
         console.warn(`⚠️ Failed to load balance for ${wallet.chainUID}:`, error.message);

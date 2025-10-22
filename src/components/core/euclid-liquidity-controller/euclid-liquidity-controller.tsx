@@ -2,7 +2,7 @@ import { Component, Listen, State, Watch, Prop } from '@stencil/core';
 import { liquidityStore } from '../../../store/liquidity.store';
 import { marketStore } from '../../../store/market.store';
 import { walletStore } from '../../../store/wallet.store';
-import { createAPIClient } from '../../../utils/api-client';
+import { euclidAPI } from '../../../utils/core-api';
 import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
 import type { EuclidConfig } from '../../../utils/env';
 import { DEFAULT_CONFIG } from '../../../utils/env';
@@ -19,7 +19,8 @@ export class EuclidLiquidityController {
   @State() isInitialized = false;
   @Prop() config?: string; // JSON string of EuclidConfig
 
-  private apiClient: ReturnType<typeof createAPIClient>;
+  // Use the lightweight core API instead of heavy api-client
+  private api = euclidAPI;
 
   async componentWillLoad() {
     await this.initialize();
@@ -32,9 +33,9 @@ export class EuclidLiquidityController {
   private async initialize() {
     console.log('💧 Initializing Liquidity Controller...');
 
-    // Initialize API client
+    // No need to initialize heavy API client - using lightweight core API
     const euclidConfig: EuclidConfig = this.config ? JSON.parse(this.config) : DEFAULT_CONFIG;
-    this.apiClient = createAPIClient(euclidConfig);
+    console.log('Using config:', euclidConfig);
 
     // Subscribe to liquidity store changes
     liquidityStore.onChange('selectedPool', () => this.handlePoolChange());
@@ -91,7 +92,7 @@ export class EuclidLiquidityController {
       });
 
       // Execute add liquidity via API
-      const result = await this.apiClient.createAddLiquidityTransactionWrapped({
+      const result = await this.api.buildAddLiquidityTransaction({
         slippage_tolerance_bps: 50, // 0.5% = 50 basis points
         timeout: (Math.floor(Date.now() / 1000) + 1200).toString(), // 20 minutes
         pair_info: {
@@ -113,8 +114,9 @@ export class EuclidLiquidityController {
       });
 
       if (result.success && result.data) {
-        const transactionData = result.data as TransactionResponse;
-        const { txHash } = transactionData;
+        // TransactionResponse contains transaction instructions, not completed transaction hash
+        // We'll use a placeholder until the transaction is actually executed
+        const txHash = 'pending';
 
                 // Get wallet info and track the transaction
         const connectedWallets = walletStore.getAllConnectedWallets();
@@ -194,7 +196,7 @@ export class EuclidLiquidityController {
       });
 
       // Execute remove liquidity via API
-      const result = await this.apiClient.createRemoveLiquidityTransactionWrapped({
+      const result = await this.api.buildRemoveLiquidityTransaction({
         slippage_tolerance_bps: 50, // 0.5% = 50 basis points
         timeout: (Math.floor(Date.now() / 1000) + 1200).toString(), // 20 minutes
         lp_token_amount: lpTokenAmount,

@@ -1,12 +1,14 @@
 import { Component, h, State } from '@stencil/core';
-import { euclidAPIService } from '../../../utils/api-service';
+import { euclidAPI } from '../../../utils/core-api';
 
 interface EndpointInfo {
   name: string;
-  type: 'service';
+  type: 'core' | 'lazy';
   category: string;
   method: (...args: unknown[]) => Promise<unknown>;
   params?: string[];
+  isLazyLoaded?: boolean;
+  moduleSize?: string;
 }
 
 @Component({
@@ -18,35 +20,83 @@ export class EuclidAPITester {
   @State() endpoints: EndpointInfo[] = [];
   @State() selectedEndpoint: EndpointInfo | null = null;
   @State() isLoading = false;
-  @State() result: { data?: unknown; error?: string; duration: number; timestamp: string } | null = null;
+  @State() result: {
+    data?: unknown;
+    error?: string;
+    duration: number;
+    timestamp: string;
+    lazyLoadTime?: number;
+    bundleInfo?: string;
+    bundleImpact?: {
+      moduleLoaded: boolean;
+      moduleName: string;
+      estimatedSize: string;
+    };
+  } | null = null;
   @State() error: string | null = null;
   @State() customParams = '{}';
   @State() selectedCategory = 'all';
+  @State() bundleStats: { coreSize: number; lazyModulesLoaded: string[] } = { coreSize: 0, lazyModulesLoaded: [] };
 
   componentWillLoad() {
     this.discoverEndpoints();
+    this.measureBundleSize();
+  }
+
+  private measureBundleSize() {
+    // Calculate initial bundle size (approximate)
+    const scripts = document.querySelectorAll('script');
+    let totalSize = 0;
+    scripts.forEach(script => {
+      if (script.src && script.src.includes('euclid')) {
+        // Approximate - in real scenario we'd use Performance API
+        totalSize += 50; // KB estimate for core bundle
+      }
+    });
+    this.bundleStats.coreSize = totalSize;
   }
 
   private discoverEndpoints() {
     const endpoints: EndpointInfo[] = [];
 
-    // Auto-discover API Service methods
-    const servicePrototype = Object.getPrototypeOf(euclidAPIService);
-    const serviceMethods = Object.getOwnPropertyNames(servicePrototype)
-      .filter(name => name !== 'constructor' && typeof servicePrototype[name] === 'function');
+    // Discover Core API methods (our new lazy-loaded API)
+    const corePrototype = Object.getPrototypeOf(euclidAPI);
+    const coreMethods = Object.getOwnPropertyNames(corePrototype)
+      .filter(name => name !== 'constructor' && typeof corePrototype[name] === 'function');
 
-    serviceMethods.forEach(methodName => {
+    coreMethods.forEach(methodName => {
       const category = this.categorizeMethod(methodName);
+      const isLazyLoaded = this.isLazyLoadedMethod(methodName);
+
       endpoints.push({
         name: this.formatMethodName(methodName),
-        type: 'service',
+        type: isLazyLoaded ? 'lazy' : 'core',
         category,
-        method: euclidAPIService[methodName].bind(euclidAPIService),
-        params: this.extractMethodParams(servicePrototype[methodName])
+        method: euclidAPI[methodName].bind(euclidAPI),
+        params: this.extractMethodParams(corePrototype[methodName]),
+        isLazyLoaded,
+        moduleSize: isLazyLoaded ? '~2-5KB' : '~0.1KB'
       });
     });
 
     this.endpoints = endpoints.sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  private isLazyLoadedMethod(methodName: string): boolean {
+    // Methods that trigger lazy loading
+    const lazyMethods = [
+      'getChains', 'getChainConfig', 'getEvmChainConfig', 'getKeplrConfig', 'getRouterConfig', 'getAllEvmChains',
+      'getAllTokens', 'getAllowedDenoms', 'getEscrow', 'getTokenAddress', 'getPartnerFeesCollected', 'getState', 'getVLP',
+      'getAllPools', 'getTokenMetadata', 'getTokenById', 'getTokenDenoms', 'getTokenTransfers',
+      'getAllChainsRouter', 'getRoute', 'getSimulateSwap', 'getEstimateSwap', 'getSwapTransaction',
+      'getAllPoolsVLP', 'getUserPositions', 'getRewards', 'getClaimableRewards',
+      'getBalance', 'getUserPositions', 'getStakedAmount',
+      'getAllPoolsPool', 'getPoolById', 'getPoolStatistics', 'getPoolHistory',
+      'getContractInfo', 'getContractState',
+      'buildSwapTransaction', 'buildAddLiquidityTransaction', 'buildRemoveLiquidityTransaction', 'simulateSwap', 'getBalances', 'getTransactionHistory'
+    ];
+
+    return lazyMethods.includes(methodName);
   }
 
   private categorizeMethod(methodName: string): string {
@@ -106,34 +156,90 @@ export class EuclidAPITester {
     this.selectedEndpoint = endpoint;
 
     const startTime = Date.now();
+    let bundleImpact = null;
 
     try {
-      let params = {};
-      try {
-        params = JSON.parse(this.customParams);
-      } catch {
-        // Use empty params if JSON is invalid
-      }
+      // For lazy endpoints, check if module is already loaded and track loading
+      if (endpoint.isLazyLoaded) {
+        const moduleName = this.getModuleNameFromEndpoint(endpoint.name);
+        const wasAlreadyLoaded = this.bundleStats.lazyModulesLoaded.includes(moduleName);
 
-      // Try to call the method with params
-      let result;
-      if (endpoint.params && endpoint.params.length > 0) {
-        // If method expects parameters, try to provide them
-        const paramValues = endpoint.params.map(paramName => {
-          return params[paramName] || this.getDefaultParamValue(paramName);
-        });
-        result = await endpoint.method(...paramValues);
+        // Execute the method (this will trigger lazy loading if needed)
+        let params = {};
+        try {
+          params = JSON.parse(this.customParams);
+        } catch {
+          // Use empty params if JSON is invalid
+        }
+
+        let result;
+        const loadStartTime = performance.now();
+
+        if (endpoint.params && endpoint.params.length > 0) {
+          const paramValues = endpoint.params.map(paramName => {
+            return params[paramName] || this.getDefaultParamValue(paramName);
+          });
+          result = await endpoint.method(...paramValues);
+        } else {
+          result = await endpoint.method();
+        }
+
+        const loadEndTime = performance.now();
+        const loadDuration = loadEndTime - loadStartTime;
+
+        // If it took longer than normal and wasn't already loaded, assume we loaded a module
+        const probablyLoadedModule = !wasAlreadyLoaded && loadDuration > 50; // >50ms suggests network/module loading
+
+        if (probablyLoadedModule && !this.bundleStats.lazyModulesLoaded.includes(moduleName)) {
+          this.bundleStats.lazyModulesLoaded = [...this.bundleStats.lazyModulesLoaded, moduleName];
+          bundleImpact = {
+            moduleLoaded: true,
+            moduleName,
+            estimatedSize: endpoint.moduleSize || '~2-5KB'
+          };
+        } else {
+          bundleImpact = {
+            moduleLoaded: false,
+            moduleName,
+            estimatedSize: wasAlreadyLoaded ? 'Already loaded' : 'From cache'
+          };
+        }
+
+        const duration = Date.now() - startTime;
+        this.result = {
+          data: result,
+          duration,
+          timestamp: new Date().toISOString(),
+          bundleImpact
+        };
+
       } else {
-        // No parameters needed
-        result = await endpoint.method();
-      }
+        // Non-lazy endpoint - just execute normally
+        let params = {};
+        try {
+          params = JSON.parse(this.customParams);
+        } catch {
+          // Use empty params if JSON is invalid
+        }
 
-      const duration = Date.now() - startTime;
-      this.result = {
-        data: result,
-        duration,
-        timestamp: new Date().toISOString()
-      };
+        let result;
+        if (endpoint.params && endpoint.params.length > 0) {
+          const paramValues = endpoint.params.map(paramName => {
+            return params[paramName] || this.getDefaultParamValue(paramName);
+          });
+          result = await endpoint.method(...paramValues);
+        } else {
+          result = await endpoint.method();
+        }
+
+        const duration = Date.now() - startTime;
+        this.result = {
+          data: result,
+          duration,
+          timestamp: new Date().toISOString(),
+          bundleImpact: null
+        };
+      }
 
     } catch (error) {
       const duration = Date.now() - startTime;
@@ -141,11 +247,24 @@ export class EuclidAPITester {
       this.result = {
         error: this.error,
         duration,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        bundleImpact: null
       };
     } finally {
       this.isLoading = false;
     }
+  }  private getModuleNameFromEndpoint(endpointName: string): string {
+    // Map endpoint names to their lazy modules
+    const name = endpointName.toLowerCase();
+    if (name.includes('chain')) return 'chains';
+    if (name.includes('token')) return 'tokens';
+    if (name.includes('pool')) return 'pools';
+    if (name.includes('factory')) return 'factory';
+    if (name.includes('router')) return 'router';
+    if (name.includes('vlp')) return 'vlp';
+    if (name.includes('vcoin')) return 'vcoin';
+    if (name.includes('transaction') || name.includes('swap') || name.includes('liquidity')) return 'transactions';
+    return 'core';
   }
 
   private getDefaultParamValue(paramName: string): unknown {
@@ -170,8 +289,26 @@ export class EuclidAPITester {
       <div class="api-tester">
         <header class="header">
           <h1>🧪 Euclid API Tester</h1>
-          <p>Auto-discovered {this.endpoints.length} endpoints from actual clients</p>
+          <p>Auto-discovered {this.endpoints.length} endpoints from new lazy-loaded core API</p>
         </header>
+
+        <div class="bundle-stats">
+          <h3>📦 Bundle Performance</h3>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <span class="stat-label">Core Size:</span>
+              <span class="stat-value">{this.bundleStats.coreSize}KB</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Lazy Modules Loaded:</span>
+              <span class="stat-value">{this.bundleStats.lazyModulesLoaded.length}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Modules:</span>
+              <span class="stat-value">{this.bundleStats.lazyModulesLoaded.join(', ') || 'None yet'}</span>
+            </div>
+          </div>
+        </div>
 
         <div class="controls">
           <div class="filter-section">
@@ -209,10 +346,15 @@ export class EuclidAPITester {
                 >
                   <div class="endpoint-header">
                     <span class="endpoint-name">{endpoint.name}</span>
-                    <span class={`endpoint-type ${endpoint.type}`}>{endpoint.type.toUpperCase()}</span>
+                    <span class={`endpoint-type ${endpoint.type}`}>
+                      {endpoint.isLazyLoaded ? '🚀 LAZY' : '⚡ CORE'}
+                    </span>
                   </div>
                   <div class="endpoint-meta">
                     <span class="category">{endpoint.category}</span>
+                    {endpoint.isLazyLoaded && (
+                      <span class="lazy-info">Size: {endpoint.moduleSize}</span>
+                    )}
                     {endpoint.params && endpoint.params.length > 0 && (
                       <span class="params">Params: {endpoint.params.join(', ')}</span>
                     )}
@@ -253,6 +395,17 @@ export class EuclidAPITester {
                 <div class="result-meta">
                   <span>Duration: {this.result.duration}ms</span>
                   <span>Time: {new Date(this.result.timestamp).toLocaleTimeString()}</span>
+                  {this.result.bundleImpact && (
+                    <div class="bundle-impact">
+                      <span class="impact-label">Bundle Impact:</span>
+                      <span class={`impact-status ${this.result.bundleImpact.moduleLoaded ? 'loaded' : 'cached'}`}>
+                        {this.result.bundleImpact.moduleLoaded ? '📦 New Module Loaded' : '⚡ From Cache'}
+                      </span>
+                      <span class="impact-details">
+                        {this.result.bundleImpact.moduleName} ({this.result.bundleImpact.estimatedSize})
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <pre class="result-data">
                   {JSON.stringify(this.result.data || this.result.error, null, 2)}

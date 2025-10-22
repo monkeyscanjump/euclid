@@ -225,7 +225,7 @@ export namespace Components {
          */
         "environment": 'mainnet' | 'testnet' | 'devnet';
         /**
-          * @default 'data-list-tokens'
+          * @default 'api-tester'
          */
         "selectedDemo": string;
     }
@@ -1209,7 +1209,7 @@ declare namespace LocalJSX {
          */
         "environment"?: 'mainnet' | 'testnet' | 'devnet';
         /**
-          * @default 'data-list-tokens'
+          * @default 'api-tester'
          */
         "selectedDemo"?: string;
     }

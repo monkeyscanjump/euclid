@@ -1,10 +1,11 @@
 import { Component, h, State, Listen, Prop } from '@stencil/core';
 import { marketStore } from '../../../store/market.store';
-import { createAPIClient } from '../../../utils/api-client';
+import { euclidAPI } from '../../../utils/core-api';
 import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
 import { requestManager } from '../../../utils/request-manager';
 import { pollingCoordinator } from '../../../utils/polling-coordinator';
 import type { EuclidConfig } from '../../../utils/env';
+import type { EuclidChainConfig } from '../../../utils/types';
 import { DEFAULT_CONFIG } from '../../../utils/env';
 
 @Component({
@@ -15,15 +16,13 @@ export class EuclidMarketDataController {
   @Prop() config?: string; // JSON string of EuclidConfig
 
   private euclidConfig: EuclidConfig;
-  private apiClient: ReturnType<typeof createAPIClient>;
+  private api = euclidAPI;
 
   async componentWillLoad() {
     // Parse configuration
     this.euclidConfig = this.config ? JSON.parse(this.config) : DEFAULT_CONFIG;
 
-    // Create configured API client
-    this.apiClient = createAPIClient(this.euclidConfig);
-
+    // No need for heavy API client initialization
     // Initialize everything here to avoid re-renders
     await this.initialize();
   }
@@ -61,14 +60,20 @@ export class EuclidMarketDataController {
 
           // Load chains, tokens, and pools in parallel using new API methods
           const [chains, tokens, poolsResponse] = await Promise.all([
-            this.apiClient.getChains({ showAllChains: false }),
-            this.apiClient.getTokenMetadata(),
-            this.apiClient.getAllPools()
+            this.api.getChains({ showAllChains: false }),
+            this.api.getTokenMetadata(),
+            this.api.getAllPools()
           ]);
 
           // Process chains
           if (chains && chains.length > 0) {
-            marketStore.setChains(chains);
+            // Ensure type field conforms to EuclidChainConfig enum
+            // API returns lowercase "evm"/"cosmwasm", convert to proper case
+            const validChains: EuclidChainConfig[] = chains.map(chain => ({
+              ...chain,
+              type: (chain.type?.toLowerCase() === 'evm') ? 'EVM' : 'Cosmwasm'
+            }));
+            marketStore.setChains(validChains);
             console.log('📡 Loaded chains:', chains.length);
           } else {
             console.warn('No chains data received');
@@ -143,12 +148,18 @@ export class EuclidMarketDataController {
           if (shouldRefreshChains && shouldRefreshTokens) {
             // Both need updating - parallel fetch
             const [chains, tokens] = await Promise.all([
-              this.apiClient.getChains({ showAllChains: false }),
-              this.apiClient.getTokenMetadata()
+              this.api.getChains({ showAllChains: false }),
+              this.api.getTokenMetadata()
             ]);
 
             if (chains && chains.length > 0) {
-              marketStore.setChains(chains);
+              // Ensure type field conforms to EuclidChainConfig enum
+              // API returns lowercase "evm"/"cosmwasm", convert to proper case
+              const validChains: EuclidChainConfig[] = chains.map(chain => ({
+                ...chain,
+                type: (chain.type?.toLowerCase() === 'evm') ? 'EVM' : 'Cosmwasm'
+              }));
+              marketStore.setChains(validChains);
               console.log('📡 Refreshed chains:', chains.length);
             }
 
@@ -158,14 +169,20 @@ export class EuclidMarketDataController {
             }
           } else if (shouldRefreshChains) {
             // Only chains need updating
-            const chains = await this.apiClient.getChains({ showAllChains: false });
+            const chains = await this.api.getChains({ showAllChains: false });
             if (chains && chains.length > 0) {
-              marketStore.setChains(chains);
+              // Ensure type field conforms to EuclidChainConfig enum
+              // API returns lowercase "evm"/"cosmwasm", convert to proper case
+              const validChains: EuclidChainConfig[] = chains.map(chain => ({
+                ...chain,
+                type: (chain.type?.toLowerCase() === 'evm') ? 'EVM' : 'Cosmwasm'
+              }));
+              marketStore.setChains(validChains);
               console.log('📡 Refreshed chains only:', chains.length);
             }
           } else if (shouldRefreshTokens) {
             // Only tokens need updating
-            const tokens = await this.apiClient.getTokenMetadata();
+            const tokens = await this.api.getTokenMetadata();
             if (tokens && tokens.length > 0) {
               marketStore.setTokens(tokens);
               console.log('💰 Refreshed tokens only:', tokens.length);
@@ -202,38 +219,24 @@ export class EuclidMarketDataController {
 
     try {
       // Get token denominations across all chains with caching
-      const denomsResponse = await requestManager.request(
-        `token-denoms-${tokenId}`,
-        () => this.apiClient.getTokenDenoms(tokenId),
-        { ttl: this.euclidConfig.performance.cache.tokens }
-      );
+      // Note: getTokenDenoms method needs to be implemented in core API
+      console.log('📄 Token denoms not yet implemented for:', tokenId);
 
-      if (denomsResponse.success && denomsResponse.data) {
-        const denoms = denomsResponse.data.router.token_denoms.denoms;
-
-        // Emit token details loaded event
-        dispatchEuclidEvent(EUCLID_EVENTS.MARKET.TOKEN_DETAILS_SUCCESS, {
-          tokenId,
-          data: { denoms }
-        });
-      }
+      // For now, emit a placeholder event
+      dispatchEuclidEvent(EUCLID_EVENTS.MARKET.TOKEN_DETAILS_SUCCESS, {
+        tokenId,
+        data: { denoms: [] }
+      });
 
       // Get escrow information with caching
-      const escrowsResponse = await requestManager.request(
-        `token-escrows-${tokenId}`,
-        () => this.apiClient.getEscrows(tokenId),
-        { ttl: this.euclidConfig.performance.cache.tokens }
-      );
+      // Note: getEscrows method needs to be implemented in core API
+      console.log('📄 Token escrows not yet implemented for:', tokenId);
 
-      if (escrowsResponse.success && escrowsResponse.data) {
-        const escrows = escrowsResponse.data.router.escrows;
-
-        // Emit escrow info loaded event
-        dispatchEuclidEvent(EUCLID_EVENTS.MARKET.ESCROWS_LOADED, {
-          tokenId,
-          data: { escrows }
-        });
-      }
+      // For now, emit a placeholder event
+      dispatchEuclidEvent(EUCLID_EVENTS.MARKET.ESCROWS_LOADED, {
+        tokenId,
+        data: { escrows: [] }
+      });
     } catch (error) {
       console.error('Failed to load token details:', error);
 

@@ -5,6 +5,7 @@
  * It contains typing information for all components that exist in this project.
  */
 import { HTMLStencilElement, JSXBase } from "@stencil/core/internal";
+import { SavedAddress } from "./components/ui/euclid-address-book/euclid-address-book";
 import { ButtonSize, ButtonVariant } from "./components/ui/euclid-button/euclid-button";
 import { EuclidChainConfig, PoolInfo, TokenMetadata } from "./utils/types/api.types";
 import { ChainDisplayMode, ChainField } from "./components/ui/euclid-chain-item/euclid-chain-item";
@@ -18,6 +19,7 @@ import { TokenInfo } from "./components/ui/euclid-token-content/euclid-token-con
 import { TokenInfo as TokenInfo1 } from "./components/ui/euclid-token-input/euclid-token-input";
 import { TokenDisplayMode, TokenField } from "./components/ui/euclid-token-item/euclid-token-item";
 import { WalletProvider } from "./components/ui/euclid-wallet-content/euclid-wallet-content";
+export { SavedAddress } from "./components/ui/euclid-address-book/euclid-address-book";
 export { ButtonSize, ButtonVariant } from "./components/ui/euclid-button/euclid-button";
 export { EuclidChainConfig, PoolInfo, TokenMetadata } from "./utils/types/api.types";
 export { ChainDisplayMode, ChainField } from "./components/ui/euclid-chain-item/euclid-chain-item";
@@ -32,6 +34,20 @@ export { TokenInfo as TokenInfo1 } from "./components/ui/euclid-token-input/eucl
 export { TokenDisplayMode, TokenField } from "./components/ui/euclid-token-item/euclid-token-item";
 export { WalletProvider } from "./components/ui/euclid-wallet-content/euclid-wallet-content";
 export namespace Components {
+    interface EuclidAddressBook {
+        /**
+          * @default true
+         */
+        "allowEditing": boolean;
+        /**
+          * @default false
+         */
+        "showActiveOnly": boolean;
+        /**
+          * @default true
+         */
+        "showBalances": boolean;
+    }
     interface EuclidButton {
         /**
           * @default false
@@ -567,6 +583,10 @@ export namespace Components {
         "config"?: string;
     }
 }
+export interface EuclidAddressBookCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLEuclidAddressBookElement;
+}
 export interface EuclidChainItemCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLEuclidChainItemElement;
@@ -612,6 +632,26 @@ export interface EuclidWalletContentCustomEvent<T> extends CustomEvent<T> {
     target: HTMLEuclidWalletContentElement;
 }
 declare global {
+    interface HTMLEuclidAddressBookElementEventMap {
+        "addressSelected": SavedAddress;
+        "addressAdded": SavedAddress;
+        "addressUpdated": SavedAddress;
+        "addressRemoved": SavedAddress;
+    }
+    interface HTMLEuclidAddressBookElement extends Components.EuclidAddressBook, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLEuclidAddressBookElementEventMap>(type: K, listener: (this: HTMLEuclidAddressBookElement, ev: EuclidAddressBookCustomEvent<HTMLEuclidAddressBookElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLEuclidAddressBookElementEventMap>(type: K, listener: (this: HTMLEuclidAddressBookElement, ev: EuclidAddressBookCustomEvent<HTMLEuclidAddressBookElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    }
+    var HTMLEuclidAddressBookElement: {
+        prototype: HTMLEuclidAddressBookElement;
+        new (): HTMLEuclidAddressBookElement;
+    };
     interface HTMLEuclidButtonElement extends Components.EuclidButton, HTMLStencilElement {
     }
     var HTMLEuclidButtonElement: {
@@ -934,6 +974,7 @@ declare global {
         new (): HTMLEuclidWalletControllerElement;
     };
     interface HTMLElementTagNameMap {
+        "euclid-address-book": HTMLEuclidAddressBookElement;
         "euclid-button": HTMLEuclidButtonElement;
         "euclid-chain-item": HTMLEuclidChainItemElement;
         "euclid-config-provider": HTMLEuclidConfigProviderElement;
@@ -959,6 +1000,24 @@ declare global {
     }
 }
 declare namespace LocalJSX {
+    interface EuclidAddressBook {
+        /**
+          * @default true
+         */
+        "allowEditing"?: boolean;
+        "onAddressAdded"?: (event: EuclidAddressBookCustomEvent<SavedAddress>) => void;
+        "onAddressRemoved"?: (event: EuclidAddressBookCustomEvent<SavedAddress>) => void;
+        "onAddressSelected"?: (event: EuclidAddressBookCustomEvent<SavedAddress>) => void;
+        "onAddressUpdated"?: (event: EuclidAddressBookCustomEvent<SavedAddress>) => void;
+        /**
+          * @default false
+         */
+        "showActiveOnly"?: boolean;
+        /**
+          * @default true
+         */
+        "showBalances"?: boolean;
+    }
     interface EuclidButton {
         /**
           * @default false
@@ -1583,6 +1642,7 @@ declare namespace LocalJSX {
         "config"?: string;
     }
     interface IntrinsicElements {
+        "euclid-address-book": EuclidAddressBook;
         "euclid-button": EuclidButton;
         "euclid-chain-item": EuclidChainItem;
         "euclid-config-provider": EuclidConfigProvider;
@@ -1611,6 +1671,7 @@ export { LocalJSX as JSX };
 declare module "@stencil/core" {
     export namespace JSX {
         interface IntrinsicElements {
+            "euclid-address-book": LocalJSX.EuclidAddressBook & JSXBase.HTMLAttributes<HTMLEuclidAddressBookElement>;
             "euclid-button": LocalJSX.EuclidButton & JSXBase.HTMLAttributes<HTMLEuclidButtonElement>;
             "euclid-chain-item": LocalJSX.EuclidChainItem & JSXBase.HTMLAttributes<HTMLEuclidChainItemElement>;
             /**

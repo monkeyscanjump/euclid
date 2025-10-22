@@ -42,9 +42,9 @@ export class EuclidDemoPlayground {
   private componentDemos: ComponentDemo[] = [
     {
       id: 'data-list-tokens',
-      name: 'Data List - Tokens',
+      name: '🪙 Token List',
       description: 'Interactive token list with search, filtering, and infinite scroll',
-      category: 'Data Display',
+      category: 'Display',
       tagName: 'euclid-data-list',
       defaultProps: {
         dataType: 'tokens',
@@ -177,7 +177,7 @@ export class EuclidDemoPlayground {
     },
     {
       id: 'swap-card',
-      name: 'Swap Card',
+      name: '🔄 Token Swap',
       description: 'Token swap interface with advanced options',
       category: 'Trading',
       tagName: 'euclid-swap-card',
@@ -232,7 +232,7 @@ export class EuclidDemoPlayground {
     },
     {
       id: 'liquidity-card',
-      name: 'Liquidity Card',
+      name: '💧 Liquidity Pool',
       description: 'Add/remove liquidity interface',
       category: 'Trading',
       tagName: 'euclid-liquidity-card',
@@ -291,7 +291,7 @@ export class EuclidDemoPlayground {
     },
     {
       id: 'portfolio-overview',
-      name: 'Portfolio Overview',
+      name: '📊 Portfolio',
       description: 'Portfolio balance and position tracking',
       category: 'Portfolio',
       tagName: 'euclid-portfolio-overview',
@@ -345,9 +345,9 @@ export class EuclidDemoPlayground {
     },
     {
       id: 'core-provider-config',
-      name: 'Core Provider - Configuration',
-      description: 'Configure API endpoints, environment, and feature flags for the entire component system',
-      category: 'Core',
+      name: '⚙️ App Settings',
+      description: 'Configure app environment, API settings, and feature preferences',
+      category: 'Settings',
       tagName: 'euclid-core-provider',
       defaultProps: {
         environment: 'testnet',
@@ -431,6 +431,38 @@ export class EuclidDemoPlayground {
             { value: 'walletconnect', label: 'WalletConnect' },
             { value: 'coinbase', label: 'Coinbase Wallet' }
           ]
+        }
+      ]
+    },
+    {
+      id: 'address-book',
+      name: '📇 Address Book',
+      description: 'Manage and organize saved wallet addresses across multiple chains',
+      category: 'Wallet',
+      tagName: 'euclid-address-book',
+      defaultProps: {
+        showActiveOnly: false,
+        allowEditing: true,
+        showBalances: true
+      },
+      propDefinitions: [
+        {
+          name: 'showActiveOnly',
+          type: 'boolean',
+          defaultValue: false,
+          description: 'Only show addresses that are currently active/connected'
+        },
+        {
+          name: 'allowEditing',
+          type: 'boolean',
+          defaultValue: true,
+          description: 'Allow editing and managing address entries'
+        },
+        {
+          name: 'showBalances',
+          type: 'boolean',
+          defaultValue: true,
+          description: 'Display wallet balances when available'
         }
       ]
     }
@@ -654,9 +686,9 @@ export class EuclidDemoPlayground {
               <span class="control-name">{prop.name}</span>
               <input
                 type="number"
-                value={String(value)}
                 min={prop.min}
                 max={prop.max}
+                value={String(value)}
                 onChange={(e) => this.updateProp(prop.name, parseInt((e.target as HTMLInputElement).value))}
               />
             </label>
@@ -780,7 +812,7 @@ export class EuclidDemoPlayground {
         componentElement = (
           <div class="core-provider-demo">
             <div class="provider-info">
-              <h3>🌌 Core Provider Configuration</h3>
+              <h3>⚙️ App Settings Configuration</h3>
               <p>This component provides configuration to all child components. Configure the settings to see how they affect the entire system.</p>
 
               <div class="config-summary">
@@ -824,6 +856,16 @@ export class EuclidDemoPlayground {
               </div>
             </euclid-core-provider>
           </div>
+        );
+        break;
+
+      case 'euclid-address-book':
+        componentElement = (
+          <euclid-address-book
+            showActiveOnly={Boolean(props.showActiveOnly)}
+            allowEditing={Boolean(props.allowEditing)}
+            showBalances={Boolean(props.showBalances)}
+          />
         );
         break;
 

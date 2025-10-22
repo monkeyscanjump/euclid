@@ -340,8 +340,13 @@ export class PhantomAdapter implements WalletAdapter {
     return (window as { phantom?: { ethereum?: { request: (args: { method: string; params?: unknown[] }) => Promise<unknown> } } }).phantom?.ethereum;
   }
 
+  private get phantomSolana() {
+    return (window as { phantom?: { solana?: { isPhantom?: boolean } } }).phantom?.solana;
+  }
+
   isInstalled(): boolean {
-    return !!this.phantom;
+    // Phantom is installed if either the Ethereum or Solana provider is available
+    return !!(this.phantom || (this.phantomSolana?.isPhantom));
   }
 
   async connect(chainConfig: EuclidChainConfig): Promise<WalletConnectionResult> {
@@ -352,6 +357,11 @@ export class PhantomAdapter implements WalletAdapter {
 
       if (chainConfig.type !== 'EVM') {
         return { success: false, error: 'Phantom only supports EVM chains' };
+      }
+
+      // Check if Ethereum provider is available
+      if (!this.phantom) {
+        return { success: false, error: 'Phantom Ethereum provider not available. Please enable Ethereum support in Phantom.' };
       }
 
       // Request account access

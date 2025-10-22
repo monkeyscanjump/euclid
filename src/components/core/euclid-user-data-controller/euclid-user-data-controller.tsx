@@ -31,6 +31,7 @@ export class EuclidUserDataController {
   private maxRetries = 3;
   private euclidConfig: EuclidConfig;
   private apiClient: ReturnType<typeof createAPIClient>;
+  private walletChangeTimeout: number | null = null;
 
   async componentWillLoad() {
     // Parse configuration
@@ -52,14 +53,23 @@ export class EuclidUserDataController {
   private async initialize() {
     console.log('👤 Initializing User Data Controller...');
 
-    // Listen for wallet connection changes
+    // Listen for wallet connection changes with debouncing
     walletStore.onChange('wallets', async (wallets: Map<string, WalletInfo>) => {
-      const connectedWallets = Array.from(wallets.values()).filter(wallet => wallet.isConnected);
-      if (connectedWallets.length > 0) {
-        await this.handleWalletConnection(connectedWallets);
-      } else {
-        this.handleWalletDisconnection();
+      // Clear existing timeout to debounce rapid changes
+      if (this.walletChangeTimeout) {
+        clearTimeout(this.walletChangeTimeout);
       }
+
+      // Debounce wallet changes to prevent infinite loops
+      this.walletChangeTimeout = window.setTimeout(async () => {
+        const connectedWallets = Array.from(wallets.values()).filter(wallet => wallet.isConnected);
+        if (connectedWallets.length > 0) {
+          await this.handleWalletConnection(connectedWallets);
+        } else {
+          this.handleWalletDisconnection();
+        }
+        this.walletChangeTimeout = null;
+      }, 200);
     });
 
     // Initial check for already connected wallets
@@ -101,13 +111,16 @@ export class EuclidUserDataController {
   }
 
   private handleWalletDisconnection() {
-    console.log('🔌 Wallets disconnected, clearing user data...');
+    // Prevent infinite loops - only clear if we're not already in a cleared state
+    if (walletStore.state.isConnected || walletStore.getAllConnectedWallets().length > 0) {
+      console.log('🔌 Wallets disconnected, clearing user data...');
 
-    this.clearPeriodicRefresh();
-    this.retryCount = 0;
+      this.clearPeriodicRefresh();
+      this.retryCount = 0;
 
-    // Clear all wallet data
-    walletStore.clear();
+      // Clear all wallet data
+      walletStore.clear();
+    }
   }
 
   private async loadUserBalances() {

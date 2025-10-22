@@ -1,5 +1,6 @@
 import { Component, h, State, Event, EventEmitter } from '@stencil/core';
 import { appStore } from '../../../store/app.store';
+import { WalletAdapterFactory } from '../../../utils/wallet-adapter';
 
 export interface WalletProvider {
   id: string;
@@ -15,22 +16,56 @@ export interface WalletProvider {
   shadow: true,
 })
 export class EuclidWalletContent {
-  @State() private walletProviders: WalletProvider[] = [
-    // Mock data - in real app this would come from store/API
-    { id: 'metamask', name: 'MetaMask', icon: '🦊', installed: true, description: 'Connect using MetaMask wallet' },
-    { id: 'keplr', name: 'Keplr', icon: '🔗', installed: true, description: 'Connect using Keplr wallet' },
-    { id: 'phantom', name: 'Phantom', icon: '👻', installed: false, description: 'Connect using Phantom wallet' },
-    { id: 'walletconnect', name: 'WalletConnect', icon: '🌐', installed: true, description: 'Connect using WalletConnect' },
-  ];
+  @State() private walletProviders: WalletProvider[] = [];
 
   @Event() walletConnect!: EventEmitter<WalletProvider>;
 
+  componentWillLoad() {
+    this.detectWallets();
+  }
+
+  private detectWallets() {
+    // Get available wallets from adapter factory
+    const availableWallets = WalletAdapterFactory.getAvailableWallets();
+
+    // Create provider list with metadata
+    const walletMetadata: Record<string, { name: string; icon: string; description: string }> = {
+      'metamask': { name: 'MetaMask', icon: '🦊', description: 'Connect using MetaMask wallet' },
+      'keplr': { name: 'Keplr', icon: '🔗', description: 'Connect using Keplr wallet' },
+      'phantom': { name: 'Phantom', icon: '👻', description: 'Connect using Phantom wallet' },
+      'cosmostation': { name: 'Cosmostation', icon: '🌌', description: 'Connect using Cosmostation wallet' },
+      'walletconnect': { name: 'WalletConnect', icon: '🌐', description: 'Connect using WalletConnect' }
+    };
+
+    this.walletProviders = availableWallets.map(wallet => {
+      const metadata = walletMetadata[wallet.type] || {
+        name: wallet.type,
+        icon: '🔗',
+        description: `Connect using ${wallet.type} wallet`
+      };
+
+      return {
+        id: wallet.type,
+        name: metadata.name,
+        icon: metadata.icon,
+        installed: wallet.installed,
+        description: metadata.description
+      };
+    });
+
+    console.log('🔍 Detected wallets:', this.walletProviders);
+  }
+
   private handleWalletConnect = (provider: WalletProvider) => {
+    console.log('🔗 Wallet clicked:', provider);
+
     if (!provider.installed) {
+      console.log('❌ Wallet not installed, opening install URL');
       this.openInstallUrl(provider.id);
       return;
     }
 
+    console.log('✅ Emitting walletConnect event for:', provider.id);
     this.walletConnect.emit(provider);
     appStore.closeWalletModal();
   };

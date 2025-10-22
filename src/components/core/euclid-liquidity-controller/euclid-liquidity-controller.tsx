@@ -2,8 +2,10 @@ import { Component, Listen, State, Watch, Prop } from '@stencil/core';
 import { liquidityStore } from '../../../store/liquidity.store';
 import { marketStore } from '../../../store/market.store';
 import { walletStore } from '../../../store/wallet.store';
-import { apiClient } from '../../../utils/api-client';
+import { createAPIClient } from '../../../utils/api-client';
 import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
+import type { EuclidConfig } from '../../../utils/env';
+import { DEFAULT_CONFIG } from '../../../utils/env';
 
 interface TransactionResponse {
   txHash?: string;
@@ -17,12 +19,18 @@ export class EuclidLiquidityController {
   @State() isInitialized = false;
   @Prop() config?: string; // JSON string of EuclidConfig
 
+  private apiClient: ReturnType<typeof createAPIClient>;
+
   async componentDidLoad() {
     await this.initialize();
   }
 
   private async initialize() {
     console.log('💧 Initializing Liquidity Controller...');
+
+    // Initialize API client
+    const euclidConfig: EuclidConfig = this.config ? JSON.parse(this.config) : DEFAULT_CONFIG;
+    this.apiClient = createAPIClient(euclidConfig);
 
     // Subscribe to liquidity store changes
     liquidityStore.onChange('selectedPool', () => this.handlePoolChange());
@@ -79,7 +87,7 @@ export class EuclidLiquidityController {
       });
 
       // Execute add liquidity via API
-      const result = await apiClient.createAddLiquidityTransactionWrapped({
+      const result = await this.apiClient.createAddLiquidityTransactionWrapped({
         slippage_tolerance_bps: 50, // 0.5% = 50 basis points
         timeout: (Math.floor(Date.now() / 1000) + 1200).toString(), // 20 minutes
         pair_info: {
@@ -182,7 +190,7 @@ export class EuclidLiquidityController {
       });
 
       // Execute remove liquidity via API
-      const result = await apiClient.createRemoveLiquidityTransactionWrapped({
+      const result = await this.apiClient.createRemoveLiquidityTransactionWrapped({
         slippage_tolerance_bps: 50, // 0.5% = 50 basis points
         timeout: (Math.floor(Date.now() / 1000) + 1200).toString(), // 20 minutes
         lp_token_amount: lpTokenAmount,

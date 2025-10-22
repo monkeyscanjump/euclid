@@ -17,6 +17,30 @@ export interface EuclidConfig {
     routes: number;
   };
 
+  // Performance Configuration
+  performance: {
+    cache: {
+      marketData: number;
+      routes: number;
+      balances: number;
+      tokens: number;
+    };
+    polling: {
+      active: {
+        marketData: number;
+        balances: number;
+        routes: number;
+      };
+      background: {
+        marketData: number;
+        balances: number;
+        routes: number;
+      };
+    };
+    requestDeduplication: boolean;
+    pauseOnHidden: boolean;
+  };
+
   // UI Configuration
   ui: {
     defaultSlippage: number;
@@ -57,6 +81,30 @@ export const DEFAULT_CONFIG: EuclidConfig = {
     marketData: 30000,  // 30 seconds
     balances: 60000,    // 1 minute
     routes: 300000,     // 5 minutes
+  },
+
+  // Performance Configuration
+  performance: {
+    cache: {
+      marketData: 60000,     // 1 minute
+      routes: 30000,         // 30 seconds
+      balances: 120000,      // 2 minutes
+      tokens: 300000,        // 5 minutes
+    },
+    polling: {
+      active: {
+        marketData: 30000,   // 30 seconds when tab active
+        balances: 60000,     // 1 minute when tab active
+        routes: 10000,       // 10 seconds when tab active
+      },
+      background: {
+        marketData: 300000,  // 5 minutes when tab hidden
+        balances: 600000,    // 10 minutes when tab hidden
+        routes: 60000,       // 1 minute when tab hidden
+      },
+    },
+    requestDeduplication: true,
+    pauseOnHidden: true,
   },
 
   // UI Configuration

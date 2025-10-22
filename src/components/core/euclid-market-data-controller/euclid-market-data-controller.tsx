@@ -2,6 +2,8 @@ import { Component, h, State, Listen, Prop } from '@stencil/core';
 import { marketStore } from '../../../store/market.store';
 import { createAPIClient } from '../../../utils/api-client';
 import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
+import { requestManager } from '../../../utils/request-manager';
+import { pollingCoordinator } from '../../../utils/polling-coordinator';
 import type { EuclidConfig } from '../../../utils/env';
 import { DEFAULT_CONFIG } from '../../../utils/env';
 
@@ -12,7 +14,6 @@ export class EuclidMarketDataController {
   @State() isInitialized = false;
   @Prop() config?: string; // JSON string of EuclidConfig
 
-  private refreshInterval: number;
   private euclidConfig: EuclidConfig;
   private apiClient: ReturnType<typeof createAPIClient>;
 
@@ -29,9 +30,8 @@ export class EuclidMarketDataController {
   }
 
   disconnectedCallback() {
-    if (this.refreshInterval) {
-      clearInterval(this.refreshInterval);
-    }
+    // Clean up polling
+    pollingCoordinator.unregister('market-data-refresh');
   }
 
   private async initialize() {
@@ -48,83 +48,109 @@ export class EuclidMarketDataController {
   }
 
   private async loadInitialData() {
-    try {
-      marketStore.setLoading(true);
+    return requestManager.request(
+      'market-initial-data',
+      async () => {
+        try {
+          marketStore.setLoading(true);
 
-      console.log('📊 Loading initial market data...');
+          console.log('📊 Loading initial market data...');
 
-      // Load chains
-      const chainsResponse = await this.apiClient.getAllChains(false);
-      if (chainsResponse.success && chainsResponse.data) {
-        // Store the EuclidChainConfig[] data directly
-        marketStore.setChains(chainsResponse.data);
-        console.log('📡 Loaded chains:', chainsResponse.data.length);
-      } else {
-        console.warn('Failed to load chains:', chainsResponse.error);
-      }
+          // Load chains, tokens, and pools in parallel using new API methods
+          const [chains, tokens, poolsResponse] = await Promise.all([
+            this.apiClient.getChains({ showAllChains: false }),
+            this.apiClient.getTokenMetadata(),
+            this.apiClient.getAllPools()
+          ]);
 
-      // Load tokens
-      const tokensResponse = await this.apiClient.getAllTokens();
-      if (tokensResponse.success && tokensResponse.data) {
-        // Store the TokenMetadata[] data directly
-        marketStore.setTokens(tokensResponse.data);
-        console.log('🪙 Loaded tokens:', tokensResponse.data.length);
-      } else {
-        console.warn('Failed to load tokens:', tokensResponse.error);
-      }
+          // Process chains
+          if (chains && chains.length > 0) {
+            marketStore.setChains(chains);
+            console.log('📡 Loaded chains:', chains.length);
+          } else {
+            console.warn('No chains data received');
+          }
 
-      // Load pools
-      const poolsResponse = await this.apiClient.getAllPools();
-      if (poolsResponse.success && poolsResponse.data) {
-        marketStore.setPools(poolsResponse.data);
-        console.log('🏊 Loaded pools:', poolsResponse.data.length);
-      } else {
-        console.warn('Failed to load pools:', poolsResponse.error);
-      }
+          // Process tokens
+          if (tokens && tokens.length > 0) {
+            marketStore.setTokens(tokens);
+            console.log('🪙 Loaded tokens:', tokens.length);
+          } else {
+            console.warn('No tokens data received');
+          }
 
-    } catch (error) {
-      console.error('Failed to load initial market data:', error);
-    } finally {
-      marketStore.setLoading(false);
-    }
+          // Process pools
+          if (poolsResponse.success && poolsResponse.data) {
+            marketStore.setPools(poolsResponse.data);
+            console.log('🏊 Loaded pools:', poolsResponse.data.length);
+          } else {
+            console.warn('Failed to load pools:', poolsResponse.error);
+          }
+
+          return { success: true };
+        } catch (error) {
+          console.error('Failed to load initial market data:', error);
+          throw error;
+        } finally {
+          marketStore.setLoading(false);
+        }
+      },
+      { ttl: this.euclidConfig.performance.cache.marketData }
+    );
   }
 
   private setupPeriodicRefresh() {
-    // Use configured refresh interval
-    const refreshInterval = this.euclidConfig.refreshIntervals.marketData;
-
-    this.refreshInterval = window.setInterval(async () => {
-      if (marketStore.isDataStale()) {
-        console.log('🔄 Refreshing stale market data...');
-        await this.refreshMarketData();
+    // Register polling task with the coordinator
+    pollingCoordinator.register(
+      'market-data-refresh',
+      () => this.refreshMarketData().then(() => {}),
+      {
+        activeInterval: this.euclidConfig.performance.polling.active.marketData,
+        backgroundInterval: this.euclidConfig.performance.polling.background.marketData,
+        pauseOnHidden: this.euclidConfig.performance.pauseOnHidden
       }
-    }, refreshInterval);
+    );
 
-    console.log(`📊 Market data refresh interval set to ${refreshInterval}ms`);
+    console.log('📊 Market data polling registered with coordinator');
   }
 
   private async refreshMarketData() {
-    try {
-      marketStore.setLoading(true);
-
-      // Refresh chains data
-      const chainsResponse = await this.apiClient.getAllChains(false);
-      if (chainsResponse.success && chainsResponse.data) {
-        marketStore.setChains(chainsResponse.data);
-      }
-
-      // Refresh tokens data
-      const tokensResponse = await this.apiClient.getAllTokens();
-      if (tokensResponse.success && tokensResponse.data) {
-        marketStore.setTokens(tokensResponse.data);
-      }
-
-      console.log('✅ Market data refreshed successfully');
-    } catch (error) {
-      console.error('❌ Failed to refresh market data:', error);
-    } finally {
-      marketStore.setLoading(false);
+    // Only refresh if data is actually stale
+    if (!marketStore.isDataStale(this.euclidConfig.performance.cache.marketData)) {
+      return;
     }
+
+    return requestManager.request(
+      'market-refresh',
+      async () => {
+        try {
+          marketStore.setLoading(true);
+
+          // Refresh chains and tokens data in parallel using new API methods
+          const [chains, tokens] = await Promise.all([
+            this.apiClient.getChains({ showAllChains: false }),
+            this.apiClient.getTokenMetadata()
+          ]);
+
+          if (chains && chains.length > 0) {
+            marketStore.setChains(chains);
+          }
+
+          if (tokens && tokens.length > 0) {
+            marketStore.setTokens(tokens);
+          }
+
+          console.log('✅ Market data refreshed successfully');
+          return { success: true };
+        } catch (error) {
+          console.error('❌ Failed to refresh market data:', error);
+          throw error;
+        } finally {
+          marketStore.setLoading(false);
+        }
+      },
+      { ttl: this.euclidConfig.performance.cache.marketData }
+    );
   }
 
   @Listen(EUCLID_EVENTS.MARKET.LOAD_INITIAL, { target: 'window' })
@@ -145,8 +171,13 @@ export class EuclidMarketDataController {
     console.log('📋 Loading token details for:', tokenId);
 
     try {
-      // Get token denominations across all chains
-      const denomsResponse = await this.apiClient.getTokenDenoms(tokenId);
+      // Get token denominations across all chains with caching
+      const denomsResponse = await requestManager.request(
+        `token-denoms-${tokenId}`,
+        () => this.apiClient.getTokenDenoms(tokenId),
+        { ttl: this.euclidConfig.performance.cache.tokens }
+      );
+
       if (denomsResponse.success && denomsResponse.data) {
         const denoms = denomsResponse.data.router.token_denoms.denoms;
 
@@ -157,8 +188,13 @@ export class EuclidMarketDataController {
         });
       }
 
-      // Get escrow information
-      const escrowsResponse = await this.apiClient.getEscrows(tokenId);
+      // Get escrow information with caching
+      const escrowsResponse = await requestManager.request(
+        `token-escrows-${tokenId}`,
+        () => this.apiClient.getEscrows(tokenId),
+        { ttl: this.euclidConfig.performance.cache.tokens }
+      );
+
       if (escrowsResponse.success && escrowsResponse.data) {
         const escrows = escrowsResponse.data.router.escrows;
 

@@ -5,6 +5,7 @@ import { WalletAdapterFactory } from '../../../utils/wallet-adapter';
 import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
 import type { EuclidConfig } from '../../../utils/env';
 import { DEFAULT_CONFIG } from '../../../utils/env';
+import type { EuclidChainConfig } from '../../../utils/types/api.types';
 
 @Component({
   tag: 'euclid-wallet-controller',
@@ -119,17 +120,19 @@ export class EuclidWalletController {
   @Listen(EUCLID_EVENTS.WALLET.CONNECT_REQUEST, { target: 'window' })
   async handleWalletConnectionRequest(event: CustomEvent<{ chainUID: string; walletType: string }>) {
     const { chainUID, walletType } = event.detail;
-    console.log('🔗 Wallet connection requested:', { chainUID, walletType });
+    console.log('🎯 Wallet controller received connection request:', { chainUID, walletType });
 
     try {
+      console.log('🔄 Attempting to connect wallet...');
       await this.connectWallet(chainUID, walletType);
+      console.log('✅ Wallet connection successful!');
     } catch (error) {
-      console.error('Failed to connect wallet:', error);
+      console.error('❌ Failed to connect wallet:', error);
       // Emit connection failure event
       dispatchEuclidEvent(EUCLID_EVENTS.WALLET.CONNECT_FAILED, {
         chainUID,
         walletType,
-        error: error.message
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   }
@@ -146,22 +149,37 @@ export class EuclidWalletController {
   }
 
   private async connectWallet(chainUID: string, walletType: string) {
-    // Get chain configuration
-    const chainConfig = marketStore.getChain(chainUID);
+    console.log('🔗 connectWallet called with:', { chainUID, walletType });
+
+    // Get chain configuration from store, or use fallback
+    let chainConfig = marketStore.getChain(chainUID);
+
     if (!chainConfig) {
-      throw new Error(`Chain configuration not found for ${chainUID}`);
+      console.warn(`Chain ${chainUID} not found in store, using fallback configuration`);
+      chainConfig = this.getFallbackChainConfig(chainUID, walletType);
+
+      if (!chainConfig) {
+        throw new Error(`Chain configuration not found for ${chainUID} and no fallback available`);
+      }
     }
 
-    // Validate wallet type
-    const validWalletTypes = ['keplr', 'metamask', 'cosmostation', 'walletconnect'];
+    console.log('🔗 Using chain config:', chainConfig);
+
+    // Validate wallet type (including phantom)
+    const validWalletTypes = ['keplr', 'metamask', 'cosmostation', 'walletconnect', 'phantom'];
     if (!validWalletTypes.includes(walletType)) {
       throw new Error(`Unsupported wallet type: ${walletType}`);
     }
 
-    // Use the wallet adapter factory for proper separation of concerns
-    const result = await WalletAdapterFactory.connectWallet(walletType as 'keplr' | 'metamask' | 'cosmostation' | 'walletconnect', chainConfig);
+    console.log('✅ Wallet type validation passed');    // Use the wallet adapter factory for proper separation of concerns
+    console.log('🔗 Calling WalletAdapterFactory.connectWallet...');
+    const result = await WalletAdapterFactory.connectWallet(walletType as 'keplr' | 'metamask' | 'cosmostation' | 'walletconnect' | 'phantom', chainConfig);
+
+    console.log('🔗 Wallet adapter result:', result);
 
     if (result.success && result.address) {
+      console.log('✅ Connection successful, adding to store...');
+
       // Add wallet to store
       walletStore.addWallet(chainUID, {
         address: result.address,
@@ -172,6 +190,8 @@ export class EuclidWalletController {
         balances: []
       });
 
+      console.log('📡 Emitting connection success event...');
+
       // Emit connection success event
       dispatchEuclidEvent(EUCLID_EVENTS.WALLET.CONNECT_SUCCESS, {
         chainUID,
@@ -179,8 +199,94 @@ export class EuclidWalletController {
         address: result.address
       });
     } else {
+      console.error('❌ Wallet connection failed:', result.error);
       throw new Error(result.error || 'Failed to connect wallet');
     }
+  }
+
+  private getFallbackChainConfig(chainUID: string, walletType: string): EuclidChainConfig | null {
+    // Fallback configurations for common chains when market data isn't loaded yet
+    const fallbackConfigs: Record<string, EuclidChainConfig> = {
+      'ethereum': {
+        chain_uid: 'ethereum',
+        chain_id: '1',
+        display_name: 'Ethereum',
+        type: 'EVM',
+        explorer_url: 'https://etherscan.io',
+        factory_address: '',
+        token_factory_address: '',
+        logo: ''
+      },
+      'bsc': {
+        chain_uid: 'bsc',
+        chain_id: '56',
+        display_name: 'BNB Smart Chain',
+        type: 'EVM',
+        explorer_url: 'https://bscscan.com',
+        factory_address: '',
+        token_factory_address: '',
+        logo: ''
+      },
+      'polygon': {
+        chain_uid: 'polygon',
+        chain_id: '137',
+        display_name: 'Polygon',
+        type: 'EVM',
+        explorer_url: 'https://polygonscan.com',
+        factory_address: '',
+        token_factory_address: '',
+        logo: ''
+      },
+      'arbitrum': {
+        chain_uid: 'arbitrum',
+        chain_id: '42161',
+        display_name: 'Arbitrum One',
+        type: 'EVM',
+        explorer_url: 'https://arbiscan.io',
+        factory_address: '',
+        token_factory_address: '',
+        logo: ''
+      },
+      'cosmoshub-4': {
+        chain_uid: 'cosmoshub-4',
+        chain_id: 'cosmoshub-4',
+        display_name: 'Cosmos Hub',
+        type: 'Cosmwasm',
+        explorer_url: 'https://mintscan.io/cosmos',
+        factory_address: '',
+        token_factory_address: '',
+        logo: ''
+      },
+      'osmosis-1': {
+        chain_uid: 'osmosis-1',
+        chain_id: 'osmosis-1',
+        display_name: 'Osmosis',
+        type: 'Cosmwasm',
+        explorer_url: 'https://mintscan.io/osmosis',
+        factory_address: '',
+        token_factory_address: '',
+        logo: ''
+      }
+    };
+
+    const config = fallbackConfigs[chainUID];
+    if (!config) {
+      return null;
+    }
+
+    // Validate that the wallet type is compatible with the chain
+    const isEvmWallet = ['metamask', 'phantom', 'walletconnect'].includes(walletType);
+    const isCosmosWallet = ['keplr', 'cosmostation'].includes(walletType);
+
+    if (config.type === 'EVM' && !isEvmWallet) {
+      return null;
+    }
+
+    if (config.type === 'Cosmwasm' && !isCosmosWallet) {
+      return null;
+    }
+
+    return config;
   }
 
   render() {

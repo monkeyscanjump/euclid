@@ -1,5 +1,7 @@
 import { Component, h, State, Listen, Element } from '@stencil/core';
 import { appStore } from '../../../store/app.store';
+import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
+import { marketStore } from '../../../store/market.store';
 
 @Component({
   tag: 'euclid-modal',
@@ -80,6 +82,76 @@ export class EuclidModal {
     if (event.key === 'Tab') {
       this.handleTabKey(event);
     }
+  }
+
+  @Listen('walletConnect')
+  handleWalletConnect(event: CustomEvent) {
+    const provider = event.detail;
+    console.log('🔗 Modal received wallet connection request:', provider);
+
+    if (!provider.installed) {
+      console.warn('❌ Wallet not installed:', provider.name);
+      return;
+    }
+
+    // For now, use the first available chain for the wallet type
+    // In a real implementation, you'd show a chain selector
+    const defaultChain = this.getDefaultChainForWalletType(provider.id);
+
+    console.log('🔗 Selected chain for', provider.id, ':', defaultChain);
+
+    if (!defaultChain) {
+      console.error('❌ No suitable chain found for wallet:', provider.id);
+      return;
+    }
+
+    console.log('📡 Dispatching wallet connection request:', {
+      chainUID: defaultChain,
+      walletType: provider.id
+    });
+
+    // Dispatch wallet connection request
+    dispatchEuclidEvent(EUCLID_EVENTS.WALLET.CONNECT_REQUEST, {
+      chainUID: defaultChain,
+      walletType: provider.id
+    });
+
+    // Close the modal
+    this.closeModal();
+  }  private getDefaultChainForWalletType(walletType: string): string | null {
+    const chains = marketStore.state.chains;
+
+    // Map wallet types to compatible chain types
+    const walletChainMap: Record<string, string[]> = {
+      'metamask': ['EVM'],
+      'phantom': ['EVM'],
+      'keplr': ['Cosmwasm'],
+      'cosmostation': ['Cosmwasm'],
+      'walletconnect': ['EVM', 'Cosmwasm']
+    };
+
+    const compatibleTypes = walletChainMap[walletType];
+    if (!compatibleTypes) {
+      return null;
+    }
+
+    // Find the first chain that's compatible with this wallet
+    for (const chain of chains) {
+      if (compatibleTypes.includes(chain.type)) {
+        return chain.chain_uid;
+      }
+    }
+
+    // Fallback defaults if no chains loaded yet
+    const fallbacks: Record<string, string> = {
+      'metamask': 'ethereum',
+      'phantom': 'ethereum',
+      'keplr': 'cosmoshub-4',
+      'cosmostation': 'cosmoshub-4',
+      'walletconnect': 'ethereum'
+    };
+
+    return fallbacks[walletType] || null;
   }
 
   private closeModal() {

@@ -1,4 +1,5 @@
 import { Component, Prop, h, State, Event, EventEmitter, Listen, Element } from '@stencil/core';
+import { walletStore } from '../../../store/wallet.store';
 
 export interface TokenBalance {
   symbol: string;
@@ -153,6 +154,8 @@ export class EuclidPortfolioOverview {
   @State() chartTooltipData: ChartDataPoint | null = null;
   @State() sortBy: 'value' | 'pnl' | 'apy' | 'allocation' = 'value';
   @State() sortOrder: 'asc' | 'desc' = 'desc';
+  @State() connectedWallets = walletStore.state.connectedWallets;
+  @State() primaryWalletAddress: string = '';
 
   // Events
   @Event() positionSelected: EventEmitter<PoolPosition>;
@@ -163,13 +166,100 @@ export class EuclidPortfolioOverview {
   @Event() viewTransaction: EventEmitter<Transaction>;
   @Event() timePeriodChanged: EventEmitter<string>;
 
+  private updateTimeout: number | null = null;
+  private isInitialized: boolean = false;
+
+  componentWillLoad() {
+    // Subscribe to wallet store changes with debouncing
+    walletStore.onChange('connectedWallets', () => {
+      // Clear existing timeout to debounce rapid changes
+      if (this.updateTimeout) {
+        clearTimeout(this.updateTimeout);
+      }
+
+      // Debounce updates to prevent infinite loops
+      this.updateTimeout = window.setTimeout(() => {
+        this.connectedWallets = { ...walletStore.state.connectedWallets };
+        this.updatePrimaryWalletAddress();
+        this.updateTimeout = null;
+      }, 100);
+    });
+
+    // Initialize wallet state
+    this.updatePrimaryWalletAddress();
+    this.isInitialized = true;
+  }
+
   componentDidLoad() {
     this.setupChart();
+  }
+
+  disconnectedCallback() {
+    // Clean up timeout to prevent memory leaks
+    if (this.updateTimeout) {
+      clearTimeout(this.updateTimeout);
+      this.updateTimeout = null;
+    }
+  }
+
+  private getWalletCount(): number {
+    if (this.connectedWallets instanceof Map) {
+      return this.connectedWallets.size;
+    } else if (typeof this.connectedWallets === 'object' && this.connectedWallets !== null) {
+      return Object.keys(this.connectedWallets).length;
+    }
+    return 0;
+  }
+
+  private updatePrimaryWalletAddress() {
+    // Use the walletAddress prop if provided, otherwise get from connected wallets
+    if (this.walletAddress) {
+      if (this.primaryWalletAddress !== this.walletAddress) {
+        this.primaryWalletAddress = this.walletAddress;
+      }
+      return;
+    }
+
+    // Handle both Map and Object types for backward compatibility
+    let wallets: { address: string }[] = [];
+    if (this.connectedWallets instanceof Map) {
+      wallets = Array.from(this.connectedWallets.values());
+    } else if (typeof this.connectedWallets === 'object' && this.connectedWallets !== null) {
+      wallets = Object.values(this.connectedWallets);
+    }
+
+    const newAddress = wallets.length > 0 ? wallets[0].address : '';
+
+    // Only update if address actually changed to prevent loops
+    if (this.primaryWalletAddress !== newAddress) {
+      this.primaryWalletAddress = newAddress;
+
+      // Only log once when initialized and when address actually changes
+      if (this.isInitialized) {
+        if (newAddress) {
+          console.log('📝 Portfolio using wallet address:', this.primaryWalletAddress);
+        } else {
+          console.log('📝 No connected wallets found for portfolio');
+        }
+      }
+    }
   }
 
   @Listen('resize', { target: 'window' })
   handleResize() {
     this.setupChart();
+  }
+
+  @Listen('euclid:wallet:connect-success', { target: 'window' })
+  handleWalletConnected() {
+    console.log('📝 Portfolio detected wallet connection, updating address');
+    this.updatePrimaryWalletAddress();
+  }
+
+  @Listen('euclid:wallet:disconnect-success', { target: 'window' })
+  handleWalletDisconnected() {
+    console.log('📝 Portfolio detected wallet disconnection, updating address');
+    this.updatePrimaryWalletAddress();
   }
 
   private setupChart() {
@@ -711,7 +801,7 @@ export class EuclidPortfolioOverview {
       );
     }
 
-    if (!this.walletAddress) {
+    if (!this.primaryWalletAddress) {
       return (
         <div class="portfolio-overview empty">
           <div class="empty-state">
@@ -719,6 +809,15 @@ export class EuclidPortfolioOverview {
               <path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,17A1.5,1.5 0 0,0 13.5,15.5A1.5,1.5 0 0,0 12,14A1.5,1.5 0 0,0 10.5,15.5A1.5,1.5 0 0,0 12,17M12,10.5C12.8,10.5 13.5,9.8 13.5,9C13.5,8.2 12.8,7.5 12,7.5C11.2,7.5 10.5,8.2 10.5,9C10.5,9.8 11.2,10.5 12,10.5Z"/>
             </svg>
             <span>Connect your wallet to view portfolio</span>
+            <euclid-button
+              variant="primary"
+              onClick={() => {
+                // Dispatch event to open wallet modal
+                window.dispatchEvent(new CustomEvent('openWalletModal'));
+              }}
+            >
+              Connect Wallet
+            </euclid-button>
           </div>
         </div>
       );
@@ -730,8 +829,13 @@ export class EuclidPortfolioOverview {
           <h2 class="portfolio-title">{this.cardTitle}</h2>
           <div class="wallet-info">
             <span class="wallet-address">
-              {this.walletAddress.slice(0, 6)}...{this.walletAddress.slice(-4)}
+              {this.primaryWalletAddress.slice(0, 6)}...{this.primaryWalletAddress.slice(-4)}
             </span>
+            {this.getWalletCount() > 1 && (
+              <span class="wallet-count">
+                +{this.getWalletCount() - 1} more
+              </span>
+            )}
           </div>
         </div>
 

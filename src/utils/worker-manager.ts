@@ -28,7 +28,7 @@ export class DataListWorkerManager {
 
   constructor(config: WorkerManagerConfig = {}) {
     this.config = {
-      workerPath: './build/workers/data-list.worker.js',
+      workerPath: '/build/workers/data-list.worker.js',
       batchSize: 50,
       debounceTime: 200,
       timeout: 5000,

@@ -54,7 +54,7 @@
     "build:sw:inject": "node build-sw.mjs",
     "build": "npm run build:stencil && npm run build:worker && npm run build:sw:bundle && npm run build:sw:inject",
     "predeploy": "npm run build && node deploy-gh-pages.js",
-    "deploy": "npm run predeploy && git add docs && git commit -m \"Deploy: Update GitHub Pages\" && git push origin main",
+    "deploy": "git add docs && git commit -m \"Deploy: Update GitHub Pages\" && git push origin main",
     "dev": "stencil build --dev --watch",
     "start": "stencil build --dev --watch --serve",
     "test": "stencil test --spec --e2e",

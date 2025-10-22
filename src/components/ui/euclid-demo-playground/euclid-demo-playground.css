@@ -80,6 +80,20 @@
   padding: var(--euclid-space-8);
   background: var(--euclid-surface);
   overflow: auto;
+  min-height: 0;
+}
+
+/* Special constraint for API Tester - limit to viewport height */
+.demo-section.api-tester-container {
+  overflow: hidden;
+  max-height: 100%; /* Account for header and padding only */
+  min-height: 600px; /* Increased minimum for better usability */
+  padding: var(--euclid-space-4); /* Reduced padding */
+}
+
+.demo-section.api-tester-container euclid-api-tester {
+  height: 100%;
+  max-height: 100%;
 }
 
 @media (max-width: 1024px) {

@@ -46,6 +46,8 @@ export namespace Components {
          */
         "showBalances": boolean;
     }
+    interface EuclidApiTester {
+    }
     interface EuclidButton {
         /**
           * @default false
@@ -651,6 +653,12 @@ declare global {
         prototype: HTMLEuclidAddressBookElement;
         new (): HTMLEuclidAddressBookElement;
     };
+    interface HTMLEuclidApiTesterElement extends Components.EuclidApiTester, HTMLStencilElement {
+    }
+    var HTMLEuclidApiTesterElement: {
+        prototype: HTMLEuclidApiTesterElement;
+        new (): HTMLEuclidApiTesterElement;
+    };
     interface HTMLEuclidButtonElement extends Components.EuclidButton, HTMLStencilElement {
     }
     var HTMLEuclidButtonElement: {
@@ -963,6 +971,7 @@ declare global {
     };
     interface HTMLElementTagNameMap {
         "euclid-address-book": HTMLEuclidAddressBookElement;
+        "euclid-api-tester": HTMLEuclidApiTesterElement;
         "euclid-button": HTMLEuclidButtonElement;
         "euclid-chain-item": HTMLEuclidChainItemElement;
         "euclid-config-provider": HTMLEuclidConfigProviderElement;
@@ -1005,6 +1014,8 @@ declare namespace LocalJSX {
           * @default true
          */
         "showBalances"?: boolean;
+    }
+    interface EuclidApiTester {
     }
     interface EuclidButton {
         /**
@@ -1635,6 +1646,7 @@ declare namespace LocalJSX {
     }
     interface IntrinsicElements {
         "euclid-address-book": EuclidAddressBook;
+        "euclid-api-tester": EuclidApiTester;
         "euclid-button": EuclidButton;
         "euclid-chain-item": EuclidChainItem;
         "euclid-config-provider": EuclidConfigProvider;
@@ -1664,6 +1676,7 @@ declare module "@stencil/core" {
     export namespace JSX {
         interface IntrinsicElements {
             "euclid-address-book": LocalJSX.EuclidAddressBook & JSXBase.HTMLAttributes<HTMLEuclidAddressBookElement>;
+            "euclid-api-tester": LocalJSX.EuclidApiTester & JSXBase.HTMLAttributes<HTMLEuclidApiTesterElement>;
             "euclid-button": LocalJSX.EuclidButton & JSXBase.HTMLAttributes<HTMLEuclidButtonElement>;
             "euclid-chain-item": LocalJSX.EuclidChainItem & JSXBase.HTMLAttributes<HTMLEuclidChainItemElement>;
             /**

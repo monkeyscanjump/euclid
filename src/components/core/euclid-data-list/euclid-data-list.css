@@ -201,6 +201,14 @@
   max-height: 60vh;
   overflow-y: auto;
   scroll-behavior: smooth;
+  /* Fix for element position jumping */
+  contain: layout style;
+  position: relative;
+  isolation: isolate;
+  /* Stable scrolling */
+  overscroll-behavior: contain;
+  /* Prevent layout shifts */
+  scrollbar-gutter: stable;
 }
 
 /* Parent Scroll Mode - No internal scrolling */
@@ -214,6 +222,11 @@
   /* Base styling for intersection observer targeting */
   position: relative;
   transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+  /* Prevent layout shift during scroll */
+  contain: layout;
+  will-change: auto;
+  /* Stable positioning */
+  transform: translateZ(0);
 }
 
 /* Smooth transitions during updates */
@@ -228,6 +241,15 @@
 /* Prevent layout jumps during transitions */
 .data-container--transitioning {
   min-height: inherit;
+}
+
+/* Stable grid/list layouts */
+.data-grid,
+.data-list-container,
+.data-compact-container {
+  /* Prevent container size changes from affecting children */
+  contain: layout;
+  position: relative;
 }
 
 /* Worker-related styles */

@@ -1,4 +1,4 @@
-import { Component, Host, h, Prop } from '@stencil/core';
+import { Component, h, Prop } from '@stencil/core';
 import { DEFAULT_CONFIG, ENVIRONMENT_PRESETS, mergeConfig, type EuclidConfig } from '../../../utils/env';
 
 /**
@@ -8,7 +8,6 @@ import { DEFAULT_CONFIG, ENVIRONMENT_PRESETS, mergeConfig, type EuclidConfig } f
  */
 @Component({
   tag: 'euclid-config-provider',
-  shadow: true,
 })
 export class EuclidConfigProvider {
   // Configuration Props
@@ -94,12 +93,7 @@ export class EuclidConfigProvider {
 
   render() {
     return (
-      <Host>
-        {/* Only provide configuration context - no auto-loaded controllers */}
-        <div class="euclid-config-provider">
-          <slot></slot>
-        </div>
-      </Host>
+      <slot></slot>
     );
   }
 }

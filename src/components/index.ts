@@ -26,6 +26,7 @@ export { EuclidListItems } from './ui/euclid-list-items/euclid-list-items';
 export { EuclidPoolItem } from './ui/euclid-pool-item/euclid-pool-item';
 export { EuclidAddressBook } from './ui/euclid-address-book/euclid-address-book';
 export { EuclidDemoPlayground } from './ui/euclid-demo-playground/euclid-demo-playground';
+export { EuclidAPITester } from './ui/euclid-api-tester/euclid-api-tester';
 
 // Feature Components
 export { EuclidSwapCard } from './features/euclid-swap-card/euclid-swap-card';

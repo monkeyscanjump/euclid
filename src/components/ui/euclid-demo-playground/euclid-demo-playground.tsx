@@ -55,7 +55,7 @@ export class EuclidDemoPlayground {
         searchable: true,
         sortable: true,
         showStats: true,
-        enableWorker: false,
+        enableWorker: true,
         filterable: true,
         selectable: true,
         loading: false,
@@ -465,6 +465,44 @@ export class EuclidDemoPlayground {
           description: 'Display wallet balances when available'
         }
       ]
+    },
+    {
+      id: 'api-tester',
+      name: '🧪 API Tester',
+      description: 'Test and explore all Euclid Protocol API endpoints with live data',
+      category: 'Developer Tools',
+      tagName: 'euclid-api-tester',
+      defaultProps: {
+        selectedCategory: 'all',
+        showImplementedOnly: false
+      },
+      propDefinitions: [
+        {
+          name: 'selectedCategory',
+          type: 'select',
+          defaultValue: 'all',
+          description: 'Filter endpoints by category',
+          options: [
+            { value: 'all', label: 'All Categories' },
+            { value: 'Chain', label: 'Chain' },
+            { value: 'Token', label: 'Token' },
+            { value: 'Pool', label: 'Pool' },
+            { value: 'Factory', label: 'Factory' },
+            { value: 'Router', label: 'Router' },
+            { value: 'VLP', label: 'VLP' },
+            { value: 'Virtual Balance', label: 'Virtual Balance' },
+            { value: 'CosmWasm', label: 'CosmWasm' },
+            { value: 'Routes', label: 'Routes' },
+            { value: 'Transactions', label: 'Transactions' }
+          ]
+        },
+        {
+          name: 'showImplementedOnly',
+          type: 'boolean',
+          defaultValue: false,
+          description: 'Show only implemented endpoints'
+        }
+      ]
     }
   ];
 
@@ -869,6 +907,14 @@ export class EuclidDemoPlayground {
         );
         break;
 
+      case 'euclid-api-tester':
+        componentElement = (
+          <euclid-api-tester
+            key={`${demo.id}-${JSON.stringify(props)}`}
+          />
+        );
+        break;
+
       default:
         componentElement = <div>Component not found</div>;
     }
@@ -877,6 +923,9 @@ export class EuclidDemoPlayground {
   }
 
   render() {
+    const isApiTester = this.activeTab === 'api-tester';
+    const demoSectionClass = isApiTester ? 'demo-section api-tester-container' : 'demo-section';
+
     return (
       <div class="demo-playground">
         <div class="playground-content">
@@ -884,7 +933,7 @@ export class EuclidDemoPlayground {
             {this.renderControlsPanel()}
           </div>
 
-          <div class="demo-section">
+          <div class={demoSectionClass}>
             <euclid-config-provider environment={this.environment}>
               {this.renderDemo()}
             </euclid-config-provider>

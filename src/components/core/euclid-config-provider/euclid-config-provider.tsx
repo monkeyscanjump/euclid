@@ -1,5 +1,6 @@
 import { Component, h, Prop } from '@stencil/core';
 import { DEFAULT_CONFIG, ENVIRONMENT_PRESETS, mergeConfig, type EuclidConfig } from '../../../utils/env';
+import { logger } from '../../../utils/logger';
 
 /**
  * Lightweight configuration provider that only provides configuration context
@@ -66,7 +67,7 @@ export class EuclidConfigProvider {
       try {
         overrides.refreshIntervals = JSON.parse(this.refreshIntervals);
       } catch (e) {
-        console.warn('Invalid refreshIntervals JSON, using defaults:', e);
+        logger.warn('Component', 'Invalid refreshIntervals JSON, using defaults:', e);
       }
     }
 
@@ -74,7 +75,7 @@ export class EuclidConfigProvider {
       try {
         overrides.features = JSON.parse(this.featureFlags);
       } catch (e) {
-        console.warn('Invalid featureFlags JSON, using defaults:', e);
+        logger.warn('Component', 'Invalid featureFlags JSON, using defaults:', e);
       }
     }
 

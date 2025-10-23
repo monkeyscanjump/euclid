@@ -1,5 +1,6 @@
 import { Component, Prop, h, Event, EventEmitter } from '@stencil/core';
 import type { PoolInfo, TokenMetadata } from '../../../utils/types/api.types';
+import { logger } from '../../../utils/logger';
 
 export interface UserPoolPosition {
   poolId: string;
@@ -60,7 +61,7 @@ export class EuclidPoolItem {
     const token2Name = token2Meta?.displayName || this.pool.token_2.toUpperCase();
 
     // Debug: Log raw API values
-    console.log('🔍 Raw pool data:', {
+    logger.info('Component', '🔍 Raw pool data:', {
       pool_id: this.pool.pool_id,
       token_1: this.pool.token_1,
       token_2: this.pool.token_2,

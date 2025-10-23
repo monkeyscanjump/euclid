@@ -83,7 +83,7 @@ export class IndexedDBStorage {
 
   private async initCrypto(): Promise<void> {
     if (!window.crypto?.subtle) {
-      console.warn('Web Crypto API not available - storage will not be encrypted');
+      logger.warn('Utils', 'Web Crypto API not available - storage will not be encrypted');
       return;
     }
 
@@ -115,7 +115,7 @@ export class IndexedDBStorage {
         );
       }
     } catch (error) {
-      console.warn('Failed to initialize encryption:', error);
+      logger.warn('Utils', 'Failed to initialize encryption:', error);
     }
   }
 
@@ -133,7 +133,7 @@ export class IndexedDBStorage {
       const keyData = await window.crypto.subtle.exportKey('jwk', key);
       localStorage.setItem('euclid-crypto-key', JSON.stringify(keyData));
     } catch (error) {
-      console.warn('Failed to store crypto key:', error);
+      logger.warn('Utils', 'Failed to store crypto key:', error);
     }
   }
 
@@ -197,7 +197,7 @@ export class IndexedDBStorage {
         };
         encrypted = true;
       } catch (error) {
-        console.warn('Encryption failed, storing unencrypted:', error);
+        logger.warn('Utils', 'Encryption failed, storing unencrypted:', error);
       }
     }
 
@@ -251,7 +251,7 @@ export class IndexedDBStorage {
             const decryptedValue = await this.decrypt(encryptedData.buffer, iv);
             resolve(decryptedValue as T);
           } catch (error) {
-            console.error('Decryption failed:', error);
+            logger.error('Utils', 'Decryption failed:', error);
             resolve(null);
           }
         } else {
@@ -374,6 +374,7 @@ export class IndexedDBStorage {
 export const secureStorage = new IndexedDBStorage();
 
 import type { WalletInfo } from '../types/euclid-api.types';
+import { logger } from '../logger';
 
 // Convenience functions for common operations
 export const walletStorage = {
@@ -425,10 +426,10 @@ export async function migrateFromLocalStorage(): Promise<void> {
         const parsedData = JSON.parse(oldData);
         await secureStorage.setItem(migration.store, migration.new, parsedData);
         localStorage.removeItem(migration.old);
-        console.log(`Migrated ${migration.old} to IndexedDB`);
+        logger.info('Utils', `Migrated ${migration.old} to IndexedDB`);
       }
     } catch (error) {
-      console.warn(`Failed to migrate ${migration.old}:`, error);
+      logger.warn('Utils', `Failed to migrate ${migration.old}:`, error);
     }
   }
 }

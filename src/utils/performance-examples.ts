@@ -4,24 +4,25 @@
  */
 
 import { smartEuclidAPIService, SmartEuclidAPIService } from './smart-api-service';
+import { logger } from './logger';
 
 /**
  * Example 1: Basic Usage - Automatic Lazy Loading
  * Only loads the endpoints you actually use
  */
 export async function basicUsageExample() {
-  console.log('🚀 Starting basic usage example...');
+  logger.info('Utils', '🚀 Starting basic usage example...');
 
   // At this point, NO endpoints are loaded yet - bundle size is minimal!
-  console.log('Initial stats:', smartEuclidAPIService.getPerformanceStats());
+  logger.info('Utils', 'Initial stats:', smartEuclidAPIService.getPerformanceStats());
 
   // This call will automatically load only the 'chains' category endpoints
   const chains = await smartEuclidAPIService.getChains();
-  console.log('After getChains():', smartEuclidAPIService.getPerformanceStats());
+  logger.info('Utils', 'After getChains():', smartEuclidAPIService.getPerformanceStats());
 
   // This call will automatically load only the 'tokens' category endpoints
   const tokens = await smartEuclidAPIService.getTokenMetadata({ limit: 10 });
-  console.log('After getTokenMetadata():', smartEuclidAPIService.getPerformanceStats());
+  logger.info('Utils', 'After getTokenMetadata():', smartEuclidAPIService.getPerformanceStats());
 
   return { chains, tokens };
 }
@@ -31,14 +32,14 @@ export async function basicUsageExample() {
  * Pre-load categories when you know you'll need them
  */
 export async function preloadingExample() {
-  console.log('🚀 Starting pre-loading example...');
+  logger.info('Utils', '🚀 Starting pre-loading example...');
 
   const service = new SmartEuclidAPIService();
 
   // Pre-load all token endpoints if you know you'll need them
   // This loads the category once and caches all executors
   await service.preloadCategory('tokens');
-  console.log('After preloading tokens:', service.getPerformanceStats());
+  logger.info('Utils', 'After preloading tokens:', service.getPerformanceStats());
 
   // Now these calls are instant - no loading needed
   const [metadata, tokenById, priceHistory] = await Promise.all([
@@ -47,7 +48,7 @@ export async function preloadingExample() {
     service.getTokenPriceHistory('euclid', '24h')
   ]);
 
-  console.log('After multiple token calls:', service.getPerformanceStats());
+  logger.info('Utils', 'After multiple token calls:', service.getPerformanceStats());
 
   return { metadata, tokenById, priceHistory };
 }
@@ -57,13 +58,13 @@ export async function preloadingExample() {
  * Pre-load only specific endpoints you need
  */
 export async function selectivePreloadingExample() {
-  console.log('🚀 Starting selective pre-loading example...');
+  logger.info('Utils', '🚀 Starting selective pre-loading example...');
 
   const service = new SmartEuclidAPIService();
 
   // Only load the specific endpoints you know you'll use
   await service.preloadEndpoints(['getChains', 'getAllPools', 'getRoutes']);
-  console.log('After selective preloading:', service.getPerformanceStats());
+  logger.info('Utils', 'After selective preloading:', service.getPerformanceStats());
 
   // These specific endpoints are now cached and instant
   const [chains, pools, routes] = await Promise.all([
@@ -76,7 +77,7 @@ export async function selectivePreloadingExample() {
     })
   ]);
 
-  console.log('After using preloaded endpoints:', service.getPerformanceStats());
+  logger.info('Utils', 'After using preloaded endpoints:', service.getPerformanceStats());
 
   return { chains, pools, routes };
 }
@@ -86,7 +87,7 @@ export async function selectivePreloadingExample() {
  * Only the code you actually use gets bundled
  */
 export async function bundleOptimizationExample() {
-  console.log('🚀 Demonstrating bundle optimization...');
+  logger.info('Utils', '🚀 Demonstrating bundle optimization...');
 
   // If your component only uses chains and tokens:
   // - chains.ts and tokens.ts get bundled
@@ -98,9 +99,9 @@ export async function bundleOptimizationExample() {
   const chains = await service.getChains();
   const tokens = await service.getTokenMetadata({ limit: 10 });
 
-  console.log('Bundle only includes used categories!');
-  console.log('Available endpoints:', service.getAllEndpointIds());
-  console.log('Loaded endpoints:', service.getPerformanceStats().registry.executorIds);
+  logger.info('Utils', 'Bundle only includes used categories!');
+  logger.info('Utils', 'Available endpoints:', service.getAllEndpointIds());
+  logger.info('Utils', 'Loaded endpoints:', service.getPerformanceStats().registry.executorIds);
 
   return { chains, tokens };
 }
@@ -154,32 +155,32 @@ export class SwapComponent {
 export function monitorPerformance() {
   const stats = smartEuclidAPIService.getPerformanceStats();
 
-  console.log('📊 Performance Statistics:');
-  console.log(`Total categories available: ${stats.loader.totalCategories}`);
-  console.log(`Categories loaded: ${stats.loader.loadedCategories}`);
-  console.log(`Total endpoints available: ${stats.loader.totalEndpoints}`);
-  console.log(`Endpoints loaded: ${stats.loader.loadedEndpoints}`);
-  console.log(`Categories in memory: ${stats.loader.categoriesLoaded.join(', ')}`);
-  console.log(`Executors ready: ${stats.registry.executorIds.join(', ')}`);
+  logger.info('Utils', '📊 Performance Statistics:');
+  logger.info('Utils', `Total categories available: ${stats.loader.totalCategories}`);
+  logger.info('Utils', `Categories loaded: ${stats.loader.loadedCategories}`);
+  logger.info('Utils', `Total endpoints available: ${stats.loader.totalEndpoints}`);
+  logger.info('Utils', `Endpoints loaded: ${stats.loader.loadedEndpoints}`);
+  logger.info('Utils', `Categories in memory: ${stats.loader.categoriesLoaded.join(', ')}`);
+  logger.info('Utils', `Executors ready: ${stats.registry.executorIds.join(', ')}`);
 
   // Bundle size estimation
   const bundleSizeReduction = ((stats.loader.totalEndpoints - stats.loader.loadedEndpoints) / stats.loader.totalEndpoints) * 100;
-  console.log(`🎯 Estimated bundle size reduction: ${bundleSizeReduction.toFixed(1)}%`);
+  logger.info('Utils', `🎯 Estimated bundle size reduction: ${bundleSizeReduction.toFixed(1)}%`);
 }
 
 /**
  * Quick comparison: Old vs New system
  */
 export function compareOldVsNew() {
-  console.log('📈 Bundle Size Comparison:');
-  console.log('❌ Old System: ALL 60+ endpoints loaded upfront');
-  console.log('   - Full GraphQL queries for all endpoints');
-  console.log('   - All REST configurations loaded');
-  console.log('   - ~100KB+ of endpoint definitions in bundle');
-  console.log('');
-  console.log('✅ New System: Only load what you use');
-  console.log('   - Dynamic imports with webpack code splitting');
-  console.log('   - Tree-shaking removes unused endpoints');
-  console.log('   - Component using 5 endpoints = ~10KB bundle impact');
-  console.log('   - 80-90% smaller initial bundle size!');
+  logger.info('Utils', '📈 Bundle Size Comparison:');
+  logger.info('Utils', '❌ Old System: ALL 60+ endpoints loaded upfront');
+  logger.info('Utils', '   - Full GraphQL queries for all endpoints');
+  logger.info('Utils', '   - All REST configurations loaded');
+  logger.info('Utils', '   - ~100KB+ of endpoint definitions in bundle');
+  logger.info('Utils', '');
+  logger.info('Utils', '✅ New System: Only load what you use');
+  logger.info('Utils', '   - Dynamic imports with webpack code splitting');
+  logger.info('Utils', '   - Tree-shaking removes unused endpoints');
+  logger.info('Utils', '   - Component using 5 endpoints = ~10KB bundle impact');
+  logger.info('Utils', '   - 80-90% smaller initial bundle size!');
 }

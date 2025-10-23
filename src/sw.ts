@@ -2,6 +2,7 @@ import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
 import { CacheFirst, StaleWhileRevalidate, NetworkFirst } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
+import { logger } from './utils/logger';
 
 // Declare the Workbox manifest type for TypeScript
 declare const self: ServiceWorkerGlobalScope & {
@@ -80,4 +81,4 @@ registerRoute(
   })
 );
 
-console.log('Euclid Protocol Service Worker loaded');
+logger.info('Utils', 'Euclid Protocol Service Worker loaded');

@@ -197,7 +197,6 @@ export class EuclidPortfolio {
                     chainType: wallet.chainType,
                     walletType: wallet.walletType,
                     provider: wallet.provider,
-                    isConnected: wallet.isConnected,
                     label: wallet.label
                   }}
                   clickable={false}

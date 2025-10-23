@@ -2,6 +2,7 @@ import { createStore } from '@stencil/store';
 import type { LiquidityState } from '../utils/types/euclid-api.types';
 import type { TokenMetadata, PoolInfo, LiquidityPosition } from '../utils/types/api.types';
 import type { BaseStore } from './types';
+import { logger } from '../utils/logger';
 
 const initialState: LiquidityState = {
   token1: null,
@@ -112,7 +113,7 @@ const actions = {
   getPosition(poolId: string): LiquidityPosition | null {
     // This would typically fetch from API or cache
     // For now, return null
-    console.warn(`getPosition(${poolId}) not implemented`);
+    logger.warn('LiquidityStore', `getPosition(${poolId}) not implemented`);
     return null;
   },
 };

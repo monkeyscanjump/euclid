@@ -1,5 +1,7 @@
 import { walletStore } from '../store/wallet.store';
 import { marketStore } from '../store/market.store';
+import { parseCommaSeparated } from './string-helpers';
+import { logger } from './logger';
 
 export interface ConnectedWallet {
   id: string;
@@ -59,7 +61,7 @@ export function addCustomWallets(
 ): ConnectedWallet[] {
   if (!customAddresses.trim()) return existingWallets;
 
-  const addresses = customAddresses.split(',').map(addr => addr.trim()).filter(addr => addr.length > 0);
+  const addresses = parseCommaSeparated(customAddresses);
   const wallets = [...existingWallets];
 
   for (const address of addresses) {
@@ -122,7 +124,7 @@ export function addCustomWallet(
     // Check if wallet already exists for this chain
     const existingWallet = walletStore.getWalletByChain(chainUID);
     if (existingWallet && existingWallet.address === address) {
-      console.warn('Wallet already exists for this chain and address');
+      logger.warn('WalletUtils', 'Wallet already exists for this chain and address');
       return false;
     }
 
@@ -135,10 +137,10 @@ export function addCustomWallet(
       autoConnect: false // Default auto-connect to OFF for new wallets
     });
 
-    console.log(`✅ Added ${walletType} wallet:`, { address, chainUID, label });
+    logger.info('WalletUtils', `Added ${walletType} wallet`, { address, chainUID, label });
     return true;
   } catch (error) {
-    console.error('Failed to add custom wallet:', error);
+    logger.error('WalletUtils', 'Failed to add custom wallet', error);
     return false;
   }
 }
@@ -149,10 +151,10 @@ export function addCustomWallet(
 export function removeWallet(chainUID: string): boolean {
   try {
     walletStore.removeWallet(chainUID);
-    console.log(`✅ Removed wallet for chain: ${chainUID}`);
+    logger.info('WalletUtils', `Removed wallet for chain: ${chainUID}`);
     return true;
   } catch (error) {
-    console.error('Failed to remove wallet:', error);
+    logger.error('WalletUtils', 'Failed to remove wallet', error);
     return false;
   }
 }

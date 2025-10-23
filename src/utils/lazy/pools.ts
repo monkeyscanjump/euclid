@@ -4,6 +4,7 @@
  */
 
 import { DEFAULT_CONFIG } from '../env';
+import { logger } from '../logger';
 
 interface PoolConfig {
   graphqlEndpoint: string;
@@ -121,7 +122,7 @@ export async function getAllPoolsImpl(onlyVerified: boolean = true) {
 
     return { success: true, data: pools };
   } catch (error) {
-    console.error('Error fetching pools:', error);
+    logger.error('Utils', 'Error fetching pools:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
@@ -189,6 +190,6 @@ export async function getPoolByIdImpl(poolId: string) {
 export async function getPoolInfoImpl(token1: string, token2: string) {
   // This would need to be implemented based on the specific GraphQL schema
   // For now, return null as a placeholder
-  console.warn(`getPoolInfo for ${token1}/${token2} not yet implemented in lazy module`);
+  logger.warn('Utils', `getPoolInfo for ${token1}/${token2} not yet implemented in lazy module`);
   return null;
 }

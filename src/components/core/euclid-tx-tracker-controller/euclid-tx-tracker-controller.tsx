@@ -4,6 +4,7 @@ import { apiClient } from '../../../utils/api-client';
 import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
 import { requestManager } from '../../../utils/request-manager';
 import { pollingCoordinator } from '../../../utils/polling-coordinator';
+import { logger } from '../../../utils/logger';
 
 @Component({
   tag: 'euclid-tx-tracker-controller',
@@ -30,13 +31,13 @@ export class EuclidTxTrackerController {
   }
 
   private async initialize() {
-    console.log('🔍 Initializing Transaction Tracker Controller...');
+    logger.info('Component', '🔍 Initializing Transaction Tracker Controller...');
 
     // Start periodic tracking
     this.startTracking();
 
     this.isInitialized = true;
-    console.log('✅ Transaction Tracker Controller initialized');
+    logger.info('Component', '✅ Transaction Tracker Controller initialized');
   }
 
   private startTracking() {
@@ -69,7 +70,7 @@ export class EuclidTxTrackerController {
     chainUID: string,
     type: 'swap' | 'add_liquidity' | 'remove_liquidity' | 'transfer'
   ): Promise<void> {
-    console.log('🔍 Starting to track transaction:', { txHash, chainUID, type });
+    logger.info('Component', '🔍 Starting to track transaction:', { txHash, chainUID, type });
 
     this.trackingTransactions.set(txHash, { chainUID, type, pollCount: 0 });
 
@@ -99,7 +100,7 @@ export class EuclidTxTrackerController {
       cacheKey,
       async () => {
         try {
-          console.log(`🔍 Checking transaction status: ${txHash}`);
+          logger.info('Component', `🔍 Checking transaction status: ${txHash}`);
 
           const response = await apiClient.trackTransactionWrapped(txHash, chainUID);
 
@@ -121,7 +122,7 @@ export class EuclidTxTrackerController {
             status,
           });
 
-          console.log(`✅ Transaction finalized: ${txHash} - Status: ${status}`);
+          logger.info('Component', `✅ Transaction finalized: ${txHash} - Status: ${status}`);
 
           // If successful, refresh user data to update balances/positions
           if (status === 'confirmed') {
@@ -133,7 +134,7 @@ export class EuclidTxTrackerController {
 
           // Stop tracking after 120 polls (20 minutes with 10s intervals)
           if (newPollCount >= 120) {
-            console.warn(`⚠️ Transaction tracking timeout: ${txHash}`);
+            logger.warn('Component', `⚠️ Transaction tracking timeout: ${txHash}`);
             this.trackingTransactions.delete(txHash);
 
             // Mark as failed due to timeout
@@ -149,11 +150,11 @@ export class EuclidTxTrackerController {
           }
         }
           } else {
-            console.warn(`⚠️ Failed to check transaction status: ${txHash}`, response.error);
+            logger.warn('Component', `⚠️ Failed to check transaction status: ${txHash}`, response.error);
           }
           return { success: true };
         } catch (error) {
-          console.error(`❌ Error checking transaction status: ${txHash}`, error);
+          logger.error('Component', `❌ Error checking transaction status: ${txHash}`, error);
           throw error;
         }
       },
@@ -229,7 +230,7 @@ export class EuclidTxTrackerController {
     type: 'swap' | 'add_liquidity' | 'remove_liquidity' | 'transfer';
   }>) {
     const { txHash, chainUID, type } = event.detail;
-    console.log('🔍 Transaction submitted, starting tracking:', event.detail);
+    logger.info('Component', '🔍 Transaction submitted, starting tracking:', event.detail);
     await this.trackTransaction(txHash, chainUID, type);
   }
 
@@ -240,14 +241,14 @@ export class EuclidTxTrackerController {
     type: 'swap' | 'add_liquidity' | 'remove_liquidity' | 'transfer';
   }>) {
     const { txHash, chainUID, type } = event.detail;
-    console.log('🔍 Manual transaction tracking requested:', event.detail);
+    logger.info('Component', '🔍 Manual transaction tracking requested:', event.detail);
     await this.trackTransaction(txHash, chainUID, type);
   }
 
   @Listen(EUCLID_EVENTS.TRANSACTION.STOP_TRACKING, { target: 'window' })
   handleStopTrackingTransaction(event: CustomEvent<{ txHash: string }>) {
     const { txHash } = event.detail;
-    console.log('⏹️ Stopping transaction tracking:', txHash);
+    logger.info('Component', '⏹️ Stopping transaction tracking:', txHash);
     this.trackingTransactions.delete(txHash);
   }
 
@@ -260,7 +261,7 @@ export class EuclidTxTrackerController {
   @Watch('isInitialized')
   onInitializedChange(newValue: boolean) {
     if (newValue) {
-      console.log('🔍 Transaction Tracker Controller ready');
+      logger.info('Component', '🔍 Transaction Tracker Controller ready');
     }
   }
 

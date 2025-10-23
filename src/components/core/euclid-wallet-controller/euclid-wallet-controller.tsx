@@ -7,6 +7,7 @@ import type { EuclidConfig } from '../../../utils/env';
 import { DEFAULT_CONFIG } from '../../../utils/env';
 import type { EuclidChainConfig } from '../../../utils/types/api.types';
 import { WalletType, isValidWalletType, isEvmWalletType, isCosmosWalletType } from '../../../utils/types/wallet.types';
+import { logger } from '../../../utils/logger';
 
 @Component({
   tag: 'euclid-wallet-controller',
@@ -27,7 +28,7 @@ export class EuclidWalletController {
   }
 
   private async initialize() {
-    console.log('🔗 Initializing Wallet Controller...');
+    logger.info('WalletController', 'Initializing Wallet Controller...');
 
     // FIRST: Initialize wallet store (loads from IndexedDB)
     await walletStore.initialize();
@@ -39,7 +40,7 @@ export class EuclidWalletController {
     this.setupWalletEventListeners();
 
     this.isInitialized = true;
-    console.log('✅ Wallet Controller initialized');
+    logger.info('WalletController', 'Wallet Controller initialized');
   }
 
   private async detectAvailableWallets() {
@@ -60,7 +61,7 @@ export class EuclidWalletController {
       availableWallets.push('cosmostation');
     }
 
-    console.log('🔍 Available wallets detected:', availableWallets);
+    logger.info('Component', '🔍 Available wallets detected:', availableWallets);
     return availableWallets;
   }
 
@@ -74,12 +75,12 @@ export class EuclidWalletController {
 
       if (ethProvider.on) {
         ethProvider.on('accountsChanged', (accounts: string[]) => {
-          console.log('MetaMask accounts changed:', accounts);
+          logger.info('Component', 'MetaMask accounts changed:', accounts);
           this.handleEvmAccountChange(accounts);
         });
 
         ethProvider.on('chainChanged', (chainId: string) => {
-          console.log('MetaMask chain changed:', chainId);
+          logger.info('Component', 'MetaMask chain changed:', chainId);
           this.handleEvmChainChange(chainId);
         });
       }
@@ -87,7 +88,7 @@ export class EuclidWalletController {
 
     // Listen for Keplr events
     window.addEventListener('keplr_keystorechange', () => {
-      console.log('Keplr keystore changed');
+      logger.info('Component', 'Keplr keystore changed');
       this.handleKeplrKeystoreChange();
     });
   }
@@ -104,7 +105,7 @@ export class EuclidWalletController {
 
   private handleEvmChainChange(chainId: string) {
     // Handle EVM chain changes
-    console.log('Chain changed to:', chainId);
+    logger.info('Component', 'Chain changed to:', chainId);
     // TODO: Update wallet store with new chain info
   }
 
@@ -124,14 +125,14 @@ export class EuclidWalletController {
   @Listen(EUCLID_EVENTS.WALLET.CONNECT_REQUEST, { target: 'window' })
   async handleWalletConnectionRequest(event: CustomEvent<{ chainUID: string; walletType: string }>) {
     const { chainUID, walletType } = event.detail;
-    console.log('🎯 Wallet controller received connection request:', { chainUID, walletType });
+    logger.info('Component', '🎯 Wallet controller received connection request:', { chainUID, walletType });
 
     try {
-      console.log('🔄 Attempting to connect wallet...');
+      logger.info('Component', '🔄 Attempting to connect wallet...');
       await this.connectWallet(chainUID, walletType);
-      console.log('✅ Wallet connection successful!');
+      logger.info('Component', '✅ Wallet connection successful!');
     } catch (error) {
-      console.error('❌ Failed to connect wallet:', error);
+      logger.error('Component', '❌ Failed to connect wallet:', error);
       // Emit connection failure event
       dispatchEuclidEvent(EUCLID_EVENTS.WALLET.CONNECT_FAILED, {
         chainUID,
@@ -144,7 +145,7 @@ export class EuclidWalletController {
   @Listen(EUCLID_EVENTS.WALLET.DISCONNECT_REQUEST, { target: 'window' })
   handleWalletDisconnectionRequest(event: CustomEvent<{ chainUID: string }>) {
     const { chainUID } = event.detail;
-    console.log('🔌 Wallet disconnection requested:', chainUID);
+    logger.info('Component', '🔌 Wallet disconnection requested:', chainUID);
 
     walletStore.disconnectWallet(chainUID);
 
@@ -153,13 +154,13 @@ export class EuclidWalletController {
   }
 
   private async connectWallet(chainUID: string, walletType: string) {
-    console.log('🔗 connectWallet called with:', { chainUID, walletType });
+    logger.info('Component', '🔗 connectWallet called with:', { chainUID, walletType });
 
     // Get chain configuration from store, or use fallback
     let chainConfig = marketStore.getChain(chainUID);
 
     if (!chainConfig) {
-      console.warn(`Chain ${chainUID} not found in store, using fallback configuration`);
+      logger.warn('Component', `Chain ${chainUID} not found in store, using fallback configuration`);
       chainConfig = this.getFallbackChainConfig(chainUID, walletType);
 
       if (!chainConfig) {
@@ -167,21 +168,21 @@ export class EuclidWalletController {
       }
     }
 
-    console.log('🔗 Using chain config:', chainConfig);
+    logger.info('Component', '🔗 Using chain config:', chainConfig);
 
     // Validate wallet type using helper function - NO MORE HARDCODED ARRAYS!
     if (!isValidWalletType(walletType)) {
       throw new Error(`Unsupported wallet type: ${walletType}`);
     }
 
-    console.log('✅ Wallet type validation passed');    // Use the wallet adapter factory for proper separation of concerns
-    console.log('🔗 Calling WalletAdapterFactory.connectWallet...');
+    logger.info('Component', '✅ Wallet type validation passed');    // Use the wallet adapter factory for proper separation of concerns
+    logger.info('Component', '🔗 Calling WalletAdapterFactory.connectWallet...');
     const result = await WalletAdapterFactory.connectWallet(walletType as WalletType, chainConfig);
 
-    console.log('🔗 Wallet adapter result:', result);
+    logger.info('Component', '🔗 Wallet adapter result:', result);
 
     if (result.success && result.address) {
-      console.log('✅ Connection successful, adding to store...');
+      logger.info('Component', '✅ Connection successful, adding to store...');
 
       // Add wallet to store
       walletStore.addWallet(chainUID, {
@@ -192,7 +193,7 @@ export class EuclidWalletController {
         autoConnect: false // Default auto-connect to OFF for new wallets
       });
 
-      console.log('📡 Emitting connection success event...');
+      logger.info('Component', '📡 Emitting connection success event...');
 
       // Emit connection success event
       dispatchEuclidEvent(EUCLID_EVENTS.WALLET.CONNECT_SUCCESS, {
@@ -201,7 +202,7 @@ export class EuclidWalletController {
         address: result.address
       });
     } else {
-      console.error('❌ Wallet connection failed:', result.error);
+      logger.error('Component', '❌ Wallet connection failed:', result.error);
       throw new Error(result.error || 'Failed to connect wallet');
     }
   }

@@ -4,6 +4,7 @@ import { appStore } from '../../../store/app.store';
 import { marketStore } from '../../../store/market.store';
 import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
 import type { TokenMetadata } from '../../../utils/types/api.types';
+import { logger } from '../../../utils/logger';
 
 export interface SwapToken {
   id: string;
@@ -231,7 +232,7 @@ export class EuclidSwapCard {
       return;
     }
 
-    console.log('🔧 Swap - received token selection:', event.detail);
+    logger.info('Component', '🔧 Swap - received token selection:', event.detail);
 
     const { token, selectorType } = event.detail;
 
@@ -348,7 +349,7 @@ export class EuclidSwapCard {
   };
 
   private openTokenSelector = (type: 'input' | 'output') => {
-    console.log('🔧 Opening token selector for:', type);
+    logger.info('Component', '🔧 Opening token selector for:', type);
     this.tokenSelectorType = type;
     appStore.openTokenModal(type);
   };  private toggleSettings = () => {

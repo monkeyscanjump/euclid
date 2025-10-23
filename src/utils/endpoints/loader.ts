@@ -4,6 +4,7 @@
  */
 
 import type { EndpointCategory, EndpointConfig } from './base';
+import { logger } from '../logger';
 
 /**
  * Endpoint category loaders using dynamic imports for tree-shaking
@@ -133,12 +134,12 @@ export class LazyEndpointLoader {
     }
 
     try {
-      console.log(`🔄 Loading ${categoryName} endpoints...`);
+      logger.info('Utils', `🔄 Loading ${categoryName} endpoints...`);
       const category = await loader();
-      console.log(`✅ Loaded ${categoryName} endpoints (${category.endpoints.length} endpoints)`);
+      logger.info('Utils', `✅ Loaded ${categoryName} endpoints (${category.endpoints.length} endpoints)`);
       return category;
     } catch (error) {
-      console.error(`❌ Failed to load ${categoryName} endpoints:`, error);
+      logger.error('Utils', `❌ Failed to load ${categoryName} endpoints:`, error);
       throw new Error(`Failed to load ${categoryName} endpoints: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -149,7 +150,7 @@ export class LazyEndpointLoader {
   async loadEndpoint(endpointId: string): Promise<EndpointConfig | null> {
     const categoryName = this.getCategoryForEndpoint(endpointId);
     if (!categoryName) {
-      console.warn(`Unknown endpoint: ${endpointId}`);
+      logger.warn('Utils', `Unknown endpoint: ${endpointId}`);
       return null;
     }
 
@@ -157,7 +158,7 @@ export class LazyEndpointLoader {
     const endpoint = category.endpoints.find(ep => ep.id === endpointId);
 
     if (!endpoint) {
-      console.warn(`Endpoint ${endpointId} not found in category ${categoryName}`);
+      logger.warn('Utils', `Endpoint ${endpointId} not found in category ${categoryName}`);
       return null;
     }
 

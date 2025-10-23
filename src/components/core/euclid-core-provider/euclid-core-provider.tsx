@@ -3,6 +3,9 @@ import { walletStore } from '../../../store/wallet.store';
 import { appStore } from '../../../store/app.store';
 import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
 import { DEFAULT_CONFIG, ENVIRONMENT_PRESETS, mergeConfig, type EuclidConfig } from '../../../utils/env';
+import { parseCommaSeparated, parseJsonSafe, stringifyWithCache } from '../../../utils/string-helpers';
+import { logger } from '../../../utils/logger';
+import { renderIf, LoadingSpinner } from '../../../utils/render-helpers';
 
 @Component({
   tag: 'euclid-core-provider',
@@ -27,6 +30,11 @@ export class EuclidCoreProvider {
 
   // Computed configuration for child components
   private euclidConfig: EuclidConfig;
+
+  // Cached config JSON to avoid repeated stringify calls
+  private get configJson(): string {
+    return stringifyWithCache(this.euclidConfig);
+  }
 
   async componentWillLoad() {
     this.euclidConfig = this.computeConfiguration();
@@ -54,40 +62,33 @@ export class EuclidCoreProvider {
     if (this.defaultChain) overrides.defaultChain = this.defaultChain;
     if (this.defaultWallet) overrides.defaultWallet = this.defaultWallet;
 
+    // Use string helper instead of manual split/map/trim
     if (this.supportedChains) {
-      overrides.supportedChains = this.supportedChains.split(',').map(s => s.trim());
+      overrides.supportedChains = parseCommaSeparated(this.supportedChains);
     }
 
     if (this.supportedWallets) {
-      overrides.supportedWallets = this.supportedWallets.split(',').map(s => s.trim());
+      overrides.supportedWallets = parseCommaSeparated(this.supportedWallets);
     }
 
     if (this.defaultSlippage !== undefined) {
       overrides.ui = { ...config.ui, defaultSlippage: this.defaultSlippage };
     }
 
-    // Parse JSON props
+    // Use safe JSON parsing instead of try/catch everywhere
     if (this.refreshIntervals) {
-      try {
-        overrides.refreshIntervals = JSON.parse(this.refreshIntervals);
-      } catch (e) {
-        console.warn('Invalid refreshIntervals JSON, using defaults:', e);
-      }
+      overrides.refreshIntervals = parseJsonSafe(this.refreshIntervals, config.refreshIntervals);
     }
 
     if (this.featureFlags) {
-      try {
-        overrides.features = JSON.parse(this.featureFlags);
-      } catch (e) {
-        console.warn('Invalid featureFlags JSON, using defaults:', e);
-      }
+      overrides.features = parseJsonSafe(this.featureFlags, config.features);
     }
 
     return mergeConfig(config, overrides);
   }
 
   private async initialize() {
-    console.log('🌌 Initializing Euclid Protocol Core Provider...');
+    logger.info('CoreProvider', 'Initializing Euclid Protocol Core Provider...');
 
     // Initialize app store
     appStore.initialize();
@@ -99,11 +100,11 @@ export class EuclidCoreProvider {
     await this.loadInitialMarketData();
 
     this.isInitialized = true;
-    console.log('✅ Euclid Protocol Core Provider initialized successfully');
+    logger.info('CoreProvider', 'Euclid Protocol Core Provider initialized successfully');
   }
 
   private async loadInitialMarketData() {
-    console.log('📊 Delegating initial market data loading to Market Data Controller...');
+    logger.debug('CoreProvider', 'Delegating initial market data loading to Market Data Controller...');
 
     // Delegate to market data controller via events
     dispatchEuclidEvent(EUCLID_EVENTS.MARKET.LOAD_INITIAL);
@@ -111,55 +112,41 @@ export class EuclidCoreProvider {
 
   @Listen(EUCLID_EVENTS.WALLET.CONNECT_SUCCESS, { target: 'window' })
   handleWalletConnect(event: CustomEvent) {
-    console.log('🔗 Wallet connection event received:', event.detail);
+    logger.info('CoreProvider', 'Wallet connection event received', event.detail);
     // Handle wallet connection logic here
   }
 
   @Listen(EUCLID_EVENTS.WALLET.DISCONNECT_SUCCESS, { target: 'window' })
   handleWalletDisconnect(event: CustomEvent) {
-    console.log('🔌 Wallet disconnection event received:', event.detail);
+    logger.info('CoreProvider', 'Wallet disconnection event received', event.detail);
     // Handle wallet disconnection logic here
   }
 
   render() {
     return (
       <Host>
-        {!this.isInitialized && (
-          <div class="euclid-loading">
-            <div class="loading-spinner"></div>
-            <p>Initializing Euclid Protocol...</p>
-          </div>
+        {/* Loading state with consistent pattern */}
+        {renderIf(!this.isInitialized, () =>
+          <LoadingSpinner message="Initializing Euclid Protocol..." />
         )}
 
         {/* Only render controllers AFTER initialization is complete */}
-        {this.isInitialized && (
+        {renderIf(this.isInitialized, () => (
           <div>
             {/* Core controllers - these manage data and state */}
-            <euclid-wallet-controller
-              config={JSON.stringify(this.euclidConfig)}
-            />
-            <euclid-market-data-controller
-              config={JSON.stringify(this.euclidConfig)}
-            />
-            <euclid-user-data-controller
-              config={JSON.stringify(this.euclidConfig)}
-            />
+            <euclid-wallet-controller config={this.configJson} />
+            <euclid-market-data-controller config={this.configJson} />
+            <euclid-user-data-controller config={this.configJson} />
 
             {/* Feature controllers - these handle business logic */}
-            <euclid-swap-controller
-              config={JSON.stringify(this.euclidConfig)}
-            />
-            <euclid-liquidity-controller
-              config={JSON.stringify(this.euclidConfig)}
-            />
-            <euclid-tx-tracker-controller
-              config={JSON.stringify(this.euclidConfig)}
-            />
+            <euclid-swap-controller config={this.configJson} />
+            <euclid-liquidity-controller config={this.configJson} />
+            <euclid-tx-tracker-controller config={this.configJson} />
 
             {/* Global modal - controlled by appStore */}
             <euclid-modal />
           </div>
-        )}
+        ))}
 
         {/* Slot for application content - this SHOULD always render so pages load */}
         <div class="euclid-provider-content">
@@ -171,7 +158,10 @@ export class EuclidCoreProvider {
 
   private handleWalletConnectFromModal = (event: CustomEvent) => {
     const { provider, chainId } = event.detail;
-    console.log('🔗 Wallet connection request from modal:', provider.type, chainId);
+    logger.info('CoreProvider', 'Wallet connection request from modal', {
+      providerType: provider.type,
+      chainId
+    });
 
     // Dispatch wallet connection request
     dispatchEuclidEvent(EUCLID_EVENTS.WALLET.CONNECT_REQUEST, {
@@ -184,7 +174,7 @@ export class EuclidCoreProvider {
 
   private handleTokenSelectFromModal = (event: CustomEvent) => {
     const { token } = event.detail;
-    console.log('🪙 Token selection from modal:', token.symbol);
+    logger.info('CoreProvider', 'Token selection from modal', { symbol: token.symbol });
 
     // Emit token selection for consuming components
     dispatchEuclidEvent(EUCLID_EVENTS.UI.TOKEN_SELECTED, {

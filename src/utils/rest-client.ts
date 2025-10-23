@@ -10,6 +10,7 @@ import type {
 } from './types/api.types';
 import type { EuclidConfig } from './env';
 import { DEFAULT_CONFIG } from './env';
+import { logger } from './logger';
 
 /**
  * REST client for Euclid Protocol
@@ -68,7 +69,7 @@ export class EuclidRESTClient {
       };
     } catch (error) {
       clearTimeout(timeoutId);
-      console.error(`REST API request failed (${path}):`, error);
+      logger.error('Utils', `REST API request failed (${path}):`, error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',

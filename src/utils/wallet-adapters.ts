@@ -4,6 +4,7 @@
  */
 
 import { WalletType, CoreWalletType, CORE_WALLET_TYPES } from './types/wallet.types';
+import { logger } from './logger';
 
 // Type aliases for methods that need these types (TODO: Replace with proper types)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -66,7 +67,7 @@ export class MetaMaskAdapter implements WalletAdapter {
 
   async disconnect(): Promise<void> {
     // MetaMask doesn't have a disconnect method, this is handled by the wallet
-    console.log('MetaMask disconnect requested');
+    logger.info('MetaMaskAdapter', 'MetaMask disconnect requested');
   }
 
   async getCurrentAccount(): Promise<{ address: string; chainId: string; name?: string } | null> {
@@ -105,7 +106,7 @@ export class MetaMaskAdapter implements WalletAdapter {
         name: walletName
       };
     } catch (error) {
-      console.warn('Failed to get current MetaMask account:', error);
+      logger.warn('MetaMaskAdapter', 'Failed to get current MetaMask account', error);
       return null;
     }
   }
@@ -245,7 +246,7 @@ export class KeplrAdapter implements WalletAdapter {
 
   async disconnect(): Promise<void> {
     // Keplr doesn't have a disconnect method
-    console.log('Keplr disconnect requested');
+    logger.info('KeplrAdapter', 'Keplr disconnect requested');
   }
 
   async getCurrentAccount(): Promise<{ address: string; chainId: string; name?: string } | null> {
@@ -283,7 +284,7 @@ export class KeplrAdapter implements WalletAdapter {
         name: walletName
       };
     } catch (error) {
-      console.warn('Failed to get current Keplr account:', error);
+      logger.warn('Utils', 'Failed to get current Keplr account:', error);
       return null;
     }
   }
@@ -451,7 +452,7 @@ export class PhantomAdapter implements WalletAdapter {
 
   async switchChain(chainId: string): Promise<void> {
     // Phantom doesn't support multiple chains
-    console.log(`Chain switching not supported by Phantom: ${chainId}`);
+    logger.info('Utils', `Chain switching not supported by Phantom: ${chainId}`);
   }
 
   async addChain(_config: EuclidChainConfig): Promise<void> {

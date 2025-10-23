@@ -9,6 +9,7 @@ import { requestManager } from '../../../utils/request-manager';
 // import { loadingManager } from '../../../utils/loading-state-manager';
 import type { EuclidConfig } from '../../../utils/env';
 import { DEFAULT_CONFIG } from '../../../utils/env';
+import { logger } from '../../../utils/logger';
 
 interface TransactionResponse {
   txHash?: string;
@@ -34,23 +35,23 @@ export class EuclidLiquidityController {
   }
 
   private async initialize() {
-    console.log('💧 Initializing Liquidity Controller...');
+    logger.info('Component', '💧 Initializing Liquidity Controller...');
 
     // No need to initialize heavy API client - using lightweight core API
     const euclidConfig: EuclidConfig = this.config ? JSON.parse(this.config) : DEFAULT_CONFIG;
-    console.log('Using config:', euclidConfig);
+    logger.info('Component', 'Using config:', euclidConfig);
 
     // Subscribe to liquidity store changes
     liquidityStore.onChange('selectedPool', () => this.handlePoolChange());
 
     this.isInitialized = true;
-    console.log('✅ Liquidity Controller initialized');
+    logger.info('Component', '✅ Liquidity Controller initialized');
   }
 
   private handlePoolChange() {
     const { selectedPool } = liquidityStore.state;
     if (selectedPool) {
-      console.log('🏊 Pool selected for liquidity operations:', selectedPool.id);
+      logger.info('Component', '🏊 Pool selected for liquidity operations:', selectedPool.id);
     }
   }
 
@@ -86,7 +87,7 @@ export class EuclidLiquidityController {
 
       liquidityStore.setAddingLiquidity(true);
 
-      console.log('💧 Executing add liquidity...', {
+      logger.info('Component', '💧 Executing add liquidity...', {
         pool: selectedPool.id,
         token1: token1.symbol,
         token2: token2.symbol,
@@ -139,14 +140,14 @@ export class EuclidLiquidityController {
           type: 'add_liquidity',
         });
 
-        console.log('✅ Add liquidity transaction submitted:', txHash);
+        logger.info('Component', '✅ Add liquidity transaction submitted:', txHash);
         return { success: true, txHash };
       } else {
         return { success: false, error: result.error || 'Add liquidity execution failed' };
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      console.error('❌ Add liquidity execution error:', errorMessage);
+      logger.error('Component', '❌ Add liquidity execution error:', errorMessage);
       return { success: false, error: errorMessage };
     } finally {
       liquidityStore.setAddingLiquidity(false);
@@ -193,7 +194,7 @@ export class EuclidLiquidityController {
 
       liquidityStore.setRemovingLiquidity(true);
 
-      console.log('💧 Executing remove liquidity...', {
+      logger.info('Component', '💧 Executing remove liquidity...', {
         poolId,
         lpAmount: lpTokenAmount,
       });
@@ -227,14 +228,14 @@ export class EuclidLiquidityController {
           type: 'remove_liquidity',
         });
 
-        console.log('✅ Remove liquidity transaction submitted:', txHash);
+        logger.info('Component', '✅ Remove liquidity transaction submitted:', txHash);
         return { success: true, txHash };
       } else {
         return { success: false, error: result.error || 'Remove liquidity execution failed' };
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      console.error('❌ Remove liquidity execution error:', errorMessage);
+      logger.error('Component', '❌ Remove liquidity execution error:', errorMessage);
       return { success: false, error: errorMessage };
     } finally {
       liquidityStore.setRemovingLiquidity(false);
@@ -244,7 +245,7 @@ export class EuclidLiquidityController {
   // Event listeners
   @Listen(EUCLID_EVENTS.LIQUIDITY.ADD_REQUEST, { target: 'window' })
   async handleAddLiquidityExecution() {
-    console.log('💧 Add liquidity execution requested via event');
+    logger.info('Component', '💧 Add liquidity execution requested via event');
 
     // Use request manager to prevent duplicate transactions
     const result = await requestManager.request(
@@ -267,19 +268,19 @@ export class EuclidLiquidityController {
 
   @Listen(EUCLID_EVENTS.LIQUIDITY.POSITIONS_SUBSCRIBE, { target: 'window' })
   async handleLiquidityPositionsSubscribe() {
-    console.log('🏊 Component subscribed to liquidity position data - triggering fetch if needed');
+    logger.info('Component', '🏊 Component subscribed to liquidity position data - triggering fetch if needed');
     // The subscription manager will handle polling setup automatically
   }
 
   @Listen(EUCLID_EVENTS.LIQUIDITY.POSITIONS_UNSUBSCRIBE, { target: 'window' })
   handleLiquidityPositionsUnsubscribe() {
-    console.log('🏊 Component unsubscribed from liquidity position data');
+    logger.info('Component', '🏊 Component unsubscribed from liquidity position data');
     // The subscription manager will handle cleanup automatically
   }
 
   @Listen(EUCLID_EVENTS.LIQUIDITY.REMOVE_REQUEST, { target: 'window' })
   async handleRemoveLiquidityExecution(event: CustomEvent<{ poolId: string; lpTokenAmount: string }>) {
-    console.log('💧 Remove liquidity execution requested via event');
+    logger.info('Component', '💧 Remove liquidity execution requested via event');
     const { poolId, lpTokenAmount } = event.detail;
     const result = await this.executeRemoveLiquidity(poolId, lpTokenAmount);
 
@@ -298,7 +299,7 @@ export class EuclidLiquidityController {
   @Watch('isInitialized')
   onInitializedChange(newValue: boolean) {
     if (newValue) {
-      console.log('💧 Liquidity Controller ready for operations');
+      logger.info('Component', '💧 Liquidity Controller ready for operations');
     }
   }
 

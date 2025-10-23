@@ -3,6 +3,7 @@ import { marketStore } from '../../../store/market.store';
 import type { TokenMetadata, EuclidChainConfig, PoolInfo } from '../../../utils/types/api.types';
 import type { TokenField } from '../euclid-token-item/euclid-token-item';
 import type { ChainField } from '../euclid-chain-item/euclid-chain-item';
+import { logger } from '../../../utils/logger';
 
 // Generic types for different data structures
 export type ListItemType = 'token' | 'chain' | 'pool';
@@ -197,7 +198,7 @@ export class EuclidListItems {
     this.storeItems = Array.isArray(storeData) && storeData.length > 0 ? storeData : this.items;
     this.storeLoading = marketStore.state.loading;
 
-    console.log(`🔄 ${this.itemType} store sync:`, {
+    logger.info('Component', `🔄 ${this.itemType} store sync:`, {
       storeItems: this.storeItems.length,
       storeLoading: this.storeLoading,
       itemType: this.itemType

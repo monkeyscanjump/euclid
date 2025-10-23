@@ -42,7 +42,6 @@ export type {
   MarketState,
   TokenInputProps,
   PoolCardProps,
-  WalletAdapter,
   EuclidGraphQLClient,
   EuclidRESTClient,
   FormattedBalance,

@@ -1,5 +1,7 @@
 import { Component, Prop, h, State, Element, Watch } from '@stencil/core';
 import type { DataType, DisplayMode } from '../../core/euclid-data-list/types';
+import { stringifyWithCache } from '../../../utils/string-helpers';
+import { logger } from '../../../utils/logger';
 
 type PropValue = string | number | boolean;
 
@@ -431,7 +433,7 @@ export class EuclidDemoPlayground {
     try {
       localStorage.setItem(this.getActiveTabStorageKey(), this.activeTab);
     } catch (error) {
-      console.warn('Failed to save active tab to localStorage:', error);
+      logger.warn('Component', 'Failed to save active tab to localStorage:', error);
     }
   }
 
@@ -442,7 +444,7 @@ export class EuclidDemoPlayground {
         return savedTab;
       }
     } catch (error) {
-      console.warn('Failed to load active tab from localStorage:', error);
+      logger.warn('Component', 'Failed to load active tab from localStorage:', error);
     }
 
     // Fallback to prop or first demo
@@ -452,9 +454,9 @@ export class EuclidDemoPlayground {
   private savePropsToStorage() {
     try {
       const storageKey = this.getStorageKey(this.activeTab);
-      localStorage.setItem(storageKey, JSON.stringify(this.currentProps));
+      localStorage.setItem(storageKey, stringifyWithCache(this.currentProps));
     } catch (error) {
-      console.warn('Failed to save props to localStorage:', error);
+      logger.warn('Component', 'Failed to save props to localStorage:', error);
     }
   }
 
@@ -469,7 +471,7 @@ export class EuclidDemoPlayground {
         return { ...demo.defaultProps, ...parsedProps };
       }
     } catch (error) {
-      console.warn('Failed to load props from localStorage:', error);
+      logger.warn('Component', 'Failed to load props from localStorage:', error);
     }
 
     // Fallback to defaults
@@ -685,7 +687,7 @@ export class EuclidDemoPlayground {
       case 'euclid-data-list':
         componentElement = (
           <euclid-data-list
-            key={`${demo.id}-${JSON.stringify(props)}`}
+            key={`${demo.id}-${stringifyWithCache(props)}`}
             dataType={props.dataType as DataType || 'tokens'}
             displayMode={props.displayMode as DisplayMode || 'list-item'}
             cardTitle={String(props.cardTitle || 'Available Tokens')}
@@ -710,7 +712,7 @@ export class EuclidDemoPlayground {
       case 'euclid-swap-card':
         componentElement = (
           <euclid-swap-card
-            key={`${demo.id}-${JSON.stringify(props)}`}
+            key={`${demo.id}-${stringifyWithCache(props)}`}
             cardTitle={String(props.cardTitle || 'Swap Tokens')}
             showAdvanced={Boolean(props.showAdvanced)}
             loading={Boolean(props.loading)}

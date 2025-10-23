@@ -11,6 +11,7 @@ import {
   type PaginationConfig
 } from './managers';
 import type { DataType, DisplayMode, DataItem, FilterState } from './types';
+import { logger } from '../../../utils/logger';
 
 
 
@@ -235,7 +236,7 @@ export class EuclidDataList {
       { dataSubtype: this.dataType }
     );
 
-    console.log(`📊 Data List subscribed to ${subscriptionType} for ${this.dataType}`);
+    logger.info('Component', `📊 Data List subscribed to ${subscriptionType} for ${this.dataType}`);
   }
 
   /**
@@ -245,7 +246,7 @@ export class EuclidDataList {
     if (this.dataSubscriptionId) {
       dataSubscriptionManager.unsubscribe(this.dataSubscriptionId);
       this.dataSubscriptionId = null;
-      console.log(`📊 Data List unsubscribed from ${this.dataType} data`);
+      logger.info('Component', `📊 Data List unsubscribed from ${this.dataType} data`);
     }
   }  private getDefaultFields(): string[] {
     switch (this.dataType) {
@@ -291,7 +292,7 @@ export class EuclidDataList {
             resultCount: data.length,
           });
         } catch (error) {
-          console.warn('Failed to emit filtersChanged event:', error);
+          logger.warn('Component', 'Failed to emit filtersChanged event:', error);
         }
       },
       onWorkerStateChange: (isProcessing) => {
@@ -305,7 +306,7 @@ export class EuclidDataList {
         try {
           this.workerPerformance.emit(metric);
         } catch (error) {
-          console.warn('Failed to emit workerPerformance event:', error);
+          logger.warn('Component', 'Failed to emit workerPerformance event:', error);
         }
       },
     });
@@ -333,7 +334,7 @@ export class EuclidDataList {
         try {
           this.pageChanged.emit({ page, totalPages, itemsPerPage });
         } catch (error) {
-          console.warn('Failed to emit pageChanged event:', error);
+          logger.warn('Component', 'Failed to emit pageChanged event:', error);
         }
       },
       onInfiniteScrollStateChange: (isLoading, hasMore, displayedCount) => {
@@ -351,7 +352,7 @@ export class EuclidDataList {
             displayedCount,
           });
         } catch (error) {
-          console.warn('Failed to emit infiniteScrollStateChanged event:', error);
+          logger.warn('Component', 'Failed to emit infiniteScrollStateChanged event:', error);
         }
       },
     });
@@ -613,7 +614,7 @@ export class EuclidDataList {
     try {
       this.itemSelected.emit({ item, id: itemId });
     } catch (error) {
-      console.warn('Failed to emit itemSelected event:', error);
+      logger.warn('Component', 'Failed to emit itemSelected event:', error);
     }
   };
 
@@ -626,7 +627,7 @@ export class EuclidDataList {
     try {
       this.itemHover.emit({ item, id: itemId });
     } catch (error) {
-      console.warn('Failed to emit itemHover event:', error);
+      logger.warn('Component', 'Failed to emit itemHover event:', error);
     }
   };
 
@@ -657,7 +658,7 @@ export class EuclidDataList {
         requestedCount
       });
     } catch (error) {
-      console.warn('Failed to emit loadMoreRequested event:', error);
+      logger.warn('Component', 'Failed to emit loadMoreRequested event:', error);
     }
 
     // Simulate async loading (in real scenario, this would be triggered by store updates)
@@ -691,7 +692,7 @@ export class EuclidDataList {
         displayedCount: this.displayedItemsCount
       });
     } catch (error) {
-      console.warn('Failed to emit infiniteScrollStateChanged event:', error);
+      logger.warn('Component', 'Failed to emit infiniteScrollStateChanged event:', error);
     }
   }
 

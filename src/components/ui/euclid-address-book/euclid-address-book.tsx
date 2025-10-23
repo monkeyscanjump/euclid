@@ -6,6 +6,8 @@ import { walletStorage } from '../../../utils/storage/indexdb-storage';
 import { getConnectedWallets, getAllWallets, setupWalletStoreListeners, addCustomWallet, removeWallet } from '../../../utils/wallet-utils';
 import { WalletData } from '../euclid-wallet/euclid-wallet';
 import { WalletType, ChainType } from '../../../utils/types/wallet.types';
+import { stringifyWithCache } from '../../../utils/string-helpers';
+import { logger } from '../../../utils/logger';
 
 export interface SavedAddress {
   id: string;
@@ -105,9 +107,9 @@ export class EuclidAddressBook {
       await walletStorage.setAddressBook(this.savedAddresses);
     } catch {
       try {
-        localStorage.setItem('euclid-address-book', JSON.stringify(this.savedAddresses));
+        localStorage.setItem('euclid-address-book', stringifyWithCache(this.savedAddresses));
       } catch (fallbackError) {
-        console.error('Failed to save addresses:', fallbackError);
+        logger.error('AddressBook', 'Failed to save addresses', fallbackError);
       }
     }
   }
@@ -470,15 +472,15 @@ export class EuclidAddressBook {
   };
 
   private handleToggleAutoConnect = (wallet: WalletData) => {
-    console.log('🔄 Toggle auto-connect for wallet:', wallet);
+    logger.debug('AddressBook', 'Toggle auto-connect for wallet', wallet);
 
     // Ensure we have a proper boolean value (handle undefined)
     const currentAutoConnect = wallet.autoConnect ?? false;
-    console.log('🔄 Current autoConnect:', currentAutoConnect);
+    logger.debug('AddressBook', 'Current autoConnect', currentAutoConnect);
 
     // Toggle auto-connect setting in wallet store
     const newAutoConnect = !currentAutoConnect;
-    console.log('🔄 New autoConnect value:', newAutoConnect);
+    logger.debug('AddressBook', 'New autoConnect value', newAutoConnect);
 
     // Update the wallet in store with new auto-connect setting
     walletStore.addWallet(wallet.chainUID, {
@@ -492,7 +494,7 @@ export class EuclidAddressBook {
       autoConnect: newAutoConnect
     });
 
-    console.log('🔄 Updated wallet store - wallet store should auto-update UI');
+    logger.debug('AddressBook', 'Updated wallet store - wallet store should auto-update UI');
     // DON'T use refreshTrigger - it causes entire app to re-render!
     // The wallet store update should automatically trigger UI refresh
   };

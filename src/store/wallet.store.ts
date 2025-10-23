@@ -5,6 +5,8 @@ import type { BaseStore } from './types';
 import { walletAdapterFactory } from '../utils/wallet-adapters';
 import { walletStorage, migrateFromLocalStorage } from '../utils/storage/indexdb-storage';
 import { isCoreWalletType } from '../utils/types/wallet.types';
+import { logger } from '../utils/logger';
+import { hasItems } from '../utils/string-helpers';
 // import { wrapStoreWithSmartUpdates } from '../utils/store-update-coordinator';
 
 // Extended wallet state to support multiple wallets - USING OBJECTS NOT MAPS
@@ -78,7 +80,7 @@ const actions = {
     // Load persisted wallet connections
     try {
       const savedWalletsObject = await walletStorage.getConnectedWalletsAsObject();
-      if (Object.keys(savedWalletsObject).length > 0) {
+      if (hasItems(Object.keys(savedWalletsObject))) {
         smartStore.smartUpdate({
           connectedWallets: savedWalletsObject,
           wallets: savedWalletsObject, // Keep alias synchronized
@@ -98,10 +100,10 @@ const actions = {
         }
       }
     } catch (error) {
-      console.warn('Failed to load persisted wallets:', error);
+      logger.warn('WalletStore', 'Failed to load persisted wallets', error);
     }
 
-    console.log('Wallet store initialized');
+    logger.info('WalletStore', 'Wallet store initialized');
   },
 
   async connectWallet(walletType: string, chainId?: string) {
@@ -138,7 +140,7 @@ const actions = {
         autoConnect: false // Default auto-connect to OFF for new wallets
       });
 
-      console.log('✅ Wallet connected and added to both old and new structures:', {
+      logger.info('WalletStore', 'Wallet connected and added to both old and new structures', {
         address: connection.address,
         chainUID: chainUID,
         walletType: walletType
@@ -162,7 +164,7 @@ const actions = {
           const adapter = walletAdapterFactory.getAdapter(state.walletType);
           await adapter.disconnect();
         } catch (error) {
-          console.warn('Error disconnecting wallet:', error);
+          logger.warn('WalletStore', 'Error disconnecting wallet', error);
         }
       }
 
@@ -184,7 +186,7 @@ const actions = {
       try {
         await walletStorage.setConnectedWallets({});
       } catch (error) {
-        console.warn('Failed to clear persisted wallets:', error);
+        logger.warn('WalletStore', 'Failed to clear persisted wallets', error);
       }
     }
   },
@@ -242,7 +244,7 @@ const actions = {
 
   // Multi-wallet support methods - USING OBJECTS NOT MAPS
   addWallet(chainUID: string, walletInfo: Omit<WalletInfo, 'chainUID'>) {
-    console.log('🔗 addWallet() called with:', { chainUID, walletInfo });
+    logger.debug('WalletStore', 'addWallet() called with', { chainUID, walletInfo });
 
     const fullWalletInfo: WalletInfo = {
       ...walletInfo,
@@ -258,16 +260,12 @@ const actions = {
       [chainUID]: fullWalletInfo
     };
 
-    console.log('🔗 Adding wallet to store:', {
+    logger.debug('WalletStore', 'Adding wallet to store', {
       chainUID,
       address: walletInfo.address,
       walletType: walletInfo.walletType,
-      objectSizeBefore: Object.keys(state.connectedWallets).length,
-      objectSizeAfter: Object.keys(newConnectedWallets).length,
-      fullWalletInfo
-    });
-
-    // Update state using smart store
+      totalWallets: Object.keys(state.connectedWallets).length + 1
+    });    // Update state using smart store
     smartStore.smartUpdate({
       connectedWallets: newConnectedWallets,
       wallets: newConnectedWallets, // Keep alias synchronized
@@ -277,7 +275,7 @@ const actions = {
 
     // Update primary wallet state only if no wallet is currently active
     if (!state.address) {
-      console.log('🔗 Setting as primary wallet (no existing primary)');
+      logger.debug('WalletStore', 'Setting as primary wallet (no existing primary)');
       smartStore.smartUpdate({
         address: walletInfo.address,
         chainUID: chainUID,
@@ -285,12 +283,12 @@ const actions = {
         balances: [...walletInfo.balances],
       });
     } else {
-      console.log('🔗 Primary wallet already exists, keeping it as primary');
+      logger.debug('WalletStore', 'Primary wallet already exists, keeping it as primary');
     }
 
     // Persist to IndexedDB
     walletStorage.setConnectedWallets(newConnectedWallets).catch(error => {
-      console.warn('Failed to persist wallet connections:', error);
+      logger.warn('Utils', 'Failed to persist wallet connections:', error);
     });
   },
 
@@ -328,7 +326,7 @@ const actions = {
 
     // Persist to IndexedDB
     walletStorage.setConnectedWallets(newConnectedWallets).catch(error => {
-      console.warn('Failed to persist wallet connections:', error);
+      logger.warn('Utils', 'Failed to persist wallet connections:', error);
     });
   },
 
@@ -356,7 +354,7 @@ const actions = {
 
       // Persist to IndexedDB
       walletStorage.setConnectedWallets(newConnectedWallets).catch(error => {
-        console.warn('Failed to persist wallet connections:', error);
+        logger.warn('Utils', 'Failed to persist wallet connections:', error);
       });
     }
   },
@@ -495,13 +493,13 @@ const getters = {
   addTransaction: (chainUID: string, transaction: { txHash: string; timestamp?: number; type?: string }) => {
     // This would typically store transaction history
     // For now, just log it
-    console.log(`Transaction added for ${chainUID}:`, transaction);
+    logger.info('Utils', `Transaction added for ${chainUID}:`, transaction);
   },
 
   // Method for updating transaction status
   updateTransactionStatus: (chainUID: string, txHash: string, status: 'pending' | 'confirmed' | 'failed') => {
     // This would typically update stored transaction history
-    console.log(`Transaction ${txHash} on ${chainUID} updated to status: ${status}`);
+    logger.info('Utils', `Transaction ${txHash} on ${chainUID} updated to status: ${status}`);
   },
 };
 

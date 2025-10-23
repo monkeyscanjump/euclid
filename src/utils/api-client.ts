@@ -6,6 +6,7 @@
 import { EuclidGraphQLClient, createGraphQLClient } from './graphql-client';
 import { EuclidRESTClient, createRESTClient } from './rest-client';
 import type { EuclidConfig } from './env';
+import { logger } from './logger';
 import type {
   EuclidChainConfig,
   TokenMetadata,
@@ -478,7 +479,7 @@ export class EuclidAPIClient {
    */
   async getTokenDenoms(tokenId: string): Promise<{ success: boolean; data?: { router: { token_denoms: { denoms: string[] } } }; error?: string }> {
     // This method doesn't exist in the real Euclid API
-    console.warn(`getTokenDenoms(${tokenId}) is not implemented in Euclid API`);
+    logger.warn('Utils', `getTokenDenoms(${tokenId}) is not implemented in Euclid API`);
     return { success: true, data: { router: { token_denoms: { denoms: [] } } } };
   }
 
@@ -487,7 +488,7 @@ export class EuclidAPIClient {
    */
   async getEscrows(tokenId: string): Promise<{ success: boolean; data?: { router: { escrows: unknown[] } }; error?: string }> {
     // This method doesn't exist in the real Euclid API
-    console.warn(`getEscrows(${tokenId}) is not implemented in Euclid API`);
+    logger.warn('Utils', `getEscrows(${tokenId}) is not implemented in Euclid API`);
     return { success: true, data: { router: { escrows: [] } } };
   }
 
@@ -705,7 +706,7 @@ export class EuclidAPIClient {
    */
   async trackTransaction(txHash: string, chainUID: string): Promise<{ status: 'pending' | 'confirmed' | 'failed' }> {
     // This would typically query blockchain for transaction status
-    console.warn(`trackTransaction(${txHash}, ${chainUID}) not implemented`);
+    logger.warn('Utils', `trackTransaction(${txHash}, ${chainUID}) not implemented`);
     return { status: 'pending' };
   }
 

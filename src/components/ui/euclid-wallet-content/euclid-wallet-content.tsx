@@ -6,6 +6,7 @@ import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
 import { walletMetadata } from '../../../assets/wallet-logos';
 import type { EuclidChainConfig } from '../../../utils/types/api.types';
 import { isEvmWalletType, isCosmosWalletType } from '../../../utils/types/wallet.types';
+import { logger } from '../../../utils/logger';
 
 export interface WalletProvider {
   id: string;
@@ -40,11 +41,11 @@ export class EuclidWalletContent {
       );
 
       if (targetChain) {
-        console.log('🎯 Wallet modal opened with chain filter:', targetChain.display_name);
+        logger.info('Component', '🎯 Wallet modal opened with chain filter:', targetChain.display_name);
         this.selectedChain = targetChain;
         this.step = 'wallets';
       } else {
-        console.warn('⚠️ Chain filter provided but chain not found:', chainFilter);
+        logger.warn('Component', '⚠️ Chain filter provided but chain not found:', chainFilter);
         this.step = 'chains';
       }
     } else {
@@ -73,11 +74,11 @@ export class EuclidWalletContent {
       };
     });
 
-    console.log('🔍 Detected wallets:', this.walletProviders);
+    logger.info('Component', '🔍 Detected wallets:', this.walletProviders);
   }
 
   private handleChainSelect = (chain: EuclidChainConfig) => {
-    console.log('🌐 Chain selected:', chain.display_name, chain.chain_uid);
+    logger.info('Component', '🌐 Chain selected:', chain.display_name, chain.chain_uid);
     this.selectedChain = chain;
     this.step = 'wallets';
   };
@@ -93,20 +94,20 @@ export class EuclidWalletContent {
   };
 
   private handleWalletConnect = async (provider: WalletProvider) => {
-    console.log('🔗 Wallet clicked:', provider);
+    logger.info('Component', '🔗 Wallet clicked:', provider);
 
     if (!provider.installed) {
-      console.log('❌ Wallet not installed, opening install URL');
+      logger.info('Component', '❌ Wallet not installed, opening install URL');
       this.openInstallUrl(provider.id);
       return;
     }
 
     if (!this.selectedChain) {
-      console.error('❌ No chain selected');
+      logger.error('Component', '❌ No chain selected');
       return;
     }
 
-    console.log('📡 Dispatching wallet connection request:', {
+    logger.info('Component', '📡 Dispatching wallet connection request:', {
       chainUID: this.selectedChain.chain_uid,
       walletType: provider.id
     });

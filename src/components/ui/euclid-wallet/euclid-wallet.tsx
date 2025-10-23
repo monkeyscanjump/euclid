@@ -1,4 +1,5 @@
 import { Component, h, Prop, Event, EventEmitter, Fragment } from '@stencil/core';
+import { logger } from '../../../utils/logger';
 
 export interface WalletData {
   id: string;
@@ -48,7 +49,7 @@ export class EuclidWallet {
 
   private handleToggleAutoConnect = (e: Event) => {
     e.stopPropagation(); // Prevent wallet click event
-    console.log('🔄 Auto-connect button clicked!', this.wallet);
+    logger.info('Component', '🔄 Auto-connect button clicked!', this.wallet);
     this.walletToggleAutoConnect.emit(this.wallet);
   };
 

@@ -6,6 +6,7 @@
  */
 
 import type { EuclidChainConfig } from './types/api.types';
+import { logger } from './logger';
 
 export type WalletType = 'keplr' | 'metamask' | 'phantom' | 'cosmostation' | 'walletconnect' | 'custom' | 'other';
 
@@ -100,7 +101,7 @@ export class KeplrAdapter implements WalletAdapter {
             }
           });
         } catch (suggestError) {
-          console.warn('Failed to suggest chain to Keplr:', suggestError);
+          logger.warn('Utils', 'Failed to suggest chain to Keplr:', suggestError);
         }
       }
 
@@ -131,7 +132,7 @@ export class KeplrAdapter implements WalletAdapter {
   async disconnect(chainUID: string): Promise<void> {
     // Keplr doesn't have a programmatic disconnect method
     // The user needs to disconnect from the Keplr extension directly
-    console.log('Keplr disconnect requested for:', chainUID);
+    logger.info('Utils', 'Keplr disconnect requested for:', chainUID);
   }
 
   async getAddress(chainUID: string): Promise<string | null> {
@@ -311,7 +312,7 @@ export class CosmostationAdapter implements WalletAdapter {
   }
 
   async disconnect(chainUID: string): Promise<void> {
-    console.log('Cosmostation disconnect requested for:', chainUID);
+    logger.info('Utils', 'Cosmostation disconnect requested for:', chainUID);
   }
 
   async getAddress(chainUID: string): Promise<string | null> {

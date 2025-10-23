@@ -5,6 +5,8 @@ import { liquidityStore } from '../../../store/liquidity.store';
 import { marketStore } from '../../../store/market.store';
 import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
 import type { PoolInfo, TokenMetadata } from '../../../utils/types/api.types';
+import { hasItems } from '../../../utils/string-helpers';
+import { logger } from '../../../utils/logger';
 
 export interface LiquidityToken {
   symbol: string;
@@ -200,11 +202,11 @@ export class EuclidLiquidityCard {
 
   private syncWithStore() {
     // Use store data if available, fallback to legacy props
-    this.storePools = marketStore.state.pools.length > 0 ? marketStore.state.pools : [];
-    this.storeTokens = marketStore.state.tokens.length > 0 ? marketStore.state.tokens : [];
+    this.storePools = hasItems(marketStore.state.pools) ? marketStore.state.pools : [];
+    this.storeTokens = hasItems(marketStore.state.tokens) ? marketStore.state.tokens : [];
     this.storeLoading = marketStore.state.loading;
 
-    console.log('🔄 Liquidity card store sync:', {
+    logger.debug('LiquidityCard', 'Liquidity card store sync', {
       storePools: this.storePools.length,
       storeTokens: this.storeTokens.length,
       storeLoading: this.storeLoading
@@ -398,7 +400,7 @@ export class EuclidLiquidityCard {
     // Emit the pool selection event with actual store data
     this.poolSelected.emit(pool);
 
-    console.log('🎯 Pool selected:', {
+    logger.info('LiquidityCard', 'Pool selected', {
       poolId: pool.pool_id,
       token1: pool.token_1,
       token2: pool.token_2,
@@ -797,7 +799,7 @@ export class EuclidLiquidityCard {
               <button class="close-button" onClick={() => this.isPoolSelectorOpen = false}>×</button>
             </div>
             <div class="pool-list">
-              {this.storePools.length > 0 ? (
+              {hasItems(this.storePools) ? (
                 this.storePools.map(pool => (
                   <div
                     key={pool.pool_id}

@@ -7,6 +7,7 @@ import { DEFAULTS } from '../../../utils/constants';
 import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
 import { requestManager } from '../../../utils/request-manager';
 import { pollingCoordinator } from '../../../utils/polling-coordinator';
+import { logger } from '../../../utils/logger';
 
 @Component({
   tag: 'euclid-swap-controller',
@@ -33,7 +34,7 @@ export class EuclidSwapController {
   }
 
   private async initialize() {
-    console.log('🔄 Initializing Swap Controller...');
+    logger.info('Component', '🔄 Initializing Swap Controller...');
 
     // Subscribe to swap store changes for smart polling
     swapStore.onChange('fromToken', () => this.handleTokenChange());
@@ -41,7 +42,7 @@ export class EuclidSwapController {
     swapStore.onChange('fromAmount', () => this.handleAmountChange());
 
     this.isInitialized = true;
-    console.log('✅ Swap Controller initialized');
+    logger.info('Component', '✅ Swap Controller initialized');
   }
 
   private handleTokenChange() {
@@ -83,7 +84,7 @@ export class EuclidSwapController {
   private startRoutePolling() {
     if (this.routePollingActive) return;
 
-    console.log('🔄 Starting route polling...');
+    logger.info('Component', '🔄 Starting route polling...');
     this.routePollingActive = true;
 
     // Fetch routes immediately
@@ -106,7 +107,7 @@ export class EuclidSwapController {
   private stopRoutePolling() {
     if (!this.routePollingActive) return;
 
-    console.log('⏹️ Stopping route polling...');
+    logger.info('Component', '⏹️ Stopping route polling...');
     this.routePollingActive = false;
 
     // Unregister from polling coordinator
@@ -133,7 +134,7 @@ export class EuclidSwapController {
         try {
           swapStore.setLoadingRoutes(true);
 
-          console.log('🛣️ Fetching swap routes:', {
+          logger.info('Component', '🛣️ Fetching swap routes:', {
             from: fromToken.symbol,
             to: toToken.symbol,
             amount: fromAmount,
@@ -158,15 +159,15 @@ export class EuclidSwapController {
               swapStore.setSelectedRoute(routePaths[0]);
             }
 
-            console.log(`✅ Found ${routePaths.length} swap routes`);
+            logger.info('Component', `✅ Found ${routePaths.length} swap routes`);
             return { success: true, routeCount: routePaths.length };
           } else {
-            console.warn('⚠️ Failed to fetch routes:', response.error);
+            logger.warn('Component', '⚠️ Failed to fetch routes:', response.error);
             swapStore.setRoutes([]);
             return { success: false, error: response.error };
           }
         } catch (error) {
-          console.error('❌ Error fetching routes:', error);
+          logger.error('Component', '❌ Error fetching routes:', error);
           swapStore.setRoutes([]);
           throw error;
         } finally {
@@ -193,7 +194,7 @@ export class EuclidSwapController {
 
       // Check if wallet is connected for the required chain
       const wallet = walletStore.getWallet(fromToken.chainUID);
-      if (!wallet?.isConnected) {
+      if (!wallet?.address) {
         return { success: false, error: `Wallet not connected for ${fromToken.chainUID}` };
       }
 
@@ -204,7 +205,7 @@ export class EuclidSwapController {
 
       swapStore.setSwapping(true);
 
-      console.log('🔄 Executing swap...', {
+      logger.info('Component', '🔄 Executing swap...', {
         from: fromToken.symbol,
         to: toToken.symbol,
         amount: fromAmount,
@@ -212,9 +213,9 @@ export class EuclidSwapController {
       });
 
       // Get the wallet adapter for signing
-      const walletAdapter = WalletAdapterFactory.getAdapter(wallet.type);
+      const walletAdapter = WalletAdapterFactory.getAdapter(wallet.walletType);
       if (!walletAdapter) {
-        return { success: false, error: `Wallet adapter not found for ${wallet.type}` };
+        return { success: false, error: `Wallet adapter not found for ${wallet.walletType}` };
       }
 
       // Execute the swap via API - create a basic SwapRequest structure
@@ -253,14 +254,14 @@ export class EuclidSwapController {
           type: 'swap',
         });
 
-        console.log('✅ Swap transaction submitted:', txHash);
+        logger.info('Component', '✅ Swap transaction submitted:', txHash);
         return { success: true, txHash };
       } else {
         return { success: false, error: swapResult.error || 'Swap execution failed' };
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      console.error('❌ Swap execution error:', errorMessage);
+      logger.error('Component', '❌ Swap execution error:', errorMessage);
       return { success: false, error: errorMessage };
     } finally {
       swapStore.setSwapping(false);
@@ -281,7 +282,7 @@ export class EuclidSwapController {
   // Event listeners
   @Listen(EUCLID_EVENTS.SWAP.EXECUTE_REQUEST, { target: 'window' })
   async handleSwapExecution() {
-    console.log('🔄 Swap execution requested via event');
+    logger.info('Component', '🔄 Swap execution requested via event');
     const result = await this.executeSwap();
 
     // Emit result event
@@ -298,7 +299,7 @@ export class EuclidSwapController {
 
   @Listen(EUCLID_EVENTS.SWAP.ROUTES_REFRESH, { target: 'window' })
   handleRouteRefresh() {
-    console.log('🔄 Manual route refresh requested');
+    logger.info('Component', '🔄 Manual route refresh requested');
     this.fetchRoutes();
   }
 
@@ -315,7 +316,7 @@ export class EuclidSwapController {
   @Watch('isInitialized')
   onInitializedChange(newValue: boolean) {
     if (newValue) {
-      console.log('📊 Swap Controller ready for route polling');
+      logger.info('Component', '📊 Swap Controller ready for route polling');
     }
   }
 

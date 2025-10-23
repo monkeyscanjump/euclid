@@ -4,6 +4,7 @@
  */
 
 import { createStore } from '@stencil/store';
+import { logger } from './logger';
 
 export interface StateChanges {
   [key: string]: {
@@ -179,7 +180,7 @@ export class StoreUpdateCoordinator {
 
     // Only proceed if there are actual changes
     if (this.shouldUpdate(changes, options)) {
-      console.log(`🔄 Store update [${storeId}]:`, {
+      logger.info('Utils', `🔄 Store update [${storeId}]:`, {
         changedFields: Object.keys(changes).filter(key => changes[key].hasChanged),
         totalFields: Object.keys(changes).length
       });
@@ -189,7 +190,7 @@ export class StoreUpdateCoordinator {
       // Update snapshot
       this.stateSnapshots.set(storeId, { ...currentState });
     } else {
-      console.log(`⏭️ Store update skipped [${storeId}]: No significant changes detected`);
+      logger.info('Utils', `⏭️ Store update skipped [${storeId}]: No significant changes detected`);
     }
   }
 

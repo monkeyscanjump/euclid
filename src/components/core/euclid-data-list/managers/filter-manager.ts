@@ -6,6 +6,7 @@
 import { DataListWorkerManager } from '../../../../utils/worker-manager';
 import type { DataItem, DataType, FilterState } from '../types';
 import type { TokenMetadata, EuclidChainConfig, PoolInfo } from '../../../../utils/types/api.types';
+import { logger } from '../../../../utils/logger';
 
 export interface FilterConfig {
   enableWorker: boolean;
@@ -73,7 +74,7 @@ export class FilterManager {
           itemCount: data.length
         });
       } catch (error) {
-        console.error('❌ Worker processing failed, falling back to main thread:', error);
+        logger.error('Utils', '❌ Worker processing failed, falling back to main thread:', error);
         const result = this.processDataSync(data, filterState, walletAddress);
         const processingTime = performance.now() - startTime;
         this.callbacks.onFilterComplete(result, processingTime);
@@ -284,7 +285,7 @@ export class FilterManager {
           itemCount: result.totalCount
         });
       } catch (error) {
-        console.error('❌ Worker search failed:', error);
+        logger.error('Utils', '❌ Worker search failed:', error);
       } finally {
         this.callbacks.onWorkerStateChange(false);
       }

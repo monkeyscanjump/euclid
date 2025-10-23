@@ -1,5 +1,6 @@
 import { Component, h, State } from '@stencil/core';
 import { euclidAPI } from '../../../utils/core-api';
+import { categorizeMethod, formatMethodName } from '../../../utils/string-helpers';
 
 interface EndpointInfo {
   name: string;
@@ -100,22 +101,11 @@ export class EuclidAPITester {
   }
 
   private categorizeMethod(methodName: string): string {
-    if (methodName.includes('Chain') || methodName.includes('chain')) return 'Chain';
-    if (methodName.includes('Token') || methodName.includes('token')) return 'Token';
-    if (methodName.includes('Pool') || methodName.includes('pool')) return 'Pool';
-    if (methodName.includes('Route') || methodName.includes('route')) return 'Routing';
-    if (methodName.includes('Transaction') || methodName.includes('transaction') || methodName.includes('Tx')) return 'Transaction';
-    if (methodName.includes('User') || methodName.includes('user') || methodName.includes('Balance')) return 'User';
-    if (methodName.includes('Swap') || methodName.includes('swap')) return 'Swap';
-    if (methodName.includes('Liquidity') || methodName.includes('liquidity')) return 'Liquidity';
-    return 'Other';
+    return categorizeMethod(methodName);
   }
 
   private formatMethodName(methodName: string): string {
-    return methodName
-      .replace(/([A-Z])/g, ' $1')
-      .replace(/^./, str => str.toUpperCase())
-      .trim();
+    return formatMethodName(methodName);
   }
 
   private extractMethodParams(method: (...args: unknown[]) => Promise<unknown>): string[] {

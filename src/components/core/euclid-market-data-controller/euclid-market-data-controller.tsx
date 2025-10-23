@@ -8,6 +8,7 @@ import { dataSubscriptionManager } from '../../../utils/data-subscription-manage
 import type { EuclidConfig } from '../../../utils/env';
 import type { EuclidChainConfig } from '../../../utils/types';
 import { DEFAULT_CONFIG } from '../../../utils/env';
+import { logger } from '../../../utils/logger';
 
 @Component({
   tag: 'euclid-market-data-controller',
@@ -39,7 +40,7 @@ export class EuclidMarketDataController {
   }
 
   private async initialize() {
-    console.log('📊 Initializing Market Data Controller...');
+    logger.info('Component', '📊 Initializing Market Data Controller...');
 
     // Load initial data with specific logic for each data type
     await this.loadInitialData();
@@ -48,7 +49,7 @@ export class EuclidMarketDataController {
     this.setupCoreDataPolling();
 
     this.isInitialized = true;
-    console.log('📊 Market Data Controller initialized');
+    logger.info('Component', '📊 Market Data Controller initialized');
   }
 
   private async loadInitialData() {
@@ -58,10 +59,10 @@ export class EuclidMarketDataController {
         try {
           marketStore.setLoading(true);
 
-          console.log('📊 Loading initial market data...');
+          logger.info('Component', '📊 Loading initial market data...');
 
           // 1. CHAINS - Load once and cache for a long time (chains don't change often)
-          console.log('🌐 Loading chains (once per session)...');
+          logger.info('Component', '🌐 Loading chains (once per session)...');
           const chains = await this.api.getChains({ showAllChains: false });
 
           if (chains && chains.length > 0) {
@@ -70,36 +71,36 @@ export class EuclidMarketDataController {
               type: (chain.type?.toLowerCase() === 'evm') ? 'EVM' : 'Cosmwasm'
             }));
             marketStore.setChains(validChains);
-            console.log('📡 Loaded chains:', chains.length);
+            logger.info('Component', '📡 Loaded chains:', chains.length);
           } else {
-            console.warn('No chains data received');
+            logger.warn('Component', 'No chains data received');
           }
 
           // 2. TOKEN METADATA - Load initially, will be polled separately
-          console.log('🪙 Loading token metadata...');
+          logger.info('Component', '🪙 Loading token metadata...');
           const tokens = await this.api.getTokenMetadata();
 
           if (tokens && tokens.length > 0) {
             marketStore.setTokens(tokens);
-            console.log('🪙 Loaded tokens:', tokens.length);
+            logger.info('Component', '🪙 Loaded tokens:', tokens.length);
           } else {
-            console.warn('No tokens data received');
+            logger.warn('Component', 'No tokens data received');
           }
 
           // 3. POOLS - Load initially, will be polled separately
-          console.log('🏊 Loading pools with liquidity...');
+          logger.info('Component', '🏊 Loading pools with liquidity...');
           const poolsResponse = await this.api.getAllPools();
 
           if (poolsResponse.success && poolsResponse.data) {
             marketStore.setPools(poolsResponse.data);
-            console.log('🏊 Loaded pools:', poolsResponse.data.length);
+            logger.info('Component', '🏊 Loaded pools:', poolsResponse.data.length);
           } else {
-            console.warn('Failed to load pools:', poolsResponse.error);
+            logger.warn('Component', 'Failed to load pools:', poolsResponse.error);
           }
 
           return { success: true };
         } catch (error) {
-          console.error('Failed to load initial market data:', error);
+          logger.error('Component', 'Failed to load initial market data:', error);
           throw error;
         } finally {
           marketStore.setLoading(false);
@@ -118,7 +119,7 @@ export class EuclidMarketDataController {
    * 3. Pools - polled only when components subscribe to marketData/liquidityPositions
    */
   private setupCoreDataPolling() {
-    console.log('📊 Setting up optimized core data polling using configuration:', {
+    logger.info('Component', '📊 Setting up optimized core data polling using configuration:', {
       activeInterval: this.euclidConfig.performance.polling.active.marketData,
       backgroundInterval: this.euclidConfig.performance.polling.background.marketData,
       cacheTTL: this.euclidConfig.performance.cache.marketData
@@ -130,11 +131,11 @@ export class EuclidMarketDataController {
       async () => {
         if (!dataSubscriptionManager.hasSubscriptions('marketData') &&
             !dataSubscriptionManager.hasSubscriptions('tokenPrices')) {
-          console.log('⏭️ No token metadata subscriptions - skipping fetch');
+          logger.info('Component', '⏭️ No token metadata subscriptions - skipping fetch');
           return; // Skip if no subscriptions
         }
 
-        console.log('🪙 Refreshing token metadata (subscription-driven)...');
+        logger.info('Component', '🪙 Refreshing token metadata (subscription-driven)...');
         await this.refreshTokenMetadata();
       },
       {
@@ -150,11 +151,11 @@ export class EuclidMarketDataController {
       async () => {
         if (!dataSubscriptionManager.hasSubscriptions('marketData') &&
             !dataSubscriptionManager.hasSubscriptions('liquidityPositions')) {
-          console.log('⏭️ No pools data subscriptions - skipping fetch');
+          logger.info('Component', '⏭️ No pools data subscriptions - skipping fetch');
           return; // Skip if no subscriptions
         }
 
-        console.log('🏊 Refreshing pools data (subscription-driven)...');
+        logger.info('Component', '🏊 Refreshing pools data (subscription-driven)...');
         await this.refreshPoolsData();
       },
       {
@@ -164,7 +165,7 @@ export class EuclidMarketDataController {
       }
     );
 
-    console.log('📊 Optimized core data polling setup complete - will poll only when subscriptions exist');
+    logger.info('Component', '📊 Optimized core data polling setup complete - will poll only when subscriptions exist');
   }
 
   /**
@@ -179,12 +180,12 @@ export class EuclidMarketDataController {
 
           if (tokens && tokens.length > 0) {
             marketStore.setTokens(tokens);
-            console.log('💰 Refreshed token metadata:', tokens.length);
+            logger.info('Component', '💰 Refreshed token metadata:', tokens.length);
           }
 
           return { success: true };
         } catch (error) {
-          console.error('❌ Failed to refresh token metadata:', error);
+          logger.error('Component', '❌ Failed to refresh token metadata:', error);
           throw error;
         }
       },
@@ -204,12 +205,12 @@ export class EuclidMarketDataController {
 
           if (poolsResponse.success && poolsResponse.data) {
             marketStore.setPools(poolsResponse.data);
-            console.log('🏊 Refreshed pools data:', poolsResponse.data.length);
+            logger.info('Component', '🏊 Refreshed pools data:', poolsResponse.data.length);
           }
 
           return { success: true };
         } catch (error) {
-          console.error('❌ Failed to refresh pools data:', error);
+          logger.error('Component', '❌ Failed to refresh pools data:', error);
           throw error;
         }
       },
@@ -219,13 +220,13 @@ export class EuclidMarketDataController {
 
   @Listen(EUCLID_EVENTS.MARKET.LOAD_INITIAL, { target: 'window' })
   async handleInitialDataLoad() {
-    console.log('📊 Loading initial market data...');
+    logger.info('Component', '📊 Loading initial market data...');
     await this.loadInitialData();
   }
 
   @Listen(EUCLID_EVENTS.MARKET.REFRESH_DATA, { target: 'window' })
   async handleRefreshRequest() {
-    console.log('� Manual market data refresh requested');
+    logger.info('Component', '� Manual market data refresh requested');
     // Trigger both token metadata and pools refresh
     await Promise.all([
       this.refreshTokenMetadata(),
@@ -236,12 +237,12 @@ export class EuclidMarketDataController {
   @Listen(EUCLID_EVENTS.MARKET.TOKEN_DETAILS_REQUEST, { target: 'window' })
   async handleTokenDetailsRequest(event: CustomEvent<{ tokenId: string }>) {
     const { tokenId } = event.detail;
-    console.log('📋 Loading token details for:', tokenId);
+    logger.info('Component', '📋 Loading token details for:', tokenId);
 
     try {
       // Get token denominations across all chains with caching
       // Note: getTokenDenoms method needs to be implemented in core API
-      console.log('📄 Token denoms not yet implemented for:', tokenId);
+      logger.info('Component', '📄 Token denoms not yet implemented for:', tokenId);
 
       // For now, emit a placeholder event
       dispatchEuclidEvent(EUCLID_EVENTS.MARKET.TOKEN_DETAILS_SUCCESS, {
@@ -251,7 +252,7 @@ export class EuclidMarketDataController {
 
       // Get escrow information with caching
       // Note: getEscrows method needs to be implemented in core API
-      console.log('📄 Token escrows not yet implemented for:', tokenId);
+      logger.info('Component', '📄 Token escrows not yet implemented for:', tokenId);
 
       // For now, emit a placeholder event
       dispatchEuclidEvent(EUCLID_EVENTS.MARKET.ESCROWS_LOADED, {
@@ -259,7 +260,7 @@ export class EuclidMarketDataController {
         data: { escrows: [] }
       });
     } catch (error) {
-      console.error('Failed to load token details:', error);
+      logger.error('Component', 'Failed to load token details:', error);
 
       dispatchEuclidEvent(EUCLID_EVENTS.MARKET.TOKEN_DETAILS_FAILED, {
         tokenId,
@@ -271,7 +272,7 @@ export class EuclidMarketDataController {
   @Listen(EUCLID_EVENTS.MARKET.CHAIN_DETAILS_REQUEST, { target: 'window' })
   async handleChainDetailsRequest(event: CustomEvent<{ chainUID: string }>) {
     const { chainUID } = event.detail;
-    console.log('🔗 Loading chain details for:', chainUID);
+    logger.info('Component', '🔗 Loading chain details for:', chainUID);
 
     try {
       // Get chain-specific data
@@ -287,7 +288,7 @@ export class EuclidMarketDataController {
         await this.loadInitialData();
       }
     } catch (error) {
-      console.error('Failed to load chain details:', error);
+      logger.error('Component', 'Failed to load chain details:', error);
 
       dispatchEuclidEvent(EUCLID_EVENTS.MARKET.CHAIN_DETAILS_FAILED, {
         chainUID,

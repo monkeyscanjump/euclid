@@ -9,6 +9,7 @@ import { loadingManager } from '../../../utils/loading-state-manager';
 import type { UserBalance, WalletInfo } from '../../../utils/types';
 import type { EuclidConfig } from '../../../utils/env';
 import { DEFAULT_CONFIG } from '../../../utils/env';
+import { logger } from '../../../utils/logger';
 
 @Component({
   tag: 'euclid-user-data-controller',
@@ -48,7 +49,7 @@ export class EuclidUserDataController {
   }
 
   private async initialize() {
-    console.log('👤 Initializing User Data Controller...');
+    logger.info('Component', '👤 Initializing User Data Controller...');
 
     // Listen for wallet connection changes with debouncing
     walletStore.onChange('wallets', async (wallets: Record<string, WalletInfo>) => {
@@ -59,7 +60,7 @@ export class EuclidUserDataController {
 
       // Debounce wallet changes to prevent infinite loops
       this.walletChangeTimeout = window.setTimeout(async () => {
-        const connectedWallets = Object.values(wallets).filter(wallet => wallet.isConnected);
+        const connectedWallets = Object.values(wallets).filter(wallet => wallet.address);
         if (connectedWallets.length > 0) {
           await this.handleWalletConnection(connectedWallets);
         } else {
@@ -76,7 +77,7 @@ export class EuclidUserDataController {
     }
 
     this.isInitialized = true;
-    console.log('✅ User Data Controller initialized');
+    logger.info('Component', '✅ User Data Controller initialized');
   }
 
   private async handleWalletConnection(_wallets: WalletInfo[]) {
@@ -84,7 +85,7 @@ export class EuclidUserDataController {
       this.isLoading = true;
       this.error = null;
 
-      console.log('🔗 Wallets connected, loading user data...');
+      logger.info('Component', '🔗 Wallets connected, loading user data...');
 
       // Load user data for each connected wallet
       await Promise.all([
@@ -100,7 +101,7 @@ export class EuclidUserDataController {
       this.retryCount = 0;
 
     } catch (error) {
-      console.error('❌ Failed to load user data:', error);
+      logger.error('Component', '❌ Failed to load user data:', error);
       await this.handleLoadError(error);
     } finally {
       this.isLoading = false;
@@ -110,7 +111,7 @@ export class EuclidUserDataController {
   private handleWalletDisconnection() {
     // Prevent infinite loops - only clear if we're not already in a cleared state
     if (walletStore.state.isConnected || walletStore.getAllConnectedWallets().length > 0) {
-      console.log('🔌 Wallets disconnected, clearing user data...');
+      logger.info('Component', '🔌 Wallets disconnected, clearing user data...');
 
       this.clearPeriodicRefresh();
       this.retryCount = 0;
@@ -123,7 +124,7 @@ export class EuclidUserDataController {
   private async loadUserBalances() {
     // Only fetch balances if components are subscribed to balance data
     if (!dataSubscriptionManager.hasSubscriptions('balances')) {
-      console.log('💰 Skipping balance fetch - no active subscriptions');
+      logger.info('Component', '💰 Skipping balance fetch - no active subscriptions');
       return;
     }
 
@@ -138,7 +139,7 @@ export class EuclidUserDataController {
 
         try {
           const balancePromises = connectedWallets.map(async (wallet, index) => {
-            console.log(`💰 Loading balances for ${wallet.chainUID}:${wallet.address.slice(0, 8)}...`);
+            logger.info('Component', `💰 Loading balances for ${wallet.chainUID}:${wallet.address.slice(0, 8)}...`);
 
             // Update progress
             const progress = ((index + 1) / connectedWallets.length) * 100;
@@ -164,7 +165,7 @@ export class EuclidUserDataController {
               }
               return [];
             } catch (error) {
-              console.warn(`⚠️ Failed to load balance for ${wallet.chainUID}:`, error.message);
+              logger.warn('Component', `⚠️ Failed to load balance for ${wallet.chainUID}:`, error.message);
               return [];
             }
           });
@@ -173,7 +174,7 @@ export class EuclidUserDataController {
           const totalBalances = results.flat().length;
 
           loadingManager.stopLoading(loadingId);
-          console.log(`✅ Updated ${totalBalances} balances for ${connectedWallets.length} connected wallets`);
+          logger.info('Component', `✅ Updated ${totalBalances} balances for ${connectedWallets.length} connected wallets`);
 
           return { success: true, balancesCount: totalBalances };
         } catch (error) {
@@ -188,7 +189,7 @@ export class EuclidUserDataController {
   private async loadLiquidityPositions() {
     // Only fetch positions if components are subscribed to liquidity data
     if (!dataSubscriptionManager.hasSubscriptions('liquidityPositions')) {
-      console.log('🏊 Skipping liquidity positions fetch - no active subscriptions');
+      logger.info('Component', '🏊 Skipping liquidity positions fetch - no active subscriptions');
       return;
     }
 
@@ -203,7 +204,7 @@ export class EuclidUserDataController {
 
         try {
           const positionPromises = connectedWallets.map(async (wallet, index) => {
-            console.log(`🏊 Loading liquidity positions for ${wallet.chainUID}:${wallet.address.slice(0, 8)}...`);
+            logger.info('Component', `🏊 Loading liquidity positions for ${wallet.chainUID}:${wallet.address.slice(0, 8)}...`);
 
             // Update progress
             const progress = ((index + 1) / connectedWallets.length) * 100;
@@ -211,7 +212,7 @@ export class EuclidUserDataController {
 
             try {
               // Stub implementation - to be completed when liquidity API methods are available
-              console.log('Liquidity positions loading - implementation pending');
+              logger.info('Component', 'Liquidity positions loading - implementation pending');
 
               // TODO: Implement proper liquidity position loading using existing API
               // const poolsResponse = await euclidAPI.getUserLiquidityPositions(wallet.address, wallet.chainUID);
@@ -219,7 +220,7 @@ export class EuclidUserDataController {
 
               return [];
             } catch (error) {
-              console.warn(`⚠️ Failed to load liquidity positions for ${wallet.chainUID}:`, error.message);
+              logger.warn('Component', `⚠️ Failed to load liquidity positions for ${wallet.chainUID}:`, error.message);
               return [];
             }
           });
@@ -228,7 +229,7 @@ export class EuclidUserDataController {
           const totalPositions = results.flat().length;
 
           loadingManager.stopLoading(loadingId);
-          console.log(`✅ Updated ${totalPositions} liquidity positions for ${connectedWallets.length} connected wallets`);
+          logger.info('Component', `✅ Updated ${totalPositions} liquidity positions for ${connectedWallets.length} connected wallets`);
 
           return { success: true, positionsCount: totalPositions };
         } catch (error) {
@@ -243,7 +244,7 @@ export class EuclidUserDataController {
   private async loadUserTransactions() {
     // Only fetch transactions if components are subscribed to transaction data
     if (!dataSubscriptionManager.hasSubscriptions('transactions')) {
-      console.log('📊 Skipping transactions fetch - no active subscriptions');
+      logger.info('Component', '📊 Skipping transactions fetch - no active subscriptions');
       return;
     }
 
@@ -251,17 +252,17 @@ export class EuclidUserDataController {
 
     for (const wallet of connectedWallets) {
       try {
-        console.log(`📊 Loading transactions for ${wallet.chainUID}:${wallet.address.slice(0, 8)}...`);
+        logger.info('Component', `📊 Loading transactions for ${wallet.chainUID}:${wallet.address.slice(0, 8)}...`);
 
         // Stub implementation - to be completed later
-        console.log('Transactions loading - implementation pending');
+        logger.info('Component', 'Transactions loading - implementation pending');
 
         // TODO: Implement proper transaction loading
         // const txResponse = await apiClient.getUserTransactions(wallet.address, wallet.chainUID);
         // Process and update walletStore.updateWalletTransactions(wallet.chainUID, transactions);
 
       } catch (error) {
-        console.warn(`⚠️ Failed to load transactions for ${wallet.chainUID}:`, error.message);
+        logger.warn('Component', `⚠️ Failed to load transactions for ${wallet.chainUID}:`, error.message);
       }
     }
   }
@@ -305,12 +306,12 @@ export class EuclidUserDataController {
       // Check if we have connected wallets
       const connectedWallets = walletStore.getAllConnectedWallets();
       if (connectedWallets.length > 0) {
-        console.log('🔄 Refreshing wallet data...');
+        logger.info('Component', '🔄 Refreshing wallet data...');
         await this.refreshUserData();
       }
     }, this.euclidConfig.refreshIntervals.balances);
 
-    console.log(`👤 User data refresh interval set to ${this.euclidConfig.refreshIntervals.balances}ms`);
+    logger.info('Component', `👤 User data refresh interval set to ${this.euclidConfig.refreshIntervals.balances}ms`);
   }
 
   private clearPeriodicRefresh() {
@@ -333,12 +334,12 @@ export class EuclidUserDataController {
       ]);
 
       // Portfolio value calculation to be implemented later
-      console.log('Portfolio value calculation - implementation pending');
+      logger.info('Component', 'Portfolio value calculation - implementation pending');
 
       this.retryCount = 0;
 
     } catch (error) {
-      console.warn('⚠️ Failed to refresh user data:', error);
+      logger.warn('Component', '⚠️ Failed to refresh user data:', error);
       await this.handleLoadError(error);
     } finally {
       this.isLoading = false;
@@ -349,7 +350,7 @@ export class EuclidUserDataController {
     this.retryCount++;
 
     if (this.retryCount < this.maxRetries) {
-      console.log(`🔄 Retrying user data load (${this.retryCount}/${this.maxRetries})...`);
+      logger.info('Component', `🔄 Retrying user data load (${this.retryCount}/${this.maxRetries})...`);
 
       // Exponential backoff
       const delay = Math.pow(2, this.retryCount) * 1000;
@@ -358,44 +359,44 @@ export class EuclidUserDataController {
       }, delay);
 
     } else {
-      console.error('❌ Max retries reached for user data loading');
+      logger.error('Component', '❌ Max retries reached for user data loading');
       this.error = error.message || 'Failed to load user data';
     }
   }
 
   @Listen(EUCLID_EVENTS.USER.REFRESH_DATA, { target: 'window' })
   async handleRefreshRequest() {
-    console.log('🔄 Manual user data refresh requested');
+    logger.info('Component', '🔄 Manual user data refresh requested');
     await this.refreshUserData();
   }
 
   @Listen(EUCLID_EVENTS.USER.BALANCES_SUBSCRIBE, { target: 'window' })
   async handleBalancesSubscribe() {
-    console.log('💰 Component subscribed to balance data - triggering fetch');
+    logger.info('Component', '💰 Component subscribed to balance data - triggering fetch');
     await this.loadUserBalances();
   }
 
   @Listen(EUCLID_EVENTS.USER.BALANCES_UNSUBSCRIBE, { target: 'window' })
   handleBalancesUnsubscribe() {
-    console.log('💰 Component unsubscribed from balance data');
+    logger.info('Component', '💰 Component unsubscribed from balance data');
     // Cleanup can be added here if needed
   }
 
   @Listen(EUCLID_EVENTS.LIQUIDITY.POSITIONS_SUBSCRIBE, { target: 'window' })
   async handleLiquidityPositionsSubscribe() {
-    console.log('🏊 Component subscribed to liquidity position data - triggering fetch');
+    logger.info('Component', '🏊 Component subscribed to liquidity position data - triggering fetch');
     await this.loadLiquidityPositions();
   }
 
   @Listen(EUCLID_EVENTS.LIQUIDITY.POSITIONS_UNSUBSCRIBE, { target: 'window' })
   handleLiquidityPositionsUnsubscribe() {
-    console.log('🏊 Component unsubscribed from liquidity position data');
+    logger.info('Component', '🏊 Component unsubscribed from liquidity position data');
     // Cleanup can be added here if needed
   }
 
   @Listen(EUCLID_EVENTS.USER.CLEAR_DATA, { target: 'window' })
   handleClearRequest() {
-    console.log('🗑️ User data clear requested');
+    logger.info('Component', '🗑️ User data clear requested');
     walletStore.clear();
     this.clearPeriodicRefresh();
   }

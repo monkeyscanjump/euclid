@@ -4,6 +4,7 @@
  */
 
 import type { WorkerMessage, WorkerResponse, DataItem, DataType, FilterState } from '../workers/data-list.worker';
+import { logger } from './logger';
 
 export interface WorkerManagerConfig {
   workerPath?: string;
@@ -44,10 +45,10 @@ export class DataListWorkerManager {
         this.worker = new Worker(this.config.workerPath);
         this.worker.addEventListener('message', this.handleWorkerMessage.bind(this));
         this.worker.addEventListener('error', this.handleWorkerError.bind(this));
-        console.log('🚀 DataListWorker initialized successfully');
+        logger.info('WorkerManager', 'DataListWorker initialized successfully');
         this.retryCount = 0; // Reset retry count on successful initialization
       } catch (error) {
-        console.error('❌ Failed to initialize DataListWorker:', error);
+        logger.error('WorkerManager', 'Failed to initialize DataListWorker', error);
         this.handleWorkerFailure();
       }
     }
@@ -58,7 +59,7 @@ export class DataListWorkerManager {
     const pending = this.pendingMessages.get(id);
 
     if (!pending) {
-      console.warn('⚠️ Received response for unknown message ID:', id);
+      logger.warn('WorkerManager', 'Received response for unknown message ID', id);
       return;
     }
 
@@ -69,14 +70,14 @@ export class DataListWorkerManager {
       pending.reject(new Error(payload.error || 'Unknown worker error'));
     } else {
       if (payload.processingTime !== undefined) {
-        console.log(`⚡ Worker processing time: ${payload.processingTime.toFixed(2)}ms`);
+        logger.debug('WorkerManager', `Worker processing time: ${payload.processingTime.toFixed(2)}ms`);
       }
       pending.resolve(payload);
     }
   }
 
   private handleWorkerError(error: ErrorEvent) {
-    console.error('❌ Worker error:', error);
+    logger.error('WorkerManager', 'Worker error', error);
 
     // Reject all pending messages
     this.pendingMessages.forEach((pending) => {
@@ -91,12 +92,12 @@ export class DataListWorkerManager {
 
   private handleWorkerFailure() {
     this.retryCount++;
-    console.warn(`⚠️ Worker failure ${this.retryCount}/${this.maxRetries}`);
+    logger.warn('WorkerManager', `Worker failure ${this.retryCount}/${this.maxRetries}`);
 
     this.terminateWorker();
 
     if (this.retryCount >= this.maxRetries) {
-      console.error('❌ Worker failed too many times, disabling worker permanently');
+      logger.error('WorkerManager', 'Worker failed too many times, disabling worker permanently');
       this.workerDisabled = true;
       return;
     }
@@ -308,7 +309,7 @@ export class DataListWorkerManager {
       // Terminate worker
       this.worker.terminate();
       this.worker = null;
-      console.log('🔄 DataListWorker terminated');
+      logger.info('WorkerManager', 'DataListWorker terminated');
     }
   }
 

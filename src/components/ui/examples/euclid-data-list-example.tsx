@@ -8,6 +8,7 @@
 import { Component, State, h } from '@stencil/core';
 import { useAllMarketData, MarketDataSubscription } from '../../../utils/market-data-helper';
 import type { EuclidChainConfig, TokenInfo, PoolInfo } from '../../../utils/types';
+import { logger } from '../../../utils/logger';
 
 @Component({
   tag: 'euclid-data-list-example',
@@ -35,7 +36,7 @@ export class EuclidDataListExample {
     this.loading = marketData.loading;
     this.marketDataSubscriptions = marketData.subscriptions;
 
-    console.log('📊 Data List subscribed to market data:', {
+    logger.info('Component', '📊 Data List subscribed to market data:', {
       chains: this.chains.length,
       tokens: this.tokens.length,
       pools: this.pools.length
@@ -56,7 +57,7 @@ export class EuclidDataListExample {
       subscription.unsubscribe();
     });
 
-    console.log('📊 Data List unsubscribed from market data');
+    logger.info('Component', '📊 Data List unsubscribed from market data');
 
     // If this was the last component subscribed to market data,
     // the polling will automatically stop to save resources

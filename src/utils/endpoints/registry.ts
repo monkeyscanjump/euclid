@@ -6,6 +6,7 @@
 import { lazyEndpointLoader, type LazyEndpointLoader, type EndpointCategoryName } from './loader';
 import { GraphQLQueryFactory, RESTEndpointFactory } from '../endpoint-factory';
 import type { EndpointConfig } from './base';
+import { logger } from '../logger';
 
 export interface RequestOptions {
   variables?: Record<string, unknown>;
@@ -85,7 +86,7 @@ export class DynamicEndpointRegistry {
     });
 
     await Promise.all(executorPromises);
-    console.log(`✅ Pre-loaded ${category.endpoints.length} endpoints from ${categoryName} category`);
+    logger.info('Utils', `✅ Pre-loaded ${category.endpoints.length} endpoints from ${categoryName} category`);
   }  /**
    * Pre-load specific endpoints in batch
    */
@@ -99,7 +100,7 @@ export class DynamicEndpointRegistry {
       }
     });
 
-    console.log(`✅ Pre-loaded ${configs.length} endpoints: ${endpointIds.join(', ')}`);
+    logger.info('Utils', `✅ Pre-loaded ${configs.length} endpoints: ${endpointIds.join(', ')}`);
   }
 
   /**

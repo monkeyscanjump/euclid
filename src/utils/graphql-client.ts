@@ -11,6 +11,7 @@ import type {
 } from './types/api.types';
 import type { EuclidConfig } from './env';
 import { DEFAULT_CONFIG } from './env';
+import { logger } from './logger';
 
 /**
  * GraphQL client for Euclid Protocol
@@ -65,7 +66,7 @@ export class EuclidGraphQLClient {
       };
     } catch (error) {
       clearTimeout(timeoutId);
-      console.error('GraphQL query failed:', error);
+      logger.error('Utils', 'GraphQL query failed:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -237,11 +238,11 @@ export class EuclidGraphQLClient {
         } satisfies PoolInfo;
       });
 
-      console.log(`✅ Loaded ${pools.length} pools with real liquidity and APR data from official API`);
+      logger.info('Utils', `✅ Loaded ${pools.length} pools with real liquidity and APR data from official API`);
       return pools;
 
     } catch (error) {
-      console.error('Failed to fetch pools with liquidity data:', error);
+      logger.error('Utils', 'Failed to fetch pools with liquidity data:', error);
       return [];
     }
   }  /**

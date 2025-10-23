@@ -2,6 +2,7 @@
  * Polling Coordinator - Manages intervals with web-standard Page Visibility API
  * Automatically pauses/resumes based on tab visibility
  */
+import { logger } from './logger';
 
 interface PollingConfig {
   activeInterval: number;
@@ -146,7 +147,7 @@ export class PollingCoordinator {
       try {
         await task.fn();
       } catch (error) {
-        console.error(`Polling task ${task.id} failed:`, error);
+        logger.error('Utils', `Polling task ${task.id} failed:`, error);
       }
     }, interval);
   }

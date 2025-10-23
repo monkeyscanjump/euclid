@@ -42,7 +42,7 @@
  *   private async loadData() {
  *     // Only fetch data if components are subscribed
  *     if (!dataSubscriptionManager.hasSubscriptions('balances')) {
- *       console.log('Skipping data fetch - no active subscriptions');
+ *       logger.info('Utils', 'Skipping data fetch - no active subscriptions');
  *       return;
  *     }
  *
@@ -92,6 +92,7 @@ import { requestManager } from './request-manager';
 import { pollingCoordinator } from './polling-coordinator';
 import { loadingManager } from './loading-state-manager';
 import { DEFAULT_CONFIG } from './env';
+import { logger } from './logger';
 
 export interface DataSubscription {
   id: string;
@@ -159,7 +160,7 @@ class DataSubscriptionManager {
     }
     this.dataTypeSubscriptions.get(dataType)!.add(subscriptionId);
 
-    console.log(`📊 Data subscription added: ${componentId} → ${dataType}`, params);
+    logger.info('Utils', `📊 Data subscription added: ${componentId} → ${dataType}`, params);
 
     // Notify controllers that data is now needed
     this.notifyDataNeeded(dataType, subscription);
@@ -199,7 +200,7 @@ class DataSubscriptionManager {
 
     this.subscriptions.delete(subscriptionId);
 
-    console.log(`📊 Data subscription removed: ${subscription.componentId} → ${subscription.dataType}`);
+    logger.info('Utils', `📊 Data subscription removed: ${subscription.componentId} → ${subscription.dataType}`);
   }
 
   /**
@@ -213,7 +214,7 @@ class DataSubscriptionManager {
     const subsToRemove = [...componentSubs];
     subsToRemove.forEach(subscriptionId => this.unsubscribe(subscriptionId));
 
-    console.log(`📊 All subscriptions removed for component: ${componentId}`);
+    logger.info('Utils', `📊 All subscriptions removed for component: ${componentId}`);
   }
 
   /**

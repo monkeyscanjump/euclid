@@ -1,5 +1,6 @@
 import { Component, h, State, Listen, Element } from '@stencil/core';
 import { appStore } from '../../../store/app.store';
+import { logger } from '../../../utils/logger';
 
 @Component({
   tag: 'euclid-modal',
@@ -17,46 +18,46 @@ export class EuclidModal {
   private scrollBarWidth: number = 0;
 
   componentWillLoad() {
-    console.log('🚀 Modal componentWillLoad');
-    console.log('📊 Initial appState:', this.appState);
-    console.log('📊 Initial store state:', appStore.state);
+    logger.info('Component', '🚀 Modal componentWillLoad');
+    logger.info('Component', '📊 Initial appState:', this.appState);
+    logger.info('Component', '📊 Initial store state:', appStore.state);
 
     // Calculate scrollbar width for body scroll prevention
     this.scrollBarWidth = this.getScrollBarWidth();
-    console.log('📏 Scrollbar width:', this.scrollBarWidth);
+    logger.info('Component', '📏 Scrollbar width:', this.scrollBarWidth);
 
     appStore.onChange('walletModalOpen', () => {
-      console.log('👛 Wallet modal state changed:', appStore.state.walletModalOpen);
+      logger.info('Component', '👛 Wallet modal state changed:', appStore.state.walletModalOpen);
       const wasOpen = this.appState.walletModalOpen || this.appState.tokenModalOpen;
       const newState = { ...appStore.state };
       const isNowOpen = newState.walletModalOpen || newState.tokenModalOpen;
 
       this.appState = newState;
 
-      console.log('👛 Wallet modal state transition:', { wasOpen, isNowOpen });
+      logger.info('Component', '👛 Wallet modal state transition:', { wasOpen, isNowOpen });
       this.handleModalStateChange(wasOpen, isNowOpen);
     });
 
     appStore.onChange('tokenModalOpen', () => {
-      console.log('🪙 Token modal state changed:', appStore.state.tokenModalOpen);
+      logger.info('Component', '🪙 Token modal state changed:', appStore.state.tokenModalOpen);
       const wasOpen = this.appState.walletModalOpen || this.appState.tokenModalOpen;
       const newState = { ...appStore.state };
       const isNowOpen = newState.walletModalOpen || newState.tokenModalOpen;
 
       this.appState = newState;
 
-      console.log('🪙 Token modal state transition:', { wasOpen, isNowOpen });
+      logger.info('Component', '🪙 Token modal state transition:', { wasOpen, isNowOpen });
       this.handleModalStateChange(wasOpen, isNowOpen);
     });
   }
 
   componentDidLoad() {
-    console.log('🎬 componentDidLoad called');
+    logger.info('Component', '🎬 componentDidLoad called');
     // Handle initial state if modal is already open
     const isOpen = this.appState.walletModalOpen || this.appState.tokenModalOpen;
-    console.log('🎬 componentDidLoad isOpen:', isOpen);
+    logger.info('Component', '🎬 componentDidLoad isOpen:', isOpen);
     if (isOpen) {
-      console.log('🎬 componentDidLoad calling onModalOpen');
+      logger.info('Component', '🎬 componentDidLoad calling onModalOpen');
       this.onModalOpen();
     }
   }
@@ -113,16 +114,16 @@ export class EuclidModal {
    * Handle modal state changes (opening/closing)
    */
   private handleModalStateChange(wasOpen: boolean, isNowOpen: boolean) {
-    console.log('🔄 handleModalStateChange:', { wasOpen, isNowOpen });
+    logger.info('Component', '🔄 handleModalStateChange:', { wasOpen, isNowOpen });
 
     if (!wasOpen && isNowOpen) {
-      console.log('▶️ Opening modal');
+      logger.info('Component', '▶️ Opening modal');
       this.onModalOpen();
     } else if (wasOpen && !isNowOpen) {
-      console.log('⏹️ Closing modal');
+      logger.info('Component', '⏹️ Closing modal');
       this.onModalClose();
     } else {
-      console.log('➡️ No state change needed');
+      logger.info('Component', '➡️ No state change needed');
     }
   }
 
@@ -130,17 +131,17 @@ export class EuclidModal {
    * SIMPLE AS FUCK body scroll prevention
    */
   private onModalOpen() {
-    console.log('🔒 onModalOpen called');
+    logger.info('Component', '🔒 onModalOpen called');
 
     if (typeof window === 'undefined') {
-      console.log('❌ No window, returning');
+      logger.info('Component', '❌ No window, returning');
       return;
     }
 
     try {
       // Store current active element
       this.previousActiveElement = document.activeElement;
-      console.log('💾 Stored active element:', this.previousActiveElement);
+      logger.info('Component', '💾 Stored active element:', this.previousActiveElement);
 
       // SIMPLE: Just lock the fucking body scroll
       const body = document.body;
@@ -148,7 +149,7 @@ export class EuclidModal {
 
       body.style.overflow = 'hidden';
 
-      console.log('🔒 BODY SCROLL LOCKED!', {
+      logger.info('Component', '🔒 BODY SCROLL LOCKED!', {
         previousOverflow: this.previousBodyOverflow,
         newOverflow: body.style.overflow
       });
@@ -158,12 +159,12 @@ export class EuclidModal {
         const modalContainer = this.el.shadowRoot?.querySelector('.modal-container') as HTMLElement;
         if (modalContainer) {
           modalContainer.focus();
-          console.log('🎯 Modal focused');
+          logger.info('Component', '🎯 Modal focused');
         }
       });
 
     } catch (error) {
-      console.error('❌ Error in onModalOpen:', error);
+      logger.error('Component', '❌ Error in onModalOpen:', error);
     }
   }
 
@@ -171,10 +172,10 @@ export class EuclidModal {
    * SIMPLE AS FUCK restore body scroll
    */
   private onModalClose() {
-    console.log('🔓 onModalClose called');
+    logger.info('Component', '🔓 onModalClose called');
 
     if (typeof window === 'undefined') {
-      console.log('❌ No window, returning');
+      logger.info('Component', '❌ No window, returning');
       return;
     }
 
@@ -183,7 +184,7 @@ export class EuclidModal {
       const body = document.body;
       body.style.overflow = this.previousBodyOverflow;
 
-      console.log('🔓 BODY SCROLL RESTORED!', {
+      logger.info('Component', '🔓 BODY SCROLL RESTORED!', {
         restoredOverflow: this.previousBodyOverflow,
         currentOverflow: body.style.overflow
       });
@@ -191,13 +192,13 @@ export class EuclidModal {
       // Restore focus to previous element
       if (this.previousActiveElement && typeof (this.previousActiveElement as HTMLElement).focus === 'function') {
         (this.previousActiveElement as HTMLElement).focus();
-        console.log('🎯 Focus restored to:', this.previousActiveElement);
+        logger.info('Component', '🎯 Focus restored to:', this.previousActiveElement);
       }
 
       this.previousActiveElement = null;
 
     } catch (error) {
-      console.error('❌ Error in onModalClose:', error);
+      logger.error('Component', '❌ Error in onModalClose:', error);
     }
   }
 
@@ -248,17 +249,17 @@ export class EuclidModal {
   render() {
     const isOpen = this.appState.walletModalOpen || this.appState.tokenModalOpen;
 
-    console.log('🎭 Modal render called:', {
+    logger.info('Component', '🎭 Modal render called:', {
       isOpen,
       walletOpen: this.appState.walletModalOpen,
       tokenOpen: this.appState.tokenModalOpen
     });
 
     if (!isOpen) {
-      console.log('🚫 Modal not open, returning null');
+      logger.info('Component', '🚫 Modal not open, returning null');
       // Make sure scroll is restored if modal is closed
       if (document.body.style.overflow === 'hidden') {
-        console.log('🔓 FORCE restoring scroll on closed modal');
+        logger.info('Component', '🔓 FORCE restoring scroll on closed modal');
         document.body.style.overflow = this.previousBodyOverflow || '';
       }
       return null;
@@ -266,7 +267,7 @@ export class EuclidModal {
 
     // FORCE scroll lock if modal is open (backup safety net)
     if (document.body.style.overflow !== 'hidden') {
-      console.log('🔒 FORCE locking scroll in render');
+      logger.info('Component', '🔒 FORCE locking scroll in render');
       this.previousBodyOverflow = document.body.style.overflow || '';
       document.body.style.overflow = 'hidden';
     }
@@ -277,11 +278,11 @@ export class EuclidModal {
     if (this.appState.walletModalOpen) {
       title = 'Connect Wallet';
       content = <euclid-wallet-content />;
-      console.log('👛 Rendering wallet modal');
+      logger.info('Component', '👛 Rendering wallet modal');
     } else if (this.appState.tokenModalOpen) {
       title = 'Select Token';
       content = <euclid-token-content />;
-      console.log('🪙 Rendering token modal');
+      logger.info('Component', '🪙 Rendering token modal');
     }
 
     return (

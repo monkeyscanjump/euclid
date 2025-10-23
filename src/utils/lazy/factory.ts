@@ -66,7 +66,7 @@ async function executeFactoryQuery<T>(query: string, variables?: Record<string, 
 export async function getAllPoolsImpl(chainUid: string, limit?: number, offset?: number) {
   const query = `
     query All_pools($chainUid: String!, $limit: Int, $offset: Int) {
-      factory(chain_uid: $chainUid) {
+      factory(chainUid: $chainUid) {
         all_pools(limit: $limit, offset: $offset) {
           pagination {
             total_count
@@ -113,7 +113,7 @@ export async function getAllPoolsImpl(chainUid: string, limit?: number, offset?:
 export async function getAllTokensImpl(chainUid: string, limit?: number, offset?: number) {
   const query = `
     query All_tokens($chainUid: String!, $limit: Int, $offset: Int) {
-      factory(chain_uid: $chainUid) {
+      factory(chainUid: $chainUid) {
         all_tokens(limit: $limit, offset: $offset) {
           tokens
           pagination {
@@ -148,7 +148,7 @@ export async function getAllTokensImpl(chainUid: string, limit?: number, offset?
 export async function getAllowedDenomsImpl(chainUid: string) {
   const query = `
     query Allowed_denoms($chainUid: String!) {
-      factory(chain_uid: $chainUid) {
+      factory(chainUid: $chainUid) {
         allowed_denoms {
           denoms
         }
@@ -173,11 +173,11 @@ export async function getAllowedDenomsImpl(chainUid: string) {
 export async function getEscrowImpl(chainUid: string, tokenId: string) {
   const query = `
     query Escrow($chainUid: String!, $tokenId: String!) {
-      factory(chain_uid: $chainUid) {
+      factory(chainUid: $chainUid) {
         escrow(token_id: $tokenId) {
           escrow_address
           token_id
-          chain_uid
+          chainUid
           denoms
           balance
         }
@@ -190,7 +190,7 @@ export async function getEscrowImpl(chainUid: string, tokenId: string) {
       escrow: {
         escrow_address: string;
         token_id: string;
-        chain_uid: string;
+        chainUid: string;
         denoms: string[];
         balance: string;
       };
@@ -206,11 +206,11 @@ export async function getEscrowImpl(chainUid: string, tokenId: string) {
 export async function getTokenAddressImpl(chainUid: string, tokenId: string) {
   const query = `
     query Get_token_address($chainUid: String!, $tokenId: String!) {
-      factory(chain_uid: $chainUid) {
+      factory(chainUid: $chainUid) {
         get_token_address(token_id: $tokenId) {
           token_address
           token_id
-          chain_uid
+          chainUid
           token_type
         }
       }
@@ -222,7 +222,7 @@ export async function getTokenAddressImpl(chainUid: string, tokenId: string) {
       get_token_address: {
         token_address: string;
         token_id: string;
-        chain_uid: string;
+        chainUid: string;
         token_type: string;
       };
     };
@@ -237,7 +237,7 @@ export async function getTokenAddressImpl(chainUid: string, tokenId: string) {
 export async function getPartnerFeesCollectedImpl(chainUid: string, partner: string) {
   const query = `
     query Partner_fees_collected($chainUid: String!, $partner: String!) {
-      factory(chain_uid: $chainUid) {
+      factory(chainUid: $chainUid) {
         partner_fees_collected(partner: $partner) {
           partner
           total_fees
@@ -275,9 +275,9 @@ export async function getPartnerFeesCollectedImpl(chainUid: string, partner: str
 export async function getStateImpl(chainUid: string) {
   const query = `
     query Factory($chainUid: String!) {
-      factory(chain_uid: $chainUid) {
+      factory(chainUid: $chainUid) {
         state {
-          chain_uid
+          chainUid
           router_contract
           hub_channel
           admin
@@ -289,7 +289,7 @@ export async function getStateImpl(chainUid: string) {
   const result = await executeFactoryQuery<{
     factory: {
       state: {
-        chain_uid: string;
+        chainUid: string;
         router_contract: string;
         hub_channel: string;
         admin: string;
@@ -306,7 +306,7 @@ export async function getStateImpl(chainUid: string) {
 export async function getVLPImpl(chainUid: string, pair: { token_1: string; token_2: string }) {
   const query = `
     query VLP($chainUid: String!, $pair: PairInput!) {
-      factory(chain_uid: $chainUid) {
+      factory(chainUid: $chainUid) {
         vlp(pair: $pair) {
           vlp_address
           pair {

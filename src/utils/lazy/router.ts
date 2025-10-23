@@ -385,20 +385,16 @@ export async function simulateSwapImpl(
 }
 
 /**
- * Get router state - NEW IMPLEMENTATION
+ * Get router state - FIXED TO MATCH ACTUAL SCHEMA
  */
 export async function getStateImpl() {
   const query = `
     query State {
       router {
         state {
-          router_address
-          total_chains
-          total_tokens
-          total_vlps
-          total_escrows
-          total_volume
-          protocol_version
+          admin
+          vlp_code_id
+          virtual_balance_address
         }
       }
     }
@@ -407,13 +403,9 @@ export async function getStateImpl() {
   const result = await executeRouterQuery<{
     router: {
       state: {
-        router_address: string;
-        total_chains: number;
-        total_tokens: number;
-        total_vlps: number;
-        total_escrows: number;
-        total_volume: string;
-        protocol_version: string;
+        admin: string;
+        vlp_code_id: number;
+        virtual_balance_address: string;
       };
     };
   }>(query);
@@ -422,18 +414,18 @@ export async function getStateImpl() {
 }
 
 /**
- * Get token denominations - NEW IMPLEMENTATION
+ * Get token denominations - FIXED TO MATCH ACTUAL SCHEMA
  */
 export async function getTokenDenomsImpl(tokenId: string) {
   const query = `
-    query Token_denoms($tokenId: String!) {
+    query Token_denoms($token: String!) {
       router {
-        token_denoms(token_id: $tokenId) {
+        token_denoms(token: $token) {
           denoms {
-            denom
             chain_uid
-            decimals
-            symbol
+            token_type {
+              __typename
+            }
           }
         }
       }
@@ -444,26 +436,26 @@ export async function getTokenDenomsImpl(tokenId: string) {
     router: {
       token_denoms: {
         denoms: Array<{
-          denom: string;
           chain_uid: string;
-          decimals: number;
-          symbol: string;
+          token_type: {
+            __typename: string;
+          };
         }>;
       };
     };
-  }>(query, { tokenId });
+  }>(query, { token: tokenId });
 
   return result.router.token_denoms;
 }
 
 /**
- * Get token pair from VLP - NEW IMPLEMENTATION
+ * Get token pair from VLP - FIXED FIELD NAME
  */
 export async function getTokenPairFromVLPImpl(vlp: string) {
   const query = `
-    query Token_pair_from_vlp($vlp: String!) {
+    query Token_pairs_from_vlp($vlp: String!) {
       router {
-        token_pair_from_vlp(vlp: $vlp) {
+        token_pairs_from_vlp(vlp: $vlp) {
           pair {
             token_1
             token_2
@@ -476,7 +468,7 @@ export async function getTokenPairFromVLPImpl(vlp: string) {
 
   const result = await executeRouterQuery<{
     router: {
-      token_pair_from_vlp: {
+      token_pairs_from_vlp: {
         pair: {
           token_1: string;
           token_2: string;
@@ -486,7 +478,7 @@ export async function getTokenPairFromVLPImpl(vlp: string) {
     };
   }>(query, { vlp });
 
-  return result.router.token_pair_from_vlp;
+  return result.router.token_pairs_from_vlp;
 }
 
 /**

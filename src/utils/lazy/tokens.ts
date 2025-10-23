@@ -78,7 +78,7 @@ export async function getTokenMetadataImpl(options?: {
           offset: $offset,
           verified: $verified,
           dex: $dex,
-          chain_uids: $chainUids,
+          chainUids: $chainUids,
           show_volume: $showVolume,
           search: $search
         ) {
@@ -91,7 +91,7 @@ export async function getTokenMetadataImpl(options?: {
           price_change_24h
           price_change_7d
           dex
-          chain_uids
+          chainUids
           total_volume
           total_volume_24h
           tags
@@ -111,11 +111,11 @@ export async function getTokenMetadataImpl(options?: {
         tokenId: string;
         description: string;
         image: string;
-        price: string;
+        price: number;
         price_change_24h: number;
         price_change_7d: number;
         dex: string[];
-        chain_uids: string[];
+        chainUids: string[];
         total_volume: string;
         total_volume_24h: string;
         tags: string[];
@@ -129,6 +129,7 @@ export async function getTokenMetadataImpl(options?: {
   // Convert string fields to numbers as expected by TypeScript interfaces
   return result.token.token_metadatas.map(token => ({
     ...token,
+    price: token.price.toString(),
     total_volume: parseFloat(token.total_volume) || 0,
     total_volume_24h: parseFloat(token.total_volume_24h) || 0,
     min_swap_value: parseFloat(token.min_swap_value) || 0,
@@ -152,7 +153,7 @@ export async function getTokenByIdImpl(tokenId: string) {
           price_change_24h
           price_change_7d
           dex
-          chain_uids
+          chainUids
           total_volume
           total_volume_24h
           tags
@@ -181,7 +182,7 @@ export async function getTokenByIdImpl(tokenId: string) {
         price_change_24h: number;
         price_change_7d: number;
         dex: string[];
-        chain_uids: string[];
+        chainUids: string[];
         total_volume: string;
         total_volume_24h: string;
         tags: string[];
@@ -368,7 +369,7 @@ export async function getTokenTransfersImpl(tokenId: string, limit?: number, off
             amount
             timestamp
             block_height
-            chain_uid
+            chainUid
           }
           pagination {
             total_count
@@ -390,7 +391,7 @@ export async function getTokenTransfersImpl(tokenId: string, limit?: number, off
           amount: string;
           timestamp: string;
           block_height: number;
-          chain_uid: string;
+          chainUid: string;
         }>;
         pagination: {
           total_count: number;
@@ -416,7 +417,7 @@ export async function getTokenHoldersImpl(tokenId: string, limit?: number, offse
             address
             balance
             percentage
-            chain_uid
+            chainUid
             last_updated
           }
           pagination {
@@ -436,7 +437,7 @@ export async function getTokenHoldersImpl(tokenId: string, limit?: number, offse
           address: string;
           balance: string;
           percentage: string;
-          chain_uid: string;
+          chainUid: string;
           last_updated: string;
         }>;
         pagination: {

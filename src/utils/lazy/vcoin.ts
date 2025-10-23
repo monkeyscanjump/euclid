@@ -66,12 +66,12 @@ export async function getAllBalancesImpl(
 ) {
   const query = `
     query All_balances($chainUid: String!, $vcoinAddress: String!, $limit: Int, $offset: Int) {
-      vcoin(chain_uid: $chainUid, vcoin_address: $vcoinAddress) {
+      vcoin(chainUid: $chainUid, vcoinAddress: $vcoinAddress) {
         all_balances(limit: $limit, offset: $offset) {
           balances {
             user_address
             balance
-            chain_uid
+            chainUid
             last_updated
           }
           pagination {
@@ -111,7 +111,7 @@ export async function getAllBalancesImpl(
 export async function getTotalSupplyImpl(chainUid: string, vcoinAddress: string) {
   const query = `
     query Total_supply($chainUid: String!, $vcoinAddress: String!) {
-      vcoin(chain_uid: $chainUid, vcoin_address: $vcoinAddress) {
+      vcoin(chainUid: $chainUid, vcoinAddress: $vcoinAddress) {
         total_supply {
           total_supply
           circulating_supply
@@ -156,14 +156,14 @@ export async function getUserBalanceImpl(
 ) {
   const query = `
     query User_balance($chainUid: String!, $vcoinAddress: String!, $userAddress: String!) {
-      vcoin(chain_uid: $chainUid, vcoin_address: $vcoinAddress) {
+      vcoin(chainUid: $chainUid, vcoinAddress: $vcoinAddress) {
         user_balance(user_address: $userAddress) {
           user_address
           balance
           virtual_balance
           locked_balance
           available_balance
-          chain_uid
+          chainUid
           last_updated
           transaction_history {
             tx_hash

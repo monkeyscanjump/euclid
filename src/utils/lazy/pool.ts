@@ -66,7 +66,7 @@ export async function getPoolImpl(
 ) {
   const query = `
     query Pool($chainUid: String!, $poolAddress: String!, $pair: PairInput!) {
-      pool(chain_uid: $chainUid, pool_address: $poolAddress, pair: $pair) {
+      pool(chainUid: $chainUid, poolAddress: $poolAddress, pair: $pair) {
         pool_id
         pair {
           token_1
@@ -135,7 +135,7 @@ export async function getPoolFeesImpl(
 ) {
   const query = `
     query Pool_fees($chainUid: String!, $poolAddress: String!, $timeframe: String) {
-      pool(chain_uid: $chainUid, pool_address: $poolAddress) {
+      pool(chainUid: $chainUid, poolAddress: $poolAddress) {
         pool_fees(timeframe: $timeframe) {
           total_fees_collected
           fees_by_token {
@@ -196,7 +196,7 @@ export async function getSimulateJoinPoolImpl(
 ) {
   const query = `
     query Simulate_join_pool($chainUid: String!, $poolAddress: String!, $tokenAmounts: [TokenAmountInput!]!) {
-      pool(chain_uid: $chainUid, pool_address: $poolAddress) {
+      pool(chainUid: $chainUid, poolAddress: $poolAddress) {
         simulate_join_pool(token_amounts: $tokenAmounts) {
           liquidity_tokens_out
           price_impact
@@ -240,7 +240,7 @@ export async function getSimulateExitPoolImpl(
 ) {
   const query = `
     query Simulate_exit_pool($chainUid: String!, $poolAddress: String!, $liquidityAmount: String!, $exitType: String) {
-      pool(chain_uid: $chainUid, pool_address: $poolAddress) {
+      pool(chainUid: $chainUid, poolAddress: $poolAddress) {
         simulate_exit_pool(liquidity_amount: $liquidityAmount, exit_type: $exitType) {
           tokens_out {
             token_id

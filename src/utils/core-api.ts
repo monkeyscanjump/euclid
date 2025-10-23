@@ -3,6 +3,9 @@
  * ~1KB initial bundle, everything else loads on-demand
  */
 
+// Logger for debugging
+import { logger } from './logger';
+
 // Core types (minimal, unavoidable)
 import type {
   SwapRequest,
@@ -173,37 +176,72 @@ class LazyEuclidAPI {
 
   async getAllVLPPools(chainUid: string, vlpAddress: string, limit?: number, offset?: number) {
     const { getAllPoolsImpl } = await import('./lazy/vlp');
-    return getAllPoolsImpl(chainUid, vlpAddress, limit, offset);
+    const pairData = await this.getTokenPairFromVLP(vlpAddress);
+    if (!pairData) {
+      logger.warn('VLP', `Could not get token pair for VLP address: ${vlpAddress}`);
+      return null;
+    }
+    return getAllPoolsImpl(vlpAddress, pairData.pair, limit, offset);
   }
 
   async getAllVLPPositions(chainUid: string, vlpAddress: string, limit?: number, offset?: number) {
     const { getAllPositionsImpl } = await import('./lazy/vlp');
-    return getAllPositionsImpl(chainUid, vlpAddress, limit, offset);
+    const pairData = await this.getTokenPairFromVLP(vlpAddress);
+    if (!pairData) {
+      logger.warn('VLP', `Could not get token pair for VLP address: ${vlpAddress}`);
+      return null;
+    }
+    return getAllPositionsImpl(vlpAddress, pairData.pair, limit, offset);
   }
 
   async getVLPAssetList(chainUid: string, vlpAddress: string) {
     const { getAssetListImpl } = await import('./lazy/vlp');
-    return getAssetListImpl(chainUid, vlpAddress);
+    const pairData = await this.getTokenPairFromVLP(vlpAddress);
+    if (!pairData) {
+      logger.warn('VLP', `Could not get token pair for VLP address: ${vlpAddress}`);
+      return null;
+    }
+    return getAssetListImpl(vlpAddress, pairData.pair);
   }
 
   async getMyVLPPositions(chainUid: string, vlpAddress: string, userAddress: string, limit?: number, offset?: number) {
     const { getMyPositionsImpl } = await import('./lazy/vlp');
-    return getMyPositionsImpl(chainUid, vlpAddress, userAddress, limit, offset);
+    const pairData = await this.getTokenPairFromVLP(vlpAddress);
+    if (!pairData) {
+      logger.warn('VLP', `Could not get token pair for VLP address: ${vlpAddress}`);
+      return null;
+    }
+    return getMyPositionsImpl(vlpAddress, pairData.pair, userAddress, limit, offset);
   }
 
   async getVLPPool(chainUid: string, vlpAddress: string, poolId: string) {
     const { getPoolImpl } = await import('./lazy/vlp');
-    return getPoolImpl(chainUid, vlpAddress, poolId);
+    const pairData = await this.getTokenPairFromVLP(vlpAddress);
+    if (!pairData) {
+      logger.warn('VLP', `Could not get token pair for VLP address: ${vlpAddress}`);
+      return null;
+    }
+    return getPoolImpl(vlpAddress, pairData.pair, poolId);
   }
 
   async getVLPPosition(chainUid: string, vlpAddress: string, positionId: string) {
     const { getPositionImpl } = await import('./lazy/vlp');
-    return getPositionImpl(chainUid, vlpAddress, positionId);
+    const pairData = await this.getTokenPairFromVLP(vlpAddress);
+    if (!pairData) {
+      logger.warn('VLP', `Could not get token pair for VLP address: ${vlpAddress}`);
+      return null;
+    }
+    return getPositionImpl(vlpAddress, pairData.pair, positionId);
   }
 
   async getVLPTotalFeesCollected(chainUid: string, vlpAddress: string, timeframe?: string) {
     const { getTotalFeesCollectedImpl } = await import('./lazy/vlp');
-    return getTotalFeesCollectedImpl(chainUid, vlpAddress, timeframe);
+    const pairData = await this.getTokenPairFromVLP(vlpAddress);
+    if (!pairData) {
+      logger.warn('VLP', `Could not get token pair for VLP address: ${vlpAddress}`);
+      return null;
+    }
+    return getTotalFeesCollectedImpl(vlpAddress, pairData.pair, timeframe);
   }
 
   // ============================================================================

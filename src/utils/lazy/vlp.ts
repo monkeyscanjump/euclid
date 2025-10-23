@@ -60,17 +60,17 @@ async function executeVLPQuery<T>(query: string, variables?: Record<string, unkn
 }
 
 /**
- * Get all pools from VLP - NEW IMPLEMENTATION
+ * Get all pools from VLP - FIXED TO MATCH ACTUAL SCHEMA
  */
 export async function getAllPoolsImpl(
-  chainUid: string,
-  vlpAddress: string,
+  contract: string,
+  pair: { token_1: string; token_2: string },
   limit?: number,
   offset?: number
 ) {
   const query = `
-    query All_pools($chainUid: String!, $vlpAddress: String!, $limit: Int, $offset: Int) {
-      vlp(chain_uid: $chainUid, vlp_address: $vlpAddress) {
+    query All_pools($contract: String!, $pair: PairInput!, $limit: Int, $offset: Int) {
+      vlp(contract: $contract, pair: $pair) {
         all_pools(limit: $limit, offset: $offset) {
           pools {
             pool_id
@@ -114,23 +114,23 @@ export async function getAllPoolsImpl(
         };
       };
     };
-  }>(query, { chainUid, vlpAddress, limit, offset });
+  }>(query, { contract, pair, limit, offset });
 
   return result.vlp.all_pools;
 }
 
 /**
- * Get all positions from VLP - NEW IMPLEMENTATION
+ * Get all positions from VLP - FIXED TO MATCH ACTUAL SCHEMA
  */
 export async function getAllPositionsImpl(
-  chainUid: string,
-  vlpAddress: string,
+  contract: string,
+  pair: { token_1: string; token_2: string },
   limit?: number,
   offset?: number
 ) {
   const query = `
-    query All_positions($chainUid: String!, $vlpAddress: String!, $limit: Int, $offset: Int) {
-      vlp(chain_uid: $chainUid, vlp_address: $vlpAddress) {
+    query All_positions($contract: String!, $pair: PairInput!, $limit: Int, $offset: Int) {
+      vlp(contract: $contract, pair: $pair) {
         all_positions(limit: $limit, offset: $offset) {
           positions {
             position_id
@@ -170,7 +170,7 @@ export async function getAllPositionsImpl(
         };
       };
     };
-  }>(query, { chainUid, vlpAddress, limit, offset });
+  }>(query, { contract, pair, limit, offset });
 
   return result.vlp.all_positions;
 }
@@ -178,18 +178,31 @@ export async function getAllPositionsImpl(
 /**
  * Get asset list from VLP - NEW IMPLEMENTATION
  */
-export async function getAssetListImpl(chainUid: string, vlpAddress: string) {
+export async function getAssetListImpl(
+  contract: string,
+  pair: { token_1: string; token_2: string },
+  _timeframe?: string
+): Promise<{
+  assets: Array<{
+    asset_id: string;
+    symbol: string;
+    name: string;
+    decimals: number;
+    total_supply: string;
+    price_usd: string;
+  }>;
+} | null> {
   const query = `
-    query Asset_list($chainUid: String!, $vlpAddress: String!) {
-      vlp(chain_uid: $chainUid, vlp_address: $vlpAddress) {
+    query Asset_list($contract: String!, $pair: PairInput!) {
+      vlp(contract: $contract, pair: $pair) {
         asset_list {
-          assets {
-            asset_id
-            symbol
-            name
-            decimals
-            total_supply
-            price_usd
+          liquidity_token {
+            amount
+            denom
+          }
+          vlp_token {
+            amount
+            denom
           }
         }
       }
@@ -209,7 +222,7 @@ export async function getAssetListImpl(chainUid: string, vlpAddress: string) {
         }>;
       };
     };
-  }>(query, { chainUid, vlpAddress });
+  }>(query, { contract, pair });
 
   return result.vlp.asset_list;
 }
@@ -218,15 +231,15 @@ export async function getAssetListImpl(chainUid: string, vlpAddress: string) {
  * Get user's positions from VLP - NEW IMPLEMENTATION
  */
 export async function getMyPositionsImpl(
-  chainUid: string,
-  vlpAddress: string,
+  contract: string,
+  pair: { token_1: string; token_2: string },
   userAddress: string,
   limit?: number,
   offset?: number
 ) {
   const query = `
-    query My_positions($chainUid: String!, $vlpAddress: String!, $userAddress: String!, $limit: Int, $offset: Int) {
-      vlp(chain_uid: $chainUid, vlp_address: $vlpAddress) {
+    query My_positions($contract: String!, $pair: PairInput!, $userAddress: String!, $limit: Int, $offset: Int) {
+      vlp(contract: $contract, pair: $pair) {
         my_positions(user_address: $userAddress, limit: $limit, offset: $offset) {
           positions {
             position_id
@@ -266,7 +279,7 @@ export async function getMyPositionsImpl(
         };
       };
     };
-  }>(query, { chainUid, vlpAddress, userAddress, limit, offset });
+  }>(query, { contract, pair, userAddress, limit, offset });
 
   return result.vlp.my_positions;
 }
@@ -275,13 +288,13 @@ export async function getMyPositionsImpl(
  * Get specific pool from VLP - NEW IMPLEMENTATION
  */
 export async function getPoolImpl(
-  chainUid: string,
-  vlpAddress: string,
+  contract: string,
+  pair: { token_1: string; token_2: string },
   poolId: string
 ) {
   const query = `
-    query Pool($chainUid: String!, $vlpAddress: String!, $poolId: String!) {
-      vlp(chain_uid: $chainUid, vlp_address: $vlpAddress) {
+    query Pool($contract: String!, $pair: PairInput!, $poolId: String!) {
+      vlp(contract: $contract, pair: $pair) {
         pool(pool_id: $poolId) {
           pool_id
           pair {
@@ -329,7 +342,7 @@ export async function getPoolImpl(
         status: string;
       };
     };
-  }>(query, { chainUid, vlpAddress, poolId });
+  }>(query, { contract, pair, poolId });
 
   return result.vlp.pool;
 }
@@ -338,13 +351,13 @@ export async function getPoolImpl(
  * Get specific position from VLP - NEW IMPLEMENTATION
  */
 export async function getPositionImpl(
-  chainUid: string,
-  vlpAddress: string,
+  contract: string,
+  pair: { token_1: string; token_2: string },
   positionId: string
 ) {
   const query = `
-    query Position($chainUid: String!, $vlpAddress: String!, $positionId: String!) {
-      vlp(chain_uid: $chainUid, vlp_address: $vlpAddress) {
+    query Position($contract: String!, $pair: PairInput!, $positionId: String!) {
+      vlp(contract: $contract, pair: $pair) {
         position(position_id: $positionId) {
           position_id
           owner
@@ -380,7 +393,7 @@ export async function getPositionImpl(
         status: string;
       };
     };
-  }>(query, { chainUid, vlpAddress, positionId });
+  }>(query, { contract, pair, positionId });
 
   return result.vlp.position;
 }
@@ -389,13 +402,13 @@ export async function getPositionImpl(
  * Get total fees collected from VLP - NEW IMPLEMENTATION
  */
 export async function getTotalFeesCollectedImpl(
-  chainUid: string,
-  vlpAddress: string,
+  contract: string,
+  pair: { token_1: string; token_2: string },
   timeframe?: string
 ) {
   const query = `
-    query Total_fees_collected($chainUid: String!, $vlpAddress: String!, $timeframe: String) {
-      vlp(chain_uid: $chainUid, vlp_address: $vlpAddress) {
+    query Total_fees_collected($contract: String!, $pair: PairInput!, $timeframe: String) {
+      vlp(contract: $contract, pair: $pair) {
         total_fees_collected(timeframe: $timeframe) {
           total_fees
           fees_by_token {
@@ -429,7 +442,7 @@ export async function getTotalFeesCollectedImpl(
         };
       };
     };
-  }>(query, { chainUid, vlpAddress, timeframe });
+  }>(query, { contract, pair, timeframe });
 
   return result.vlp.total_fees_collected;
 }

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Euclid API Endpoint Tester</title>
+    <script type="module" src="https://monkeyscanjump.github.io/euclid/build/euclid.esm.js"></script>
+</head>
+<body>
+    <h1>Euclid API Endpoint Testing</h1>
+    <div id="results"></div>
+    
+    <script type="module">
+        // Test Router Endpoints
+        async function testRouterEndpoints() {
+            const results = document.getElementById('results');
+            
+            // Test 1: Router State (known to work)
+            try {
+                results.innerHTML += '<h2>Testing Router State</h2>';
+                
+                const stateQuery = `
+                    query {
+                        router {
+                            state {
+                                admin
+                                vlp_code_id
+                                virtual_balance_address
+                            }
+                        }
+                    }
+                `;
+                
+                const response = await fetch('https://api.euclid.xyz/graphql', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: stateQuery })
+                });
+                
+                const data = await response.json();
+                if (data.errors) {
+                    results.innerHTML += `<p style="color: red;">❌ Router State Error: ${JSON.stringify(data.errors)}</p>`;
+                } else {
+                    results.innerHTML += `<p style="color: green;">✅ Router State Success: ${JSON.stringify(data.data.router.state, null, 2)}</p>`;
+                }
+            } catch (error) {
+                results.innerHTML += `<p style="color: red;">❌ Router State Exception: ${error.message}</p>`;
+            }
+            
+            // Test 2: Router All Chains
+            try {
+                results.innerHTML += '<h2>Testing Router All Chains</h2>';
+                
+                const chainsQuery = `
+                    query {
+                        router {
+                            all_chains {
+                                chains {
+                                    chain_uid
+                                    display_name
+                                    type
+                                }
+                                pagination {
+                                    total_count
+                                }
+                            }
+                        }
+                    }
+                `;
+                
+                const response = await fetch('https://api.euclid.xyz/graphql', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: chainsQuery })
+                });
+                
+                const data = await response.json();
+                if (data.errors) {
+                    results.innerHTML += `<p style="color: red;">❌ All Chains Error: ${JSON.stringify(data.errors)}</p>`;
+                } else {
+                    results.innerHTML += `<p style="color: green;">✅ All Chains Success: Found ${data.data.router.all_chains.pagination.total_count} chains</p>`;
+                    results.innerHTML += `<pre>${JSON.stringify(data.data.router.all_chains.chains.slice(0, 3), null, 2)}</pre>`;
+                }
+            } catch (error) {
+                results.innerHTML += `<p style="color: red;">❌ All Chains Exception: ${error.message}</p>`;
+            }
+            
+            // Test 3: Router All Tokens  
+            try {
+                results.innerHTML += '<h2>Testing Router All Tokens</h2>';
+                
+                const tokensQuery = `
+                    query {
+                        router {
+                            all_tokens(limit: 5) {
+                                tokens {
+                                    token_id
+                                    display_name
+                                    type
+                                }
+                                pagination {
+                                    total_count
+                                }
+                            }
+                        }
+                    }
+                `;
+                
+                const response = await fetch('https://api.euclid.xyz/graphql', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: tokensQuery })
+                });
+                
+                const data = await response.json();
+                if (data.errors) {
+                    results.innerHTML += `<p style="color: red;">❌ All Tokens Error: ${JSON.stringify(data.errors)}</p>`;
+                } else {
+                    results.innerHTML += `<p style="color: green;">✅ All Tokens Success: Found ${data.data.router.all_tokens.pagination.total_count} tokens</p>`;
+                    results.innerHTML += `<pre>${JSON.stringify(data.data.router.all_tokens.tokens.slice(0, 3), null, 2)}</pre>`;
+                }
+            } catch (error) {
+                results.innerHTML += `<p style="color: red;">❌ All Tokens Exception: ${error.message}</p>`;
+            }
+            
+            // Test 4: Router All VLPs
+            try {
+                results.innerHTML += '<h2>Testing Router All VLPs</h2>';
+                
+                const vlpsQuery = `
+                    query {
+                        router {
+                            all_vlps(limit: 5) {
+                                vlps {
+                                    vlp_address
+                                    pair {
+                                        token_1
+                                        token_2
+                                    }
+                                }
+                                pagination {
+                                    total_count
+                                }
+                            }
+                        }
+                    }
+                `;
+                
+                const response = await fetch('https://api.euclid.xyz/graphql', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: vlpsQuery })
+                });
+                
+                const data = await response.json();
+                if (data.errors) {
+                    results.innerHTML += `<p style="color: red;">❌ All VLPs Error: ${JSON.stringify(data.errors)}</p>`;
+                } else {
+                    results.innerHTML += `<p style="color: green;">✅ All VLPs Success: Found ${data.data.router.all_vlps.pagination.total_count} VLPs</p>`;
+                    results.innerHTML += `<pre>${JSON.stringify(data.data.router.all_vlps.vlps.slice(0, 2), null, 2)}</pre>`;
+                }
+            } catch (error) {
+                results.innerHTML += `<p style="color: red;">❌ All VLPs Exception: ${error.message}</p>`;
+            }
+        }
+        
+        // Start testing when page loads
+        window.addEventListener('load', testRouterEndpoints);
+    </script>
+</body>
+</html>

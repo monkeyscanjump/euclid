@@ -771,9 +771,6 @@ export class EuclidDemoPlayground {
   }
 
   render() {
-    const isApiTester = this.activeTab === 'api-tester';
-    const demoSectionClass = isApiTester ? 'demo-section api-tester-container' : 'demo-section';
-
     return (
       <div class="demo-playground">
         <div class="playground-content">
@@ -781,7 +778,7 @@ export class EuclidDemoPlayground {
             {this.renderControlsPanel()}
           </div>
 
-          <div class={demoSectionClass}>
+          <div class="demo-section">
             <euclid-config-provider environment={this.environment}>
               {this.renderDemo()}
             </euclid-config-provider>

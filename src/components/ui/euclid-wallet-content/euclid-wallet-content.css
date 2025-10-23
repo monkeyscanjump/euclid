@@ -93,6 +93,12 @@
   background: var(--euclid-surface-secondary);
 }
 
+.wallet-logo {
+  width: 2rem;
+  height: 2rem;
+  object-fit: contain;
+}
+
 .wallet-emoji {
   font-size: 1.5rem;
 }

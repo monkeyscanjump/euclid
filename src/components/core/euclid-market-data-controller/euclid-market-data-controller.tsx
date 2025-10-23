@@ -4,6 +4,7 @@ import { euclidAPI } from '../../../utils/core-api';
 import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
 import { requestManager } from '../../../utils/request-manager';
 import { pollingCoordinator } from '../../../utils/polling-coordinator';
+import { dataSubscriptionManager } from '../../../utils/data-subscription-manager';
 import type { EuclidConfig } from '../../../utils/env';
 import type { EuclidChainConfig } from '../../../utils/types';
 import { DEFAULT_CONFIG } from '../../../utils/env';
@@ -32,18 +33,19 @@ export class EuclidMarketDataController {
   }
 
   disconnectedCallback() {
-    // Clean up polling
-    pollingCoordinator.unregister('market-data-refresh');
+    // Clean up all polling tasks
+    pollingCoordinator.unregister('market-token-metadata');
+    pollingCoordinator.unregister('market-pools-data');
   }
 
   private async initialize() {
     console.log('📊 Initializing Market Data Controller...');
 
-    // Load initial market data
+    // Load initial data with specific logic for each data type
     await this.loadInitialData();
 
-    // Set up periodic market data refresh
-    this.setupPeriodicRefresh();
+    // Set up specific polling for the three core GraphQL queries
+    this.setupCoreDataPolling();
 
     this.isInitialized = true;
     console.log('📊 Market Data Controller initialized');
@@ -58,17 +60,11 @@ export class EuclidMarketDataController {
 
           console.log('📊 Loading initial market data...');
 
-          // Load chains, tokens, and pools in parallel using new API methods
-          const [chains, tokens, poolsResponse] = await Promise.all([
-            this.api.getChains({ showAllChains: false }),
-            this.api.getTokenMetadata(),
-            this.api.getAllPools()
-          ]);
+          // 1. CHAINS - Load once and cache for a long time (chains don't change often)
+          console.log('🌐 Loading chains (once per session)...');
+          const chains = await this.api.getChains({ showAllChains: false });
 
-          // Process chains
           if (chains && chains.length > 0) {
-            // Ensure type field conforms to EuclidChainConfig enum
-            // API returns lowercase "evm"/"cosmwasm", convert to proper case
             const validChains: EuclidChainConfig[] = chains.map(chain => ({
               ...chain,
               type: (chain.type?.toLowerCase() === 'evm') ? 'EVM' : 'Cosmwasm'
@@ -79,7 +75,10 @@ export class EuclidMarketDataController {
             console.warn('No chains data received');
           }
 
-          // Process tokens
+          // 2. TOKEN METADATA - Load initially, will be polled separately
+          console.log('🪙 Loading token metadata...');
+          const tokens = await this.api.getTokenMetadata();
+
           if (tokens && tokens.length > 0) {
             marketStore.setTokens(tokens);
             console.log('🪙 Loaded tokens:', tokens.length);
@@ -87,7 +86,10 @@ export class EuclidMarketDataController {
             console.warn('No tokens data received');
           }
 
-          // Process pools
+          // 3. POOLS - Load initially, will be polled separately
+          console.log('🏊 Loading pools with liquidity...');
+          const poolsResponse = await this.api.getAllPools();
+
           if (poolsResponse.success && poolsResponse.data) {
             marketStore.setPools(poolsResponse.data);
             console.log('🏊 Loaded pools:', poolsResponse.data.length);
@@ -103,100 +105,115 @@ export class EuclidMarketDataController {
           marketStore.setLoading(false);
         }
       },
-      { ttl: this.euclidConfig.performance.cache.marketData }
+      { ttl: this.euclidConfig.performance.cache.chains } // Use config cache TTL for initial load
     );
   }
 
-  private setupPeriodicRefresh() {
-    console.log(`📊 Setting up polling - Active: ${this.euclidConfig.performance.polling.active.marketData}ms, Cache TTL: ${this.euclidConfig.performance.cache.marketData}ms`);
+    /**
+   * Set up specific polling for the three core GraphQL queries
+   * Uses the sophisticated configuration from env.ts
+   * OPTIMIZED: Only polls when components are subscribed to the data
+   * 1. Chains - fetched once per session (no polling needed)
+   * 2. Token metadata - polled only when components subscribe to tokenPrices/marketData
+   * 3. Pools - polled only when components subscribe to marketData/liquidityPositions
+   */
+  private setupCoreDataPolling() {
+    console.log('📊 Setting up optimized core data polling using configuration:', {
+      activeInterval: this.euclidConfig.performance.polling.active.marketData,
+      backgroundInterval: this.euclidConfig.performance.polling.background.marketData,
+      cacheTTL: this.euclidConfig.performance.cache.marketData
+    });
 
-    // Register polling task with the coordinator
+    // TOKEN METADATA POLLING - Only when subscriptions exist
     pollingCoordinator.register(
-      'market-data-refresh',
-      () => this.refreshMarketData().then(() => {}),
+      'market-token-metadata',
+      async () => {
+        if (!dataSubscriptionManager.hasSubscriptions('marketData') &&
+            !dataSubscriptionManager.hasSubscriptions('tokenPrices')) {
+          console.log('⏭️ No token metadata subscriptions - skipping fetch');
+          return; // Skip if no subscriptions
+        }
+
+        console.log('🪙 Refreshing token metadata (subscription-driven)...');
+        await this.refreshTokenMetadata();
+      },
       {
         activeInterval: this.euclidConfig.performance.polling.active.marketData,
         backgroundInterval: this.euclidConfig.performance.polling.background.marketData,
+        pauseOnHidden: this.euclidConfig.performance.pauseOnHidden
       }
     );
 
-    console.log('📊 Market data polling registered with coordinator');
+    // POOLS POLLING - Only when subscriptions exist
+    pollingCoordinator.register(
+      'market-pools-data',
+      async () => {
+        if (!dataSubscriptionManager.hasSubscriptions('marketData') &&
+            !dataSubscriptionManager.hasSubscriptions('liquidityPositions')) {
+          console.log('⏭️ No pools data subscriptions - skipping fetch');
+          return; // Skip if no subscriptions
+        }
+
+        console.log('🏊 Refreshing pools data (subscription-driven)...');
+        await this.refreshPoolsData();
+      },
+      {
+        activeInterval: this.euclidConfig.performance.polling.active.marketData,
+        backgroundInterval: this.euclidConfig.performance.polling.background.marketData,
+        pauseOnHidden: this.euclidConfig.performance.pauseOnHidden
+      }
+    );
+
+    console.log('📊 Optimized core data polling setup complete - will poll only when subscriptions exist');
   }
 
-  private async refreshMarketData() {
-    console.log('🔄 Refresh market data called - checking what needs updating...');
-
-    // Check chains separately (less frequent updates)
-    const shouldRefreshChains = marketStore.isChainsStale(this.euclidConfig.performance.cache.chains);
-    // Check tokens (frequent updates)
-    const shouldRefreshTokens = marketStore.isTokensStale(this.euclidConfig.performance.cache.tokens);
-
-    if (!shouldRefreshChains && !shouldRefreshTokens) {
-      console.log('⏭️ Neither chains nor tokens are stale, skipping API calls');
-      return;
-    }
-
-    console.log(`🌐 Refreshing: ${shouldRefreshChains ? 'chains ' : ''}${shouldRefreshTokens ? 'tokens' : ''}`);
-
+  /**
+   * Refresh token metadata specifically
+   */
+  private async refreshTokenMetadata() {
     return requestManager.request(
-      'market-refresh',
+      'token-metadata-refresh',
       async () => {
         try {
-          marketStore.setLoading(true);
+          const tokens = await this.api.getTokenMetadata();
 
-          // Execute API calls only for what needs refreshing
-          if (shouldRefreshChains && shouldRefreshTokens) {
-            // Both need updating - parallel fetch
-            const [chains, tokens] = await Promise.all([
-              this.api.getChains({ showAllChains: false }),
-              this.api.getTokenMetadata()
-            ]);
+          if (tokens && tokens.length > 0) {
+            marketStore.setTokens(tokens);
+            console.log('💰 Refreshed token metadata:', tokens.length);
+          }
 
-            if (chains && chains.length > 0) {
-              // Ensure type field conforms to EuclidChainConfig enum
-              // API returns lowercase "evm"/"cosmwasm", convert to proper case
-              const validChains: EuclidChainConfig[] = chains.map(chain => ({
-                ...chain,
-                type: (chain.type?.toLowerCase() === 'evm') ? 'EVM' : 'Cosmwasm'
-              }));
-              marketStore.setChains(validChains);
-              console.log('📡 Refreshed chains:', chains.length);
-            }
-
-            if (tokens && tokens.length > 0) {
-              marketStore.setTokens(tokens);
-              console.log('💰 Refreshed tokens:', tokens.length);
-            }
-          } else if (shouldRefreshChains) {
-            // Only chains need updating
-            const chains = await this.api.getChains({ showAllChains: false });
-            if (chains && chains.length > 0) {
-              // Ensure type field conforms to EuclidChainConfig enum
-              // API returns lowercase "evm"/"cosmwasm", convert to proper case
-              const validChains: EuclidChainConfig[] = chains.map(chain => ({
-                ...chain,
-                type: (chain.type?.toLowerCase() === 'evm') ? 'EVM' : 'Cosmwasm'
-              }));
-              marketStore.setChains(validChains);
-              console.log('📡 Refreshed chains only:', chains.length);
-            }
-          } else if (shouldRefreshTokens) {
-            // Only tokens need updating
-            const tokens = await this.api.getTokenMetadata();
-            if (tokens && tokens.length > 0) {
-              marketStore.setTokens(tokens);
-              console.log('💰 Refreshed tokens only:', tokens.length);
-            }
-          }          console.log('✅ Market data refreshed successfully');
           return { success: true };
         } catch (error) {
-          console.error('❌ Failed to refresh market data:', error);
+          console.error('❌ Failed to refresh token metadata:', error);
           throw error;
-        } finally {
-          marketStore.setLoading(false);
         }
       },
-      { ttl: this.euclidConfig.performance.cache.marketData }
+      { ttl: this.euclidConfig.performance.cache.tokens } // Use config cache TTL
+    );
+  }
+
+  /**
+   * Refresh pools data specifically
+   */
+  private async refreshPoolsData() {
+    return requestManager.request(
+      'pools-data-refresh',
+      async () => {
+        try {
+          const poolsResponse = await this.api.getAllPools();
+
+          if (poolsResponse.success && poolsResponse.data) {
+            marketStore.setPools(poolsResponse.data);
+            console.log('🏊 Refreshed pools data:', poolsResponse.data.length);
+          }
+
+          return { success: true };
+        } catch (error) {
+          console.error('❌ Failed to refresh pools data:', error);
+          throw error;
+        }
+      },
+      { ttl: this.euclidConfig.performance.cache.marketData } // Use config cache TTL
     );
   }
 
@@ -208,8 +225,12 @@ export class EuclidMarketDataController {
 
   @Listen(EUCLID_EVENTS.MARKET.REFRESH_DATA, { target: 'window' })
   async handleRefreshRequest() {
-    console.log('🔄 Manual market data refresh requested');
-    await this.refreshMarketData();
+    console.log('� Manual market data refresh requested');
+    // Trigger both token metadata and pools refresh
+    await Promise.all([
+      this.refreshTokenMetadata(),
+      this.refreshPoolsData()
+    ]);
   }
 
   @Listen(EUCLID_EVENTS.MARKET.TOKEN_DETAILS_REQUEST, { target: 'window' })
@@ -262,8 +283,8 @@ export class EuclidMarketDataController {
           data: { chain }
         });
       } else {
-        // Refresh chains if not found
-        await this.refreshMarketData();
+        // Refresh chains if not found - chains are loaded once, so trigger initial data load
+        await this.loadInitialData();
       }
     } catch (error) {
       console.error('Failed to load chain details:', error);

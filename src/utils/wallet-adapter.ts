@@ -7,7 +7,7 @@
 
 import type { EuclidChainConfig } from './types/api.types';
 
-export type WalletType = 'keplr' | 'metamask' | 'phantom' | 'cosmostation' | 'walletconnect' | 'other';
+export type WalletType = 'keplr' | 'metamask' | 'phantom' | 'cosmostation' | 'walletconnect' | 'custom' | 'other';
 
 // Declare global window extensions for wallets
 declare global {
@@ -430,7 +430,19 @@ export class WalletAdapterFactory {
   }
 
   static getAdapter(walletType: WalletType): WalletAdapter | null {
-    return this.adapters.get(walletType) || null;
+    // Map additional wallet types to existing adapters
+    let adapterType = walletType;
+    if (walletType === 'cosmostation') {
+      adapterType = 'cosmostation'; // Use cosmostation adapter directly
+    } else if (walletType === 'walletconnect') {
+      adapterType = 'metamask'; // WalletConnect uses MetaMask-like interface for EVM
+    } else if (walletType === 'custom') {
+      adapterType = 'metamask'; // Default custom wallets to MetaMask interface
+    } else if (walletType === 'other') {
+      adapterType = 'metamask'; // Default other wallets to MetaMask interface
+    }
+
+    return this.adapters.get(adapterType) || null;
   }
 
   static getAvailableWallets(): Array<{ type: WalletType; installed: boolean }> {

@@ -399,29 +399,9 @@ export class EuclidDemoPlayground {
       category: 'Wallet',
       tagName: 'euclid-address-book',
       defaultProps: {
-        showActiveOnly: false,
-        allowEditing: true,
-        showBalances: true
       },
       propDefinitions: [
-        {
-          name: 'showActiveOnly',
-          type: 'boolean',
-          defaultValue: false,
-          description: 'Only show addresses that are currently active/connected'
-        },
-        {
-          name: 'allowEditing',
-          type: 'boolean',
-          defaultValue: true,
-          description: 'Allow editing and managing address entries'
-        },
-        {
-          name: 'showBalances',
-          type: 'boolean',
-          defaultValue: true,
-          description: 'Display wallet balances when available'
-        }
+
       ]
     }
   ];
@@ -769,11 +749,7 @@ export class EuclidDemoPlayground {
 
       case 'euclid-address-book':
         componentElement = (
-          <euclid-address-book
-            showActiveOnly={Boolean(props.showActiveOnly)}
-            allowEditing={Boolean(props.allowEditing)}
-            showBalances={Boolean(props.showBalances)}
-          />
+          <euclid-address-book />
         );
         break;
 

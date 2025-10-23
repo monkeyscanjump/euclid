@@ -1,7 +1,9 @@
 import { Component, h, State } from '@stencil/core';
 import { appStore } from '../../../store/app.store';
+import { marketStore } from '../../../store/market.store';
 import { WalletAdapterFactory } from '../../../utils/wallet-adapter';
 import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
+import { walletMetadata } from '../../../assets/wallet-logos';
 import type { EuclidChainConfig } from '../../../utils/types/api.types';
 
 export interface WalletProvider {
@@ -24,32 +26,47 @@ export class EuclidWalletContent {
 
   componentWillLoad() {
     this.detectWallets();
+    this.initializeWithChainFilter();
+  }
+
+  private initializeWithChainFilter() {
+    const chainFilter = appStore.state.walletModalFilter;
+
+    if (chainFilter) {
+      // Find the chain by UID from market store
+      const targetChain = marketStore.state.chains.find(
+        chain => chain.chain_uid === chainFilter
+      );
+
+      if (targetChain) {
+        console.log('🎯 Wallet modal opened with chain filter:', targetChain.display_name);
+        this.selectedChain = targetChain;
+        this.step = 'wallets';
+      } else {
+        console.warn('⚠️ Chain filter provided but chain not found:', chainFilter);
+        this.step = 'chains';
+      }
+    } else {
+      this.step = 'chains';
+    }
   }
 
   private detectWallets() {
     // Get available wallets from adapter factory
     const availableWallets = WalletAdapterFactory.getAvailableWallets();
 
-    // Create provider list with metadata
-    const walletMetadata: Record<string, { name: string; icon: string; description: string }> = {
-      'metamask': { name: 'MetaMask', icon: '🦊', description: 'Connect using MetaMask wallet' },
-      'keplr': { name: 'Keplr', icon: '🔗', description: 'Connect using Keplr wallet' },
-      'phantom': { name: 'Phantom', icon: '👻', description: 'Connect using Phantom wallet' },
-      'cosmostation': { name: 'Cosmostation', icon: '🌌', description: 'Connect using Cosmostation wallet' },
-      'walletconnect': { name: 'WalletConnect', icon: '🌐', description: 'Connect using WalletConnect' }
-    };
-
     this.walletProviders = availableWallets.map(wallet => {
       const metadata = walletMetadata[wallet.type] || {
         name: wallet.type,
-        icon: '🔗',
-        description: `Connect using ${wallet.type} wallet`
+        logo: '',
+        description: `Connect using ${wallet.type} wallet`,
+        supportedChains: ['EVM']
       };
 
       return {
         id: wallet.type,
         name: metadata.name,
-        icon: metadata.icon,
+        icon: metadata.logo,
         installed: wallet.installed,
         description: metadata.description
       };
@@ -195,7 +212,11 @@ export class EuclidWalletContent {
               type="button"
             >
               <div class="wallet-icon">
-                <span class="wallet-emoji">{provider.icon}</span>
+                {provider.icon ? (
+                  <img src={provider.icon} alt={provider.name} class="wallet-logo" />
+                ) : (
+                  <span class="wallet-emoji">🔗</span>
+                )}
               </div>
 
               <div class="wallet-info">

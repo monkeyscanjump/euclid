@@ -18,6 +18,3 @@ export type {
   GetRoutesRequest,
   CrossChainUser
 } from './types/api.types';
-
-// Note: The old smart-api-service and endpoint system are now deprecated
-// This new system provides the same API but with lazy loading for ~90% bundle size reduction

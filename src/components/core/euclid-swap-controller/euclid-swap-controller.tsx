@@ -5,6 +5,8 @@ import { apiClient } from '../../../utils/api-client';
 import { WalletAdapterFactory } from '../../../utils/wallet-adapter';
 import { DEFAULTS } from '../../../utils/constants';
 import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
+import { requestManager } from '../../../utils/request-manager';
+import { pollingCoordinator } from '../../../utils/polling-coordinator';
 
 @Component({
   tag: 'euclid-swap-controller',
@@ -26,6 +28,8 @@ export class EuclidSwapController {
 
   disconnectedCallback() {
     this.stopRoutePolling();
+    // Clean up any registered polling tasks
+    pollingCoordinator.unregister('swap-routes');
   }
 
   private async initialize() {
@@ -85,10 +89,18 @@ export class EuclidSwapController {
     // Fetch routes immediately
     this.fetchRoutes();
 
-    // Set up periodic polling
-    this.routePollingInterval = window.setInterval(() => {
-      this.fetchRoutes();
-    }, DEFAULTS.ROUTE_REFRESH_INTERVAL);
+    // Set up intelligent polling using PollingCoordinator
+    pollingCoordinator.register(
+      'swap-routes',
+      async () => {
+        await this.fetchRoutes();
+      },
+      {
+        activeInterval: DEFAULTS.ROUTE_REFRESH_INTERVAL,
+        backgroundInterval: DEFAULTS.ROUTE_REFRESH_INTERVAL * 3, // Slower when tab is hidden
+        pauseOnHidden: false // Keep fetching routes even when tab is hidden (user might be waiting)
+      }
+    );
   }
 
   private stopRoutePolling() {
@@ -96,6 +108,9 @@ export class EuclidSwapController {
 
     console.log('⏹️ Stopping route polling...');
     this.routePollingActive = false;
+
+    // Unregister from polling coordinator
+    pollingCoordinator.unregister('swap-routes');
 
     if (this.routePollingInterval) {
       clearInterval(this.routePollingInterval);
@@ -109,45 +124,57 @@ export class EuclidSwapController {
       return;
     }
 
-    try {
-      swapStore.setLoadingRoutes(true);
+    // Use request manager for caching and deduplication
+    const cacheKey = `routes-${fromToken.id}-${toToken.id}-${fromAmount}`;
 
-      console.log('🛣️ Fetching swap routes:', {
-        from: fromToken.symbol,
-        to: toToken.symbol,
-        amount: fromAmount,
-      });
+    return requestManager.request(
+      cacheKey,
+      async () => {
+        try {
+          swapStore.setLoadingRoutes(true);
 
-      // Call the routes API
-      const response = await apiClient.getRoutesWrapped({
-        amount_in: fromAmount,
-        token_in: fromToken.id,
-        token_out: toToken.id,
-        external: true,
-      });
+          console.log('🛣️ Fetching swap routes:', {
+            from: fromToken.symbol,
+            to: toToken.symbol,
+            amount: fromAmount,
+          });
 
-      if (response.success && response.data) {
-        const routePaths = response.data.paths || [];
+          // Call the routes API
+          const response = await apiClient.getRoutesWrapped({
+            amount_in: fromAmount,
+            token_in: fromToken.id,
+            token_out: toToken.id,
+            external: true,
+          });
 
-        // Store the RoutePath[] directly
-        swapStore.setRoutes(routePaths);
+          if (response.success && response.data) {
+            const routePaths = response.data.paths || [];
 
-        // Auto-select the best route (first one, typically best by default)
-        if (routePaths.length > 0 && !swapStore.state.selectedRoute) {
-          swapStore.setSelectedRoute(routePaths[0]);
+            // Store the RoutePath[] directly
+            swapStore.setRoutes(routePaths);
+
+            // Auto-select the best route (first one, typically best by default)
+            if (routePaths.length > 0 && !swapStore.state.selectedRoute) {
+              swapStore.setSelectedRoute(routePaths[0]);
+            }
+
+            console.log(`✅ Found ${routePaths.length} swap routes`);
+            return { success: true, routeCount: routePaths.length };
+          } else {
+            console.warn('⚠️ Failed to fetch routes:', response.error);
+            swapStore.setRoutes([]);
+            return { success: false, error: response.error };
+          }
+        } catch (error) {
+          console.error('❌ Error fetching routes:', error);
+          swapStore.setRoutes([]);
+          throw error;
+        } finally {
+          swapStore.setLoadingRoutes(false);
         }
-
-        console.log(`✅ Found ${routePaths.length} swap routes`);
-      } else {
-        console.warn('⚠️ Failed to fetch routes:', response.error);
-        swapStore.setRoutes([]);
-      }
-    } catch (error) {
-      console.error('❌ Error fetching routes:', error);
-      swapStore.setRoutes([]);
-    } finally {
-      swapStore.setLoadingRoutes(false);
-    }
+      },
+      { ttl: 5000 } // Cache for 5 seconds to avoid excessive API calls during rapid input changes
+    );
   }
 
   private getUserAddressForChain(chainUID: string): string | undefined {

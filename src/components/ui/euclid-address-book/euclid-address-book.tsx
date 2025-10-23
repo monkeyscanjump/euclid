@@ -1,8 +1,9 @@
-import { Component, h, State, Event, EventEmitter, Prop, Listen } from '@stencil/core';
-import { walletStore } from '../../../store/wallet.store';
+import { Component, h, State, Event, EventEmitter, Listen } from '@stencil/core';
 import { appStore } from '../../../store/app.store';
 import { marketStore } from '../../../store/market.store';
 import { walletStorage } from '../../../utils/storage/indexdb-storage';
+import { getConnectedWallets, setupWalletStoreListeners } from '../../../utils/wallet-utils';
+import { WalletData } from '../euclid-wallet/euclid-wallet';
 
 export interface SavedAddress {
   id: string;
@@ -10,7 +11,6 @@ export interface SavedAddress {
   chainUID: string;
   walletType: string;
   label: string;
-  isActive: boolean;
   addedAt: Date;
   lastUsed?: Date;
   balance?: string;
@@ -24,46 +24,47 @@ export interface SavedAddress {
 })
 export class EuclidAddressBook {
   @State() savedAddresses: SavedAddress[] = [];
+  @State() refreshTrigger: number = 0; // For triggering re-renders
   @State() isEditing: boolean = false;
   @State() editingAddress: SavedAddress | null = null;
   @State() newAddressForm: Partial<SavedAddress> = {};
-
-  @Prop() showActiveOnly: boolean = false;
-  @Prop() allowEditing: boolean = true;
-  @Prop() showBalances: boolean = true;
+  @State() selectedChainUID: string = '';
+  @State() viewMode: 'wallets' | 'chain' = 'wallets'; // Default to wallets view
 
   @Event() addressSelected: EventEmitter<SavedAddress>;
   @Event() addressAdded: EventEmitter<SavedAddress>;
   @Event() addressUpdated: EventEmitter<SavedAddress>;
   @Event() addressRemoved: EventEmitter<SavedAddress>;
 
-  componentWillLoad() {
-    this.loadSavedAddresses();
-    this.syncWithConnectedWallets();
+  async componentWillLoad() {
+    await this.loadSavedAddresses();
+  }
 
-    // Listen for wallet changes to auto-save new addresses
-    walletStore.onChange('connectedWallets', () => {
-      console.log('📇 Address book detected connectedWallets change, syncing...');
-      this.syncWithConnectedWallets();
+  componentDidLoad() {
+    // Auto-select first chain if none selected
+    this.ensureChainSelected();
+
+    // Listen for market store changes to auto-select chain when chains load
+    marketStore.onChange('chains', () => {
+      this.ensureChainSelected();
     });
 
-    // Also listen to the main wallet state changes for compatibility
-    walletStore.onChange('isConnected', () => {
-      console.log('📇 Address book detected isConnected state change');
-      this.syncWithConnectedWallets();
+    // Use shared utility for wallet store listeners
+    setupWalletStoreListeners(() => {
+      this.refreshTrigger = Date.now();
     });
+  }
 
-    // Listen to the wallets Map as well (for multi-wallet support)
-    walletStore.onChange('wallets', () => {
-      console.log('📇 Address book detected wallets map change, syncing...');
-      this.syncWithConnectedWallets();
-    });
+  private ensureChainSelected() {
+    // Always start with wallets view
+    if (!this.selectedChainUID && this.viewMode !== 'wallets') {
+      this.viewMode = 'wallets';
+    }
   }
 
   @Listen('euclid:wallet:connect-success', { target: 'window' })
   handleWalletConnectSuccess() {
-    console.log('📇 Address book received wallet connect success event, syncing...');
-    this.syncWithConnectedWallets();
+    this.refreshTrigger = Date.now();
   }
 
   private async loadSavedAddresses() {
@@ -91,7 +92,6 @@ export class EuclidAddressBook {
           // Migrate to IndexedDB and remove from localStorage
           await this.saveAddresses();
           localStorage.removeItem('euclid-address-book');
-          console.log('📇 Migrated address book from localStorage to IndexedDB');
         }
       } catch (legacyError) {
         console.error('Failed to load addresses from localStorage:', legacyError);
@@ -113,95 +113,6 @@ export class EuclidAddressBook {
       } catch (fallbackError) {
         console.error('Failed to save addresses to localStorage fallback:', fallbackError);
       }
-    }
-  }
-
-  private syncWithConnectedWallets() {
-    const connectedWallets = walletStore.state.connectedWallets;
-    let hasNewAddresses = false;
-
-    console.log('📇 Address Book - Full wallet store state:', {
-      isConnected: walletStore.state.isConnected,
-      address: walletStore.state.address,
-      connectedWallets: connectedWallets,
-      connectedWalletsType: typeof connectedWallets,
-      isMap: connectedWallets instanceof Map,
-      mapSize: connectedWallets instanceof Map ? connectedWallets.size : 'N/A'
-    });
-
-    // Handle both Map and Object types for connectedWallets
-    let walletEntries: [string, { address: string; walletType?: string; type?: string; name?: string }][] = [];
-    if (connectedWallets instanceof Map) {
-      walletEntries = Array.from(connectedWallets.entries());
-    } else if (typeof connectedWallets === 'object' && connectedWallets !== null) {
-      walletEntries = Object.entries(connectedWallets) as typeof walletEntries;
-    }
-
-    // Also check if there's a primary wallet connected but not in the Map/Object
-    if (walletStore.state.isConnected && walletStore.state.address && walletEntries.length === 0) {
-      console.log('📇 Found primary wallet connection, adding to entries');
-      walletEntries.push([
-        walletStore.state.chainUID || 'primary',
-        {
-          address: walletStore.state.address,
-          walletType: walletStore.state.walletType || 'unknown',
-          name: walletStore.state.walletType || 'Primary Wallet'
-        }
-      ]);
-    }
-
-    console.log('📇 Syncing with connected wallets:', walletEntries.length, 'found', walletEntries);
-
-    walletEntries.forEach(([chainUID, wallet]) => {
-      const existingAddress = this.savedAddresses.find(
-        addr => addr.address === wallet.address && addr.chainUID === chainUID
-      );
-
-      if (!existingAddress) {
-        // Auto-save newly connected wallet
-        const newAddress: SavedAddress = {
-          id: `${chainUID}-${wallet.address}-${Date.now()}`,
-          address: wallet.address,
-          chainUID,
-          walletType: wallet.walletType || wallet.type || 'unknown',
-          label: `${wallet.name || wallet.walletType || 'Wallet'} (${chainUID})`,
-          isActive: true,
-          addedAt: new Date(),
-          lastUsed: new Date(),
-        };
-
-        this.savedAddresses = [...this.savedAddresses, newAddress];
-        hasNewAddresses = true;
-
-        console.log('📝 Auto-saved new wallet address:', newAddress);
-        this.addressAdded.emit(newAddress);
-      } else {
-        // Update existing address as active and mark as recently used
-        if (!existingAddress.isActive || !existingAddress.lastUsed) {
-          existingAddress.isActive = true;
-          existingAddress.lastUsed = new Date();
-          hasNewAddresses = true;
-        }
-      }
-    });
-
-    // Mark addresses as inactive if they're no longer connected
-    this.savedAddresses.forEach(savedAddr => {
-      const isStillConnected = walletEntries.some(
-        ([chainUID, wallet]) =>
-          wallet.address === savedAddr.address && chainUID === savedAddr.chainUID
-      );
-
-      if (!isStillConnected && savedAddr.isActive) {
-        savedAddr.isActive = false;
-        hasNewAddresses = true;
-      }
-    });
-
-    if (hasNewAddresses) {
-      this.saveAddresses();
-      // Trigger re-render
-      this.savedAddresses = [...this.savedAddresses];
     }
   }
 
@@ -246,7 +157,6 @@ export class EuclidAddressBook {
         chainUID: this.newAddressForm.chainUID || 'ethereum',
         walletType: this.newAddressForm.walletType || 'manual',
         label: this.newAddressForm.label!,
-        isActive: false,
         addedAt: new Date(),
       };
 
@@ -279,68 +189,23 @@ export class EuclidAddressBook {
   };
 
   private handleConnectWallet = () => {
-    console.log('📇 Opening wallet connection modal...');
     appStore.openWalletModal();
   };
 
-  // Debug methods
-  private handleSyncClick = () => {
-    console.log('🔄 Manual sync triggered');
-    this.syncWithConnectedWallets();
+  private handleConnectWalletForChain = (chainUID: string) => {
+    appStore.openWalletModal(chainUID);
   };
 
-  private debugWalletStore = () => {
-    console.log('🔍 DEBUG: Wallet Store State');
-    console.log('- isConnected:', walletStore.state.isConnected);
-    console.log('- connectedWallets:', walletStore.state.connectedWallets);
-    console.log('- connectedWallets type:', typeof walletStore.state.connectedWallets);
-    console.log('- connectedWallets instanceof Map:', walletStore.state.connectedWallets instanceof Map);
-
-    if (walletStore.state.connectedWallets instanceof Map) {
-      console.log('- Map size:', walletStore.state.connectedWallets.size);
-      console.log('- Map entries:', Array.from(walletStore.state.connectedWallets.entries()));
-    } else {
-      console.log('- Object keys:', Object.keys(walletStore.state.connectedWallets || {}));
-      console.log('- Object entries:', Object.entries(walletStore.state.connectedWallets || {}));
-    }
-    console.log('- Full state:', walletStore.state);
-  };
-
-  private debugMarketStore = () => {
-    console.log('🌐 DEBUG: Market Store - Available Chains');
-    console.log('- chains:', marketStore.state.chains);
-    console.log('- chains count:', marketStore.state.chains.length);
-    console.log('- tokens count:', marketStore.state.tokens.length);
-    console.log('- loading:', marketStore.state.loading);
-
-    marketStore.state.chains.forEach((chain, index) => {
-      console.log(`Chain ${index + 1}:`, {
-        chainUID: chain.chain_uid,
-        displayName: chain.display_name,
-        chainId: chain.chain_id,
-        logo: chain.logo,
-        type: chain.type
-      });
-    });
-  };  private formatAddress(address: string): string {
+  private formatAddress(address: string): string {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   }
 
   private getDisplayedAddresses(): SavedAddress[] {
-    let addresses = this.savedAddresses;
+    const addresses = this.savedAddresses;
 
-    if (this.showActiveOnly) {
-      addresses = addresses.filter(addr => addr.isActive);
-    }
-
-    // Sort by: active first, then by last used, then by added date
+    // Sort by last used, then by added date
     return addresses.sort((a, b) => {
-      // Active addresses first
-      if (a.isActive !== b.isActive) {
-        return b.isActive ? 1 : -1;
-      }
-
-      // Then by last used (most recent first)
+      // By last used (most recent first)
       if (a.lastUsed && b.lastUsed) {
         return b.lastUsed.getTime() - a.lastUsed.getTime();
       }
@@ -352,22 +217,85 @@ export class EuclidAddressBook {
     });
   }
 
-  private getChainInfo(chainUID: string) {
-    return marketStore.state.chains.find(chain => chain.chain_uid === chainUID);
+  private getAllChains() {
+    // Get all chains from market store, regardless of whether user has addresses
+    return marketStore.state.chains.sort((a, b) => {
+      // Sort by: EVM chains first, then by display name
+      if (a.type !== b.type) {
+        return a.type === 'EVM' ? -1 : 1;
+      }
+      return a.display_name.localeCompare(b.display_name);
+    });
   }
 
-  private getGroupedAddresses(): Record<string, SavedAddress[]> {
-    const addresses = this.getDisplayedAddresses();
-    const grouped: Record<string, SavedAddress[]> = {};
+  private getWalletsForChain(chainUID: string): WalletData[] {
+    // Get connected wallets for this specific chain
+    const connectedWallets = this.getConnectedWallets().filter(wallet => wallet.chainUID === chainUID);
 
-    addresses.forEach(address => {
-      if (!grouped[address.chainUID]) {
-        grouped[address.chainUID] = [];
+    // Get saved addresses for this chain and convert to WalletData format
+    const savedAddresses = this.getDisplayedAddresses().filter(addr => addr.chainUID === chainUID);
+    const chain = this.getAllChains().find(c => c.chain_uid === chainUID);
+
+    const savedAsWallets: WalletData[] = savedAddresses.map(address =>
+      this.convertAddressToWallet(address, chain)
+    );
+
+    // Merge and deduplicate by address
+    const allWallets = [...connectedWallets];
+    savedAsWallets.forEach(savedWallet => {
+      const alreadyExists = allWallets.some(wallet => wallet.address === savedWallet.address);
+      if (!alreadyExists) {
+        allWallets.push(savedWallet);
       }
-      grouped[address.chainUID].push(address);
     });
 
-    return grouped;
+    return allWallets;
+  }
+
+  private handleChainSelect = (chainUID: string) => {
+    this.selectedChainUID = chainUID;
+    this.viewMode = 'chain';
+    // Close editing form when switching chains
+    this.isEditing = false;
+    this.editingAddress = null;
+    this.newAddressForm = {};
+  };
+
+  private handleWalletsSelect = () => {
+    this.viewMode = 'wallets';
+    this.selectedChainUID = '';
+    // Close editing form when switching to wallets
+    this.isEditing = false;
+    this.editingAddress = null;
+    this.newAddressForm = {};
+  };
+
+  private getConnectedWallets() {
+    // Use the shared utility - READS FROM WALLET STORE STATE
+    return getConnectedWallets();
+  }
+
+  private convertAddressToWallet(address: SavedAddress, chain?: { display_name: string; logo: string; type: string }) {
+    return {
+      id: address.id,
+      address: address.address,
+      chainUID: address.chainUID,
+      chainName: chain?.display_name || 'Unknown Chain',
+      chainLogo: chain?.logo || '',
+      chainType: chain?.type || 'Unknown',
+      walletType: address.walletType,
+      provider: address.walletType,
+      isConnected: false, // Saved addresses are not connected by default
+      label: address.label,
+    };
+  }
+
+  private getSelectedChain() {
+    return this.getAllChains().find(chain => chain.chain_uid === this.selectedChainUID);
+  }
+
+  private getSelectedChainAddresses(): WalletData[] {
+    return this.getWalletsForChain(this.selectedChainUID);
   }
 
   private renderAddressForm() {
@@ -425,12 +353,16 @@ export class EuclidAddressBook {
                 };
               }}
             >
-              <option value="ethereum">Ethereum</option>
-              <option value="polygon">Polygon</option>
-              <option value="arbitrum">Arbitrum</option>
-              <option value="bsc">BSC</option>
-              <option value="cosmoshub-4">Cosmos Hub</option>
-              <option value="osmosis-1">Osmosis</option>
+              <option value="">Select a chain...</option>
+              {this.getAllChains().map(chain => (
+                <option
+                  key={chain.chain_uid}
+                  value={chain.chain_uid}
+                  selected={this.newAddressForm.chainUID === chain.chain_uid}
+                >
+                  {chain.display_name} ({chain.type})
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -454,176 +386,214 @@ export class EuclidAddressBook {
     );
   }
 
+  private renderWalletsList() {
+    const connectedWallets = this.getConnectedWallets();
+
+    return (
+      <div class="wallets-section">
+        {/* Wallets Header */}
+        <div class="chain-header">
+          <div class="chain-header-info">
+            <div class="wallets-icon">💼</div>
+            <div>
+              <h3>Connected Wallets</h3>
+              <div class="meta">
+                <span class="badge">All Chains</span>
+                <span class="chain-id">{connectedWallets.length} wallets</span>
+              </div>
+            </div>
+          </div>
+          <div class="actions">
+            <euclid-button
+              variant="primary"
+              size="sm"
+              onClick={() => appStore.openWalletModal()}
+            >
+              + Connect Wallet
+            </euclid-button>
+          </div>
+        </div>
+
+        {/* Wallets List */}
+        <div class="addresses">
+          {connectedWallets.length === 0 ? (
+            <div class="empty">
+              <div class="icon">💼</div>
+              <h4>No connected wallets</h4>
+              <p>Connect a wallet to start managing your addresses across all chains</p>
+              <div class="actions">
+                <euclid-button variant="primary" onClick={() => appStore.openWalletModal()}>
+                  Connect Wallet
+                </euclid-button>
+              </div>
+            </div>
+          ) : (
+            <div class="wallet-list">
+              {connectedWallets.map(wallet => (
+                <euclid-wallet
+                  key={wallet.id}
+                  wallet={wallet}
+                  clickable={true}
+                  showConnectionStatus={true}
+                  showChainInfo={true}
+                  onWalletClick={(event) => this.handleSelectWallet(event.detail)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  private handleSelectWallet = (_wallet: WalletData) => {
+    // You can add wallet selection logic here if needed
+  };
+
   render() {
+    const allChains = this.getAllChains();
+    const selectedChain = this.getSelectedChain();
+    const selectedChainAddresses = this.getSelectedChainAddresses();
+
     return (
       <div class="address-book">
-        <div class="address-book-header">
-          <h2>Address Book</h2>
-          <div class="header-actions">
-            <euclid-button
-              variant="ghost"
-              size="sm"
-              onClick={() => this.syncWithConnectedWallets()}
-            >
-              🔄 Sync
-            </euclid-button>
-            <euclid-button
-              variant="ghost"
-              size="sm"
-              onClick={this.debugWalletStore}
-            >
-              🔍 Wallet Debug
-            </euclid-button>
-            <euclid-button
-              variant="ghost"
-              size="sm"
-              onClick={this.debugMarketStore}
-            >
-              🌐 Chains Debug
-            </euclid-button>
-            <euclid-button
-              variant="secondary"
-              size="sm"
-              onClick={this.handleConnectWallet}
-            >
-              🔗 Connect Wallet
-            </euclid-button>
-            {this.allowEditing && (
-              <euclid-button
-                variant="primary"
-                size="sm"
-                onClick={this.handleAddAddress}
-              >
-                + Add Address
-              </euclid-button>
-            )}
-          </div>
+        <div class="header">
+          <h2>📖 Address Book</h2>
+          <euclid-button variant="ghost" size="sm" onClick={() => { this.refreshTrigger = Date.now(); }}>
+            🔄 Sync
+          </euclid-button>
         </div>
 
         {this.isEditing && this.renderAddressForm()}
 
-        <div class="address-list">
-          {this.getDisplayedAddresses().length === 0 ? (
-            <div class="empty-state">
-              <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,17A1.5,1.5 0 0,0 13.5,15.5A1.5,1.5 0 0,0 12,14A1.5,1.5 0 0,0 10.5,15.5A1.5,1.5 0 0,0 12,17M12,10.5C12.8,10.5 13.5,9.8 13.5,9C13.5,8.2 12.8,7.5 12,7.5C11.2,7.5 10.5,8.2 10.5,9C10.5,9.8 11.2,10.5 12,10.5Z"/>
-              </svg>
-              <span>No addresses saved yet</span>
-              <div class="empty-actions">
-                <euclid-button
-                  variant="primary"
-                  onClick={this.handleConnectWallet}
-                >
-                  🔗 Connect Wallet
-                </euclid-button>
-                {this.allowEditing && (
-                  <euclid-button
-                    variant="ghost"
-                    onClick={this.handleAddAddress}
-                  >
-                    Or add manually
-                  </euclid-button>
-                )}
+        <div class="content">
+          {/* SIDEBAR - Wallets and Chain Selection */}
+          <div class="sidebar">
+            {/* Wallets Item */}
+            <div
+              class={`wallets-item ${this.viewMode === 'wallets' ? 'selected' : ''}`}
+              onClick={this.handleWalletsSelect}
+            >
+              <div class="wallets-icon">💼</div>
+              <div class="chain-info">
+                <div class="chain-name">Wallets</div>
+                <div class="chain-type">All Chains</div>
+              </div>
+              <div class="chain-badges">
+                <span class="count">{this.getConnectedWallets().length}</span>
               </div>
             </div>
-          ) : (
-            Object.entries(this.getGroupedAddresses()).map(([chainUID, addresses]) => {
-              const chainInfo = this.getChainInfo(chainUID);
+
+            {/* Chain Items */}
+            {allChains.map(chain => {
+              const chainAddresses = this.getWalletsForChain(chain.chain_uid);
+              const isSelected = this.selectedChainUID === chain.chain_uid && this.viewMode === 'chain';
+              const hasAddresses = chainAddresses.length > 0;
+
               return (
-                <div key={chainUID} class="chain-group">
-                  <div class="chain-header">
-                    <div class="chain-info">
-                      {chainInfo ? (
-                        <img src={chainInfo.logo} alt={chainInfo.display_name} class="chain-logo" />
-                      ) : (
-                        <div class="chain-logo-placeholder">⛓️</div>
-                      )}
-                      <div class="chain-details">
-                        <div class="chain-name">
-                          {chainInfo ? chainInfo.display_name : chainUID}
-                        </div>
-                        <div class="chain-type">
-                          {chainInfo ? chainInfo.type.toUpperCase() : 'UNKNOWN'}
-                        </div>
-                      </div>
+                <div
+                  key={chain.chain_uid}
+                  class={`chain-item ${isSelected ? 'selected' : ''}`}
+                  onClick={() => this.handleChainSelect(chain.chain_uid)}
+                >
+                  <img src={chain.logo} alt={chain.display_name} class="chain-logo" />
+                  <div class="chain-info">
+                    <div class="chain-name">{chain.display_name}</div>
+                    <div class="chain-type">{chain.type}</div>
+                  </div>
+                  {hasAddresses && (
+                    <div class="chain-badges">
+                      <span class="count">{chainAddresses.length}</span>
                     </div>
-                    <div class="chain-count">{addresses.length} wallet{addresses.length !== 1 ? 's' : ''}</div>
-                  </div>
-
-                  <div class="chain-addresses">
-                    {addresses.map(address => (
-                      <div
-                        key={address.id}
-                        class={{
-                          'address-item': true,
-                          'address-item--active': address.isActive,
-                        }}
-                        onClick={() => this.handleSelectAddress(address)}
-                      >
-                        <div class="address-main">
-                          <div class="address-info">
-                            <div class="address-label">
-                              {address.label}
-                              {address.isActive && <span class="active-badge">Active</span>}
-                            </div>
-                            <div class="address-value">{this.formatAddress(address.address)}</div>
-                            <div class="address-meta">
-                              <span class="wallet-type">{address.walletType}</span>
-                              {address.lastUsed && (
-                                <span class="last-used">
-                                  Last used {address.lastUsed.toLocaleDateString()}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-
-                          {this.showBalances && address.balance && (
-                            <div class="address-balance">
-                              <span class="balance-value">{address.balance}</span>
-                            </div>
-                          )}
-                        </div>
-
-                        {this.allowEditing && (
-                          <div class="address-actions">
-                            <button
-                              class="action-btn"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                this.handleEditAddress(address);
-                              }}
-                              type="button"
-                              title="Edit address"
-                            >
-                              ✎
-                            </button>
-                            <button
-                              class="action-btn action-btn--danger"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                this.handleRemoveAddress(address);
-                              }}
-                              type="button"
-                              title="Remove address"
-                            >
-                              🗑
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                  )}
                 </div>
               );
-            })
-          )}
-        </div>
+            })}
+          </div>
 
-        <div class="address-book-footer">
-          <div class="stats">
-            <span>{this.getDisplayedAddresses().length} addresses</span>
-            {this.getDisplayedAddresses().filter(a => a.isActive).length > 0 && (
-              <span>• {this.getDisplayedAddresses().filter(a => a.isActive).length} active</span>
+          {/* MAIN CONTENT - Wallets or Selected Chain's Addresses */}
+          <div class="main">
+            {this.viewMode === 'wallets' ? (
+              this.renderWalletsList()
+            ) : selectedChain ? (
+              <div class="chain-section">
+                {/* Chain Header */}
+                <div class="chain-header">
+                  <div class="chain-header-info">
+                    <img src={selectedChain.logo} alt={selectedChain.display_name} class="logo" />
+                    <div>
+                      <h3>{selectedChain.display_name}</h3>
+                      <div class="meta">
+                        <span class={`badge ${selectedChain.type.toLowerCase()}`}>{selectedChain.type}</span>
+                        <span class="chain-id">{selectedChain.chain_id}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="actions">
+                    <euclid-button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => this.handleConnectWalletForChain(this.selectedChainUID)}
+                    >
+                      🔗 Connect
+                    </euclid-button>
+                    <euclid-button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => {
+                        this.handleAddAddress();
+                        this.newAddressForm = { ...this.newAddressForm, chainUID: this.selectedChainUID };
+                      }}
+                    >
+                      + Add
+                    </euclid-button>
+                  </div>
+                </div>
+
+                {/* Addresses List */}
+                <div class="addresses">
+                  {selectedChainAddresses.length === 0 ? (
+                    <div class="empty">
+                      <div class="icon">📭</div>
+                      <h4>No addresses for {selectedChain.display_name}</h4>
+                      <p>Connect a wallet or add an address manually</p>
+                      <div class="actions">
+                        <euclid-button variant="primary" onClick={() => this.handleConnectWalletForChain(this.selectedChainUID)}>
+                          Connect Wallet
+                        </euclid-button>
+                        <euclid-button
+                          variant="ghost"
+                          onClick={() => {
+                            this.handleAddAddress();
+                            this.newAddressForm = { ...this.newAddressForm, chainUID: this.selectedChainUID };
+                          }}
+                        >
+                          Add Manually
+                        </euclid-button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div class="address-list">
+                      {selectedChainAddresses.map(wallet => (
+                        <euclid-wallet
+                          key={wallet.id}
+                          wallet={wallet}
+                          clickable={true}
+                          showConnectionStatus={true}
+                          showChainInfo={false}
+                          onWalletClick={(event) => this.handleSelectWallet(event.detail)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div class="empty">
+                <div class="icon">⛓️</div>
+                <h3>Select a chain</h3>
+                <p>Choose a blockchain network from the sidebar to view and manage addresses</p>
+              </div>
             )}
           </div>
         </div>

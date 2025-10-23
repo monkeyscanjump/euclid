@@ -46,6 +46,8 @@ export const LIQUIDITY_EVENTS = {
 
   // Position management
   POSITIONS_REFRESH: 'euclid:liquidity:positions-refresh',
+  POSITIONS_SUBSCRIBE: 'euclid:liquidity:positions-subscribe',
+  POSITIONS_UNSUBSCRIBE: 'euclid:liquidity:positions-unsubscribe',
 } as const;
 
 // Transaction Events - Handle transaction tracking and monitoring
@@ -92,6 +94,8 @@ export const USER_EVENTS = {
 
   // Balance management
   BALANCES_REFRESH: 'euclid:user:balances-refresh',
+  BALANCES_SUBSCRIBE: 'euclid:user:balances-subscribe',
+  BALANCES_UNSUBSCRIBE: 'euclid:user:balances-unsubscribe',
 } as const;
 
 // UI Events - Handle user interface interactions

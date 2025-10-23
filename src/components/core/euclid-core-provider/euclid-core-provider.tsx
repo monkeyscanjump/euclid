@@ -131,32 +131,37 @@ export class EuclidCoreProvider {
           </div>
         )}
 
-        {/* Core controllers - these manage data and state */}
-        <euclid-wallet-controller
-          config={JSON.stringify(this.euclidConfig)}
-        />
-        <euclid-market-data-controller
-          config={JSON.stringify(this.euclidConfig)}
-        />
-        <euclid-user-data-controller
-          config={JSON.stringify(this.euclidConfig)}
-        />
+        {/* Only render controllers AFTER initialization is complete */}
+        {this.isInitialized && (
+          <div>
+            {/* Core controllers - these manage data and state */}
+            <euclid-wallet-controller
+              config={JSON.stringify(this.euclidConfig)}
+            />
+            <euclid-market-data-controller
+              config={JSON.stringify(this.euclidConfig)}
+            />
+            <euclid-user-data-controller
+              config={JSON.stringify(this.euclidConfig)}
+            />
 
-        {/* Feature controllers - these handle business logic */}
-        <euclid-swap-controller
-          config={JSON.stringify(this.euclidConfig)}
-        />
-        <euclid-liquidity-controller
-          config={JSON.stringify(this.euclidConfig)}
-        />
-        <euclid-tx-tracker-controller
-          config={JSON.stringify(this.euclidConfig)}
-        />
+            {/* Feature controllers - these handle business logic */}
+            <euclid-swap-controller
+              config={JSON.stringify(this.euclidConfig)}
+            />
+            <euclid-liquidity-controller
+              config={JSON.stringify(this.euclidConfig)}
+            />
+            <euclid-tx-tracker-controller
+              config={JSON.stringify(this.euclidConfig)}
+            />
 
-        {/* Global modal - controlled by appStore */}
-        <euclid-modal />
+            {/* Global modal - controlled by appStore */}
+            <euclid-modal />
+          </div>
+        )}
 
-        {/* Slot for application content */}
+        {/* Slot for application content - this SHOULD always render so pages load */}
         <div class="euclid-provider-content">
           <slot></slot>
         </div>

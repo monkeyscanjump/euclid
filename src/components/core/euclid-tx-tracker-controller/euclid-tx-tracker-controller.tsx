@@ -2,6 +2,8 @@ import { Component, Listen, State, Watch, Prop } from '@stencil/core';
 import { walletStore } from '../../../store/wallet.store';
 import { apiClient } from '../../../utils/api-client';
 import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
+import { requestManager } from '../../../utils/request-manager';
+import { pollingCoordinator } from '../../../utils/polling-coordinator';
 
 @Component({
   tag: 'euclid-tx-tracker-controller',
@@ -23,6 +25,8 @@ export class EuclidTxTrackerController {
 
   disconnectedCallback() {
     this.stopTracking();
+    // Clean up polling coordinator
+    pollingCoordinator.unregister('tx-tracker');
   }
 
   private async initialize() {
@@ -36,13 +40,24 @@ export class EuclidTxTrackerController {
   }
 
   private startTracking() {
-    // Check transactions every 10 seconds
-    this.trackingInterval = window.setInterval(() => {
-      this.checkPendingTransactions();
-    }, 10000);
+    // Use polling coordinator for intelligent background tracking
+    pollingCoordinator.register(
+      'tx-tracker',
+      async () => {
+        await this.checkPendingTransactions();
+      },
+      {
+        activeInterval: 10000, // 10 seconds when tab is active
+        backgroundInterval: 30000, // 30 seconds when tab is hidden
+        pauseOnHidden: false // Continue tracking transactions even when tab is hidden
+      }
+    );
   }
 
   private stopTracking() {
+    // Unregister from polling coordinator
+    pollingCoordinator.unregister('tx-tracker');
+
     if (this.trackingInterval) {
       clearInterval(this.trackingInterval);
     }
@@ -77,12 +92,18 @@ export class EuclidTxTrackerController {
     type: string,
     currentPollCount = 0
   ): Promise<void> {
-    try {
-      console.log(`🔍 Checking transaction status: ${txHash}`);
+    // Use request manager for caching and deduplication
+    const cacheKey = `tx-status-${txHash}-${chainUID}`;
 
-      const response = await apiClient.trackTransactionWrapped(txHash, chainUID);
+    await requestManager.request(
+      cacheKey,
+      async () => {
+        try {
+          console.log(`🔍 Checking transaction status: ${txHash}`);
 
-      if (response.success && response.data) {
+          const response = await apiClient.trackTransactionWrapped(txHash, chainUID);
+
+          if (response.success && response.data) {
         const { status } = response.data;
 
         // Update transaction status in wallet store
@@ -127,12 +148,17 @@ export class EuclidTxTrackerController {
             this.trackingTransactions.set(txHash, { chainUID, type, pollCount: newPollCount });
           }
         }
-      } else {
-        console.warn(`⚠️ Failed to check transaction status: ${txHash}`, response.error);
-      }
-    } catch (error) {
-      console.error(`❌ Error checking transaction status: ${txHash}`, error);
-    }
+          } else {
+            console.warn(`⚠️ Failed to check transaction status: ${txHash}`, response.error);
+          }
+          return { success: true };
+        } catch (error) {
+          console.error(`❌ Error checking transaction status: ${txHash}`, error);
+          throw error;
+        }
+      },
+      { ttl: 5000 } // Cache for 5 seconds to avoid duplicate requests
+    );
   }
 
   private refreshUserDataAfterSuccess(chainUID: string, type: string) {

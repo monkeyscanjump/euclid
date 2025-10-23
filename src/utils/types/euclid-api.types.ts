@@ -35,15 +35,21 @@ export interface WalletState extends Record<string, unknown> {
   error: string | null;
 }
 
-// Legacy wallet info type for backward compatibility
+// Multi-chain wallet info type
 export interface WalletInfo {
   address: string;
   chainUID: string;
   isConnected: boolean;
-  walletType: 'metamask' | 'keplr' | 'phantom';
-  type?: 'metamask' | 'keplr' | 'phantom'; // legacy alias for walletType
+  walletType: 'metamask' | 'keplr' | 'phantom' | 'cosmostation' | 'walletconnect' | 'custom';
+  type?: 'metamask' | 'keplr' | 'phantom' | 'cosmostation' | 'walletconnect' | 'custom'; // legacy alias for walletType
   name?: string; // legacy compatibility
   balances: UserBalance[];
+  // Additional fields for multi-chain support
+  chainName?: string;
+  chainType?: string;
+  chainLogo?: string;
+  addedAt?: Date;
+  lastUsed?: Date;
 }
 
 export interface SwapState extends Record<string, unknown> {

@@ -343,8 +343,14 @@ export class WalletAdapterFactory {
     this.adapters.set('phantom', new PhantomAdapter());
   }
 
-  getAdapter(type: 'metamask' | 'keplr' | 'phantom'): WalletAdapter {
-    const adapter = this.adapters.get(type);
+  getAdapter(type: 'metamask' | 'keplr' | 'phantom' | 'cosmostation' | 'walletconnect' | 'custom'): WalletAdapter {
+    // Map additional types to existing adapters for now
+    let adapterType = type;
+    if (type === 'cosmostation') adapterType = 'keplr'; // Cosmostation uses similar interface to Keplr
+    if (type === 'walletconnect') adapterType = 'metamask'; // WalletConnect for EVM
+    if (type === 'custom') adapterType = 'metamask'; // Default to MetaMask for custom wallets
+
+    const adapter = this.adapters.get(adapterType);
     if (!adapter) {
       throw new Error(`Unsupported wallet type: ${type}`);
     }

@@ -13,11 +13,12 @@ import { DataItem, DataType, DisplayMode, FilterState } from "./components/core/
 import { LiquidityPoolInfo, LiquidityPosition, LiquidityToken } from "./components/features/euclid-liquidity-card/euclid-liquidity-card";
 import { DisplayMode as DisplayMode1, FilterConfig, ListFilters, ListItemData, ListItemType, SortConfig } from "./components/ui/euclid-list-items/euclid-list-items";
 import { UserPoolPosition } from "./components/ui/euclid-pool-item/euclid-pool-item";
-import { PortfolioData } from "./components/features/euclid-portfolio/euclid-portfolio";
+import { ConnectedWallet } from "./utils/wallet-utils";
 import { SwapQuote, SwapSettings, SwapToken } from "./components/features/euclid-swap-card/euclid-swap-card";
 import { TokenInfo } from "./components/ui/euclid-token-content/euclid-token-content";
 import { TokenInfo as TokenInfo1 } from "./components/ui/euclid-token-input/euclid-token-input";
 import { TokenDisplayMode, TokenField } from "./components/ui/euclid-token-item/euclid-token-item";
+import { WalletData } from "./components/ui/euclid-wallet/euclid-wallet";
 export { SavedAddress } from "./components/ui/euclid-address-book/euclid-address-book";
 export { ButtonSize, ButtonVariant } from "./components/ui/euclid-button/euclid-button";
 export { EuclidChainConfig, PoolInfo, TokenMetadata } from "./utils/types/api.types";
@@ -26,25 +27,14 @@ export { DataItem, DataType, DisplayMode, FilterState } from "./components/core/
 export { LiquidityPoolInfo, LiquidityPosition, LiquidityToken } from "./components/features/euclid-liquidity-card/euclid-liquidity-card";
 export { DisplayMode as DisplayMode1, FilterConfig, ListFilters, ListItemData, ListItemType, SortConfig } from "./components/ui/euclid-list-items/euclid-list-items";
 export { UserPoolPosition } from "./components/ui/euclid-pool-item/euclid-pool-item";
-export { PortfolioData } from "./components/features/euclid-portfolio/euclid-portfolio";
+export { ConnectedWallet } from "./utils/wallet-utils";
 export { SwapQuote, SwapSettings, SwapToken } from "./components/features/euclid-swap-card/euclid-swap-card";
 export { TokenInfo } from "./components/ui/euclid-token-content/euclid-token-content";
 export { TokenInfo as TokenInfo1 } from "./components/ui/euclid-token-input/euclid-token-input";
 export { TokenDisplayMode, TokenField } from "./components/ui/euclid-token-item/euclid-token-item";
+export { WalletData } from "./components/ui/euclid-wallet/euclid-wallet";
 export namespace Components {
     interface EuclidAddressBook {
-        /**
-          * @default true
-         */
-        "allowEditing": boolean;
-        /**
-          * @default false
-         */
-        "showActiveOnly": boolean;
-        /**
-          * @default true
-         */
-        "showBalances": boolean;
     }
     interface EuclidApiTester {
     }
@@ -218,6 +208,8 @@ export namespace Components {
           * @default ''
          */
         "walletAddress": string;
+    }
+    interface EuclidDataListExample {
     }
     interface EuclidDemoPlayground {
         /**
@@ -405,7 +397,6 @@ export namespace Components {
          */
         "autoRefresh": boolean;
         /**
-          * Card title
           * @default 'Portfolio'
          */
         "cardTitle": string;
@@ -557,6 +548,21 @@ export namespace Components {
     interface EuclidUserDataController {
         "config"?: string;
     }
+    interface EuclidWallet {
+        /**
+          * @default true
+         */
+        "clickable": boolean;
+        /**
+          * @default true
+         */
+        "showChainInfo": boolean;
+        /**
+          * @default true
+         */
+        "showConnectionStatus": boolean;
+        "wallet": WalletData;
+    }
     interface EuclidWalletContent {
     }
     interface EuclidWalletController {
@@ -606,6 +612,10 @@ export interface EuclidTokenInputCustomEvent<T> extends CustomEvent<T> {
 export interface EuclidTokenItemCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLEuclidTokenItemElement;
+}
+export interface EuclidWalletCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLEuclidWalletElement;
 }
 declare global {
     interface HTMLEuclidAddressBookElementEventMap {
@@ -697,6 +707,12 @@ declare global {
     var HTMLEuclidDataListElement: {
         prototype: HTMLEuclidDataListElement;
         new (): HTMLEuclidDataListElement;
+    };
+    interface HTMLEuclidDataListExampleElement extends Components.EuclidDataListExample, HTMLStencilElement {
+    }
+    var HTMLEuclidDataListExampleElement: {
+        prototype: HTMLEuclidDataListExampleElement;
+        new (): HTMLEuclidDataListExampleElement;
     };
     interface HTMLEuclidDemoPlaygroundElement extends Components.EuclidDemoPlayground, HTMLStencilElement {
     }
@@ -802,7 +818,7 @@ declare global {
         new (): HTMLEuclidPoolItemElement;
     };
     interface HTMLEuclidPortfolioElementEventMap {
-        "portfolioUpdated": PortfolioData;
+        "portfolioUpdated": ConnectedWallet[];
     }
     interface HTMLEuclidPortfolioElement extends Components.EuclidPortfolio, HTMLStencilElement {
         addEventListener<K extends keyof HTMLEuclidPortfolioElementEventMap>(type: K, listener: (this: HTMLEuclidPortfolioElement, ev: EuclidPortfolioCustomEvent<HTMLEuclidPortfolioElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -926,6 +942,23 @@ declare global {
         prototype: HTMLEuclidUserDataControllerElement;
         new (): HTMLEuclidUserDataControllerElement;
     };
+    interface HTMLEuclidWalletElementEventMap {
+        "walletClick": WalletData;
+    }
+    interface HTMLEuclidWalletElement extends Components.EuclidWallet, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLEuclidWalletElementEventMap>(type: K, listener: (this: HTMLEuclidWalletElement, ev: EuclidWalletCustomEvent<HTMLEuclidWalletElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLEuclidWalletElementEventMap>(type: K, listener: (this: HTMLEuclidWalletElement, ev: EuclidWalletCustomEvent<HTMLEuclidWalletElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    }
+    var HTMLEuclidWalletElement: {
+        prototype: HTMLEuclidWalletElement;
+        new (): HTMLEuclidWalletElement;
+    };
     interface HTMLEuclidWalletContentElement extends Components.EuclidWalletContent, HTMLStencilElement {
     }
     var HTMLEuclidWalletContentElement: {
@@ -946,6 +979,7 @@ declare global {
         "euclid-config-provider": HTMLEuclidConfigProviderElement;
         "euclid-core-provider": HTMLEuclidCoreProviderElement;
         "euclid-data-list": HTMLEuclidDataListElement;
+        "euclid-data-list-example": HTMLEuclidDataListExampleElement;
         "euclid-demo-playground": HTMLEuclidDemoPlaygroundElement;
         "euclid-liquidity-card": HTMLEuclidLiquidityCardElement;
         "euclid-liquidity-controller": HTMLEuclidLiquidityControllerElement;
@@ -961,28 +995,17 @@ declare global {
         "euclid-token-item": HTMLEuclidTokenItemElement;
         "euclid-tx-tracker-controller": HTMLEuclidTxTrackerControllerElement;
         "euclid-user-data-controller": HTMLEuclidUserDataControllerElement;
+        "euclid-wallet": HTMLEuclidWalletElement;
         "euclid-wallet-content": HTMLEuclidWalletContentElement;
         "euclid-wallet-controller": HTMLEuclidWalletControllerElement;
     }
 }
 declare namespace LocalJSX {
     interface EuclidAddressBook {
-        /**
-          * @default true
-         */
-        "allowEditing"?: boolean;
         "onAddressAdded"?: (event: EuclidAddressBookCustomEvent<SavedAddress>) => void;
         "onAddressRemoved"?: (event: EuclidAddressBookCustomEvent<SavedAddress>) => void;
         "onAddressSelected"?: (event: EuclidAddressBookCustomEvent<SavedAddress>) => void;
         "onAddressUpdated"?: (event: EuclidAddressBookCustomEvent<SavedAddress>) => void;
-        /**
-          * @default false
-         */
-        "showActiveOnly"?: boolean;
-        /**
-          * @default true
-         */
-        "showBalances"?: boolean;
     }
     interface EuclidApiTester {
     }
@@ -1171,6 +1194,8 @@ declare namespace LocalJSX {
           * @default ''
          */
         "walletAddress"?: string;
+    }
+    interface EuclidDataListExample {
     }
     interface EuclidDemoPlayground {
         /**
@@ -1389,7 +1414,6 @@ declare namespace LocalJSX {
          */
         "autoRefresh"?: boolean;
         /**
-          * Card title
           * @default 'Portfolio'
          */
         "cardTitle"?: string;
@@ -1403,7 +1427,7 @@ declare namespace LocalJSX {
           * @default true
          */
         "includeCustomWallets"?: boolean;
-        "onPortfolioUpdated"?: (event: EuclidPortfolioCustomEvent<PortfolioData>) => void;
+        "onPortfolioUpdated"?: (event: EuclidPortfolioCustomEvent<ConnectedWallet[]>) => void;
         /**
           * Refresh interval in milliseconds
           * @default 60000
@@ -1577,6 +1601,22 @@ declare namespace LocalJSX {
     interface EuclidUserDataController {
         "config"?: string;
     }
+    interface EuclidWallet {
+        /**
+          * @default true
+         */
+        "clickable"?: boolean;
+        "onWalletClick"?: (event: EuclidWalletCustomEvent<WalletData>) => void;
+        /**
+          * @default true
+         */
+        "showChainInfo"?: boolean;
+        /**
+          * @default true
+         */
+        "showConnectionStatus"?: boolean;
+        "wallet": WalletData;
+    }
     interface EuclidWalletContent {
     }
     interface EuclidWalletController {
@@ -1590,6 +1630,7 @@ declare namespace LocalJSX {
         "euclid-config-provider": EuclidConfigProvider;
         "euclid-core-provider": EuclidCoreProvider;
         "euclid-data-list": EuclidDataList;
+        "euclid-data-list-example": EuclidDataListExample;
         "euclid-demo-playground": EuclidDemoPlayground;
         "euclid-liquidity-card": EuclidLiquidityCard;
         "euclid-liquidity-controller": EuclidLiquidityController;
@@ -1605,6 +1646,7 @@ declare namespace LocalJSX {
         "euclid-token-item": EuclidTokenItem;
         "euclid-tx-tracker-controller": EuclidTxTrackerController;
         "euclid-user-data-controller": EuclidUserDataController;
+        "euclid-wallet": EuclidWallet;
         "euclid-wallet-content": EuclidWalletContent;
         "euclid-wallet-controller": EuclidWalletController;
     }
@@ -1625,6 +1667,7 @@ declare module "@stencil/core" {
             "euclid-config-provider": LocalJSX.EuclidConfigProvider & JSXBase.HTMLAttributes<HTMLEuclidConfigProviderElement>;
             "euclid-core-provider": LocalJSX.EuclidCoreProvider & JSXBase.HTMLAttributes<HTMLEuclidCoreProviderElement>;
             "euclid-data-list": LocalJSX.EuclidDataList & JSXBase.HTMLAttributes<HTMLEuclidDataListElement>;
+            "euclid-data-list-example": LocalJSX.EuclidDataListExample & JSXBase.HTMLAttributes<HTMLEuclidDataListExampleElement>;
             "euclid-demo-playground": LocalJSX.EuclidDemoPlayground & JSXBase.HTMLAttributes<HTMLEuclidDemoPlaygroundElement>;
             "euclid-liquidity-card": LocalJSX.EuclidLiquidityCard & JSXBase.HTMLAttributes<HTMLEuclidLiquidityCardElement>;
             "euclid-liquidity-controller": LocalJSX.EuclidLiquidityController & JSXBase.HTMLAttributes<HTMLEuclidLiquidityControllerElement>;
@@ -1640,6 +1683,7 @@ declare module "@stencil/core" {
             "euclid-token-item": LocalJSX.EuclidTokenItem & JSXBase.HTMLAttributes<HTMLEuclidTokenItemElement>;
             "euclid-tx-tracker-controller": LocalJSX.EuclidTxTrackerController & JSXBase.HTMLAttributes<HTMLEuclidTxTrackerControllerElement>;
             "euclid-user-data-controller": LocalJSX.EuclidUserDataController & JSXBase.HTMLAttributes<HTMLEuclidUserDataControllerElement>;
+            "euclid-wallet": LocalJSX.EuclidWallet & JSXBase.HTMLAttributes<HTMLEuclidWalletElement>;
             "euclid-wallet-content": LocalJSX.EuclidWalletContent & JSXBase.HTMLAttributes<HTMLEuclidWalletContentElement>;
             "euclid-wallet-controller": LocalJSX.EuclidWalletController & JSXBase.HTMLAttributes<HTMLEuclidWalletControllerElement>;
         }

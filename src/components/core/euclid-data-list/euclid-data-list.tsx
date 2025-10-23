@@ -1,5 +1,6 @@
 import { Component, Prop, h, State, Event, EventEmitter, Watch, Element } from '@stencil/core';
 import { marketStore } from '../../../store/market.store';
+import { dataSubscriptionManager } from '../../../utils/data-subscription-manager';
 import type { TokenMetadata, EuclidChainConfig, PoolInfo } from '../../../utils/types/api.types';
 import {
   InfiniteScrollManager,
@@ -89,6 +90,9 @@ export class EuclidDataList {
   private updateTimeout: number | null = null;
   private isConnected: boolean = true;
 
+  // Data subscription management
+  private dataSubscriptionId: string | null = null;
+
   // Computed properties
   private get storeKey(): 'tokens' | 'pools' | 'chains' {
     return this.dataType;
@@ -121,6 +125,9 @@ export class EuclidDataList {
       this.displayedItemsCount = this.itemsPerPage;
       this.hasMoreData = true;
     }
+
+    // Subscribe to market data based on dataType
+    this.subscribeToMarketData();
 
     // Listen for store changes
     marketStore.onChange(this.storeKey, () => {
@@ -189,6 +196,9 @@ export class EuclidDataList {
     // Mark component as disconnected
     this.isConnected = false;
 
+    // Clean up data subscription
+    this.unsubscribeFromMarketData();
+
     // Clean up managers
     this.filterManager?.destroy();
     this.infiniteScrollManager?.destroy();
@@ -197,6 +207,45 @@ export class EuclidDataList {
     if (this.updateTimeout) {
       clearTimeout(this.updateTimeout);
       this.updateTimeout = null;
+    }
+  }
+
+  /**
+   * Subscribe to market data based on the dataType
+   * This enables optimized polling only when this component needs the data
+   */
+  private subscribeToMarketData() {
+    // Map dataType to subscription type
+    let subscriptionType: 'marketData' | 'tokenPrices';
+
+    switch (this.dataType) {
+      case 'tokens':
+        subscriptionType = 'tokenPrices'; // Tokens need price data
+        break;
+      case 'pools':
+      case 'chains':
+      default:
+        subscriptionType = 'marketData'; // Pools and chains use general market data
+        break;
+    }
+
+    this.dataSubscriptionId = dataSubscriptionManager.subscribe(
+      `euclid-data-list-${this.dataType}`,
+      subscriptionType,
+      { dataSubtype: this.dataType }
+    );
+
+    console.log(`📊 Data List subscribed to ${subscriptionType} for ${this.dataType}`);
+  }
+
+  /**
+   * Clean up data subscription
+   */
+  private unsubscribeFromMarketData() {
+    if (this.dataSubscriptionId) {
+      dataSubscriptionManager.unsubscribe(this.dataSubscriptionId);
+      this.dataSubscriptionId = null;
+      console.log(`📊 Data List unsubscribed from ${this.dataType} data`);
     }
   }  private getDefaultFields(): string[] {
     switch (this.dataType) {
@@ -350,6 +399,12 @@ export class EuclidDataList {
   @Watch('showFields')
   @Watch('infiniteScroll')
   watchPropsChange() {
+    // Update subscription when dataType changes
+    if (this.dataSubscriptionId) {
+      this.unsubscribeFromMarketData();
+      this.subscribeToMarketData();
+    }
+
     // Re-sync with store when dataType changes to get the correct data
     this.syncWithStore();
 

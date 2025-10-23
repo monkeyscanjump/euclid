@@ -28,6 +28,9 @@ export class EuclidWalletController {
   private async initialize() {
     console.log('🔗 Initializing Wallet Controller...');
 
+    // FIRST: Initialize wallet store (loads from IndexedDB)
+    await walletStore.initialize();
+
     // Check for available wallets on page load
     await this.detectAvailableWallets();
 

@@ -4,6 +4,9 @@ import { marketStore } from '../../../store/market.store';
 import { walletStore } from '../../../store/wallet.store';
 import { euclidAPI } from '../../../utils/core-api';
 import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
+import { dataSubscriptionManager } from '../../../utils/data-subscription-manager';
+import { requestManager } from '../../../utils/request-manager';
+import { loadingManager } from '../../../utils/loading-state-manager';
 import type { EuclidConfig } from '../../../utils/env';
 import { DEFAULT_CONFIG } from '../../../utils/env';
 
@@ -242,7 +245,13 @@ export class EuclidLiquidityController {
   @Listen(EUCLID_EVENTS.LIQUIDITY.ADD_REQUEST, { target: 'window' })
   async handleAddLiquidityExecution() {
     console.log('💧 Add liquidity execution requested via event');
-    const result = await this.executeAddLiquidity();
+
+    // Use request manager to prevent duplicate transactions
+    const result = await requestManager.request(
+      'add-liquidity-execution',
+      () => this.executeAddLiquidity(),
+      { ttl: 1000 } // Very short cache to prevent duplicate submissions
+    );
 
     // Emit result event
     if (result.success) {
@@ -254,6 +263,18 @@ export class EuclidLiquidityController {
         error: result.error,
       });
     }
+  }
+
+  @Listen(EUCLID_EVENTS.LIQUIDITY.POSITIONS_SUBSCRIBE, { target: 'window' })
+  async handleLiquidityPositionsSubscribe() {
+    console.log('🏊 Component subscribed to liquidity position data - triggering fetch if needed');
+    // The subscription manager will handle polling setup automatically
+  }
+
+  @Listen(EUCLID_EVENTS.LIQUIDITY.POSITIONS_UNSUBSCRIBE, { target: 'window' })
+  handleLiquidityPositionsUnsubscribe() {
+    console.log('🏊 Component unsubscribed from liquidity position data');
+    // The subscription manager will handle cleanup automatically
   }
 
   @Listen(EUCLID_EVENTS.LIQUIDITY.REMOVE_REQUEST, { target: 'window' })

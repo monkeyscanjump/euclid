@@ -377,14 +377,25 @@ import type { WalletInfo } from '../types/euclid-api.types';
 
 // Convenience functions for common operations
 export const walletStorage = {
-  async setConnectedWallets(wallets: Map<string, WalletInfo>): Promise<void> {
-    const walletsObject = Object.fromEntries(wallets);
+  async setConnectedWallets(wallets: Map<string, WalletInfo> | Record<string, WalletInfo>): Promise<void> {
+    // Handle both Map and object inputs
+    let walletsObject: Record<string, WalletInfo>;
+    if (wallets instanceof Map) {
+      walletsObject = Object.fromEntries(wallets);
+    } else {
+      walletsObject = wallets;
+    }
     return secureStorage.setItem('wallet-data', 'connected-wallets', walletsObject, { encrypt: true });
   },
 
   async getConnectedWallets(): Promise<Map<string, WalletInfo>> {
     const walletsObject = await secureStorage.getItem<Record<string, WalletInfo>>('wallet-data', 'connected-wallets');
     return walletsObject ? new Map(Object.entries(walletsObject)) : new Map();
+  },
+
+  async getConnectedWalletsAsObject(): Promise<Record<string, WalletInfo>> {
+    const walletsObject = await secureStorage.getItem<Record<string, WalletInfo>>('wallet-data', 'connected-wallets');
+    return walletsObject || {};
   },
 
   async setAddressBook(addresses: unknown[]): Promise<void> {

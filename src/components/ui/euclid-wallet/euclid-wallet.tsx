@@ -1,4 +1,4 @@
-import { Component, h, Prop, Event, EventEmitter } from '@stencil/core';
+import { Component, h, Prop, Event, EventEmitter, Fragment } from '@stencil/core';
 
 export interface WalletData {
   id: string;
@@ -9,8 +9,8 @@ export interface WalletData {
   chainType: string;
   walletType: string;
   provider: string;
-  isConnected: boolean;
   label?: string;
+  autoConnect?: boolean; // Auto-reconnect when session expires
 }
 
 @Component({
@@ -23,13 +23,33 @@ export class EuclidWallet {
   @Prop() clickable: boolean = true;
   @Prop() showConnectionStatus: boolean = true;
   @Prop() showChainInfo: boolean = true;
+  @Prop() showActions: boolean = false;
 
   @Event() walletClick: EventEmitter<WalletData>;
+  @Event() walletDelete: EventEmitter<WalletData>;
+  @Event() walletEdit: EventEmitter<WalletData>;
+  @Event() walletToggleAutoConnect: EventEmitter<WalletData>;
 
   private handleClick = () => {
     if (this.clickable) {
       this.walletClick.emit(this.wallet);
     }
+  };
+
+  private handleDelete = (e: Event) => {
+    e.stopPropagation(); // Prevent wallet click event
+    this.walletDelete.emit(this.wallet);
+  };
+
+  private handleEdit = (e: Event) => {
+    e.stopPropagation(); // Prevent wallet click event
+    this.walletEdit.emit(this.wallet);
+  };
+
+  private handleToggleAutoConnect = (e: Event) => {
+    e.stopPropagation(); // Prevent wallet click event
+    console.log('🔄 Auto-connect button clicked!', this.wallet);
+    this.walletToggleAutoConnect.emit(this.wallet);
   };
 
   private formatAddress(address: string): string {
@@ -38,13 +58,14 @@ export class EuclidWallet {
 
   render() {
     const { wallet } = this;
+    // Ensure autoConnect has a default value
+    const autoConnect = wallet.autoConnect ?? false;
 
     return (
       <div
         class={{
           'wallet-card': true,
           'clickable': this.clickable,
-          'connected': wallet.isConnected,
         }}
         onClick={this.handleClick}
       >
@@ -58,15 +79,7 @@ export class EuclidWallet {
           <div class="wallet-header">
             <div class="wallet-provider">
               <span class="provider-name">{wallet.provider}</span>
-              {this.showConnectionStatus && (
-                <div class={{
-                  'connection-indicator': true,
-                  'connected': wallet.isConnected,
-                  'saved': !wallet.isConnected,
-                }}>
-                  {wallet.isConnected ? 'Connected' : 'Saved'}
-                </div>
-              )}
+              {this.showConnectionStatus && (<div class="connection-indicator"></div>)}
             </div>
           </div>
 
@@ -88,9 +101,36 @@ export class EuclidWallet {
           )}
         </div>
 
-        {/* Connection Status Indicator */}
-        {this.showConnectionStatus && wallet.isConnected && (
-          <div class="connection-dot"></div>
+        {/* Connection Status Indicator - Removed since connection is handled by auto-connect */}
+
+        {/* Action Buttons */}
+        {this.showActions && (
+          <div class="wallet-actions">
+            {/* Auto-connect toggle for non-custom wallets */}
+            {wallet.walletType !== 'custom' && (
+              <button
+                class={`action-btn auto-connect-btn ${autoConnect ? 'enabled' : 'disabled'}`}
+                onClick={this.handleToggleAutoConnect}
+                title={autoConnect ? 'Disable auto-connect' : 'Enable auto-connect when extension session expires'}
+              >
+                {autoConnect ? '🔄' : '⏸️'}
+              </button>
+            )}
+            <button
+              class="action-btn delete-btn"
+              onClick={this.handleDelete}
+              title="Delete saved wallet"
+            >
+              🗑️
+            </button>
+            <button
+              class="action-btn edit-btn"
+              onClick={this.handleEdit}
+              title="Edit wallet name"
+            >
+              ✏️
+            </button>
+          </div>
         )}
       </div>
     );

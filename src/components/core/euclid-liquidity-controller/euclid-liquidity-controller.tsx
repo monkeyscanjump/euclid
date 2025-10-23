@@ -4,9 +4,9 @@ import { marketStore } from '../../../store/market.store';
 import { walletStore } from '../../../store/wallet.store';
 import { euclidAPI } from '../../../utils/core-api';
 import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
-import { dataSubscriptionManager } from '../../../utils/data-subscription-manager';
+// import { dataSubscriptionManager } from '../../../utils/data-subscription-manager';
 import { requestManager } from '../../../utils/request-manager';
-import { loadingManager } from '../../../utils/loading-state-manager';
+// import { loadingManager } from '../../../utils/loading-state-manager';
 import type { EuclidConfig } from '../../../utils/env';
 import { DEFAULT_CONFIG } from '../../../utils/env';
 
@@ -63,16 +63,16 @@ export class EuclidLiquidityController {
         return { success: false, error: 'Missing required liquidity parameters' };
       }
 
-      // Check if wallets are connected for both tokens
+      // Check if wallets exist for both token chains
       const token1Wallet = walletStore.getWallet(token1.chainUID);
       const token2Wallet = walletStore.getWallet(token2.chainUID);
 
-      if (!token1Wallet?.isConnected) {
-        return { success: false, error: `Wallet not connected for ${token1.symbol}` };
+      if (!token1Wallet) {
+        return { success: false, error: `No wallet found for ${token1.symbol} chain` };
       }
 
-      if (!token2Wallet?.isConnected) {
-        return { success: false, error: `Wallet not connected for ${token2.symbol}` };
+      if (!token2Wallet) {
+        return { success: false, error: `No wallet found for ${token2.symbol} chain` };
       }
 
       // Check sufficient balances
@@ -122,9 +122,9 @@ export class EuclidLiquidityController {
         const txHash = 'pending';
 
                 // Get wallet info and track the transaction
-        const connectedWallets = walletStore.getAllConnectedWallets();
-        const walletInfo = connectedWallets[0]; // Use primary wallet
-        const primaryChain = walletInfo.chainUID;
+        const allWallets = walletStore.getAllWallets();
+        const primaryWallet = allWallets[0]; // Use first available wallet
+        const primaryChain = primaryWallet.chainUID;
 
         walletStore.addTransaction(primaryChain, {
           txHash: txHash || (result.data as TransactionResponse)?.transactionHash || 'pending',
@@ -181,8 +181,8 @@ export class EuclidLiquidityController {
 
       const primaryWallet = walletStore.getWallet(token1.chain_uid);
 
-      if (!primaryWallet?.isConnected) {
-        return { success: false, error: `Wallet not connected for ${token1.chain_uid}` };
+      if (!primaryWallet) {
+        return { success: false, error: `No wallet found for ${token1.chain_uid} chain` };
       }
 
       // Check sufficient LP token balance

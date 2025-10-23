@@ -1,9 +1,11 @@
 import { Component, h, State, Event, EventEmitter, Listen } from '@stencil/core';
 import { appStore } from '../../../store/app.store';
 import { marketStore } from '../../../store/market.store';
+import { walletStore } from '../../../store/wallet.store';
 import { walletStorage } from '../../../utils/storage/indexdb-storage';
-import { getConnectedWallets, setupWalletStoreListeners } from '../../../utils/wallet-utils';
+import { getConnectedWallets, getAllWallets, setupWalletStoreListeners, addCustomWallet, removeWallet } from '../../../utils/wallet-utils';
 import { WalletData } from '../euclid-wallet/euclid-wallet';
+import { WalletType, ChainType } from '../../../utils/types/wallet.types';
 
 export interface SavedAddress {
   id: string;
@@ -24,12 +26,12 @@ export interface SavedAddress {
 })
 export class EuclidAddressBook {
   @State() savedAddresses: SavedAddress[] = [];
-  @State() refreshTrigger: number = 0; // For triggering re-renders
   @State() isEditing: boolean = false;
   @State() editingAddress: SavedAddress | null = null;
   @State() newAddressForm: Partial<SavedAddress> = {};
   @State() selectedChainUID: string = '';
   @State() viewMode: 'wallets' | 'chain' = 'wallets'; // Default to wallets view
+
 
   @Event() addressSelected: EventEmitter<SavedAddress>;
   @Event() addressAdded: EventEmitter<SavedAddress>;
@@ -51,8 +53,12 @@ export class EuclidAddressBook {
 
     // Use shared utility for wallet store listeners
     setupWalletStoreListeners(() => {
-      this.refreshTrigger = Date.now();
+      // Force a component re-render to update the UI
+      this.savedAddresses = [...this.savedAddresses];
     });
+
+    // Start real-time connection monitoring
+    this.startAutoConnectMonitoring();
   }
 
   private ensureChainSelected() {
@@ -64,22 +70,18 @@ export class EuclidAddressBook {
 
   @Listen('euclid:wallet:connect-success', { target: 'window' })
   handleWalletConnectSuccess() {
-    this.refreshTrigger = Date.now();
+    // Component will auto-refresh through store listener
   }
 
   private async loadSavedAddresses() {
     try {
-      // Try to load from IndexedDB first
       const addresses = await walletStorage.getAddressBook() as SavedAddress[];
       this.savedAddresses = addresses.map(addr => ({
         ...addr,
         addedAt: new Date(addr.addedAt),
         lastUsed: addr.lastUsed ? new Date(addr.lastUsed) : undefined,
       }));
-    } catch (error) {
-      console.error('Failed to load saved addresses from IndexedDB:', error);
-
-      // Fallback to localStorage for migration
+    } catch {
       try {
         const saved = localStorage.getItem('euclid-address-book');
         if (saved) {
@@ -89,12 +91,10 @@ export class EuclidAddressBook {
             lastUsed: addr.lastUsed ? new Date(addr.lastUsed) : undefined,
           }));
 
-          // Migrate to IndexedDB and remove from localStorage
           await this.saveAddresses();
           localStorage.removeItem('euclid-address-book');
         }
-      } catch (legacyError) {
-        console.error('Failed to load addresses from localStorage:', legacyError);
+      } catch {
         this.savedAddresses = [];
       }
     }
@@ -103,17 +103,19 @@ export class EuclidAddressBook {
   private async saveAddresses() {
     try {
       await walletStorage.setAddressBook(this.savedAddresses);
-    } catch (error) {
-      console.error('Failed to save addresses to IndexedDB:', error);
-
-      // Fallback to localStorage if IndexedDB fails
+    } catch {
       try {
         localStorage.setItem('euclid-address-book', JSON.stringify(this.savedAddresses));
-        console.warn('📇 Fallback: Saved addresses to localStorage instead');
       } catch (fallbackError) {
-        console.error('Failed to save addresses to localStorage fallback:', fallbackError);
+        console.error('Failed to save addresses:', fallbackError);
       }
     }
+  }
+
+  private async startAutoConnectMonitoring() {
+    // Import and start the new auto-connect system
+    const { startAutoConnectMonitoring } = await import('../../../utils/wallet-connection-checker');
+    startAutoConnectMonitoring();
   }
 
   private handleAddAddress = () => {
@@ -127,44 +129,38 @@ export class EuclidAddressBook {
     };
   };
 
-  private handleEditAddress = (address: SavedAddress) => {
-    this.isEditing = true;
-    this.editingAddress = address;
-    this.newAddressForm = { ...address };
-  };
-
   private handleSaveAddress = () => {
-    if (!this.newAddressForm.address || !this.newAddressForm.label) {
+    if (!this.newAddressForm.address || !this.newAddressForm.label || !this.newAddressForm.chainUID) {
       return;
     }
 
     if (this.editingAddress) {
-      // Update existing address
-      const index = this.savedAddresses.findIndex(addr => addr.id === this.editingAddress!.id);
-      if (index !== -1) {
-        this.savedAddresses[index] = {
-          ...this.editingAddress,
-          ...this.newAddressForm,
-        } as SavedAddress;
+      this.handleCancelEdit();
+      return;
+    }
 
-        this.addressUpdated.emit(this.savedAddresses[index]);
-      }
-    } else {
-      // Add new address
+    const success = addCustomWallet(
+      this.newAddressForm.address!,
+      this.newAddressForm.chainUID!,
+      this.newAddressForm.label!,
+      'custom'
+    );
+
+    if (success) {
       const newAddress: SavedAddress = {
-        id: `manual-${Date.now()}`,
+        id: `custom-${this.newAddressForm.chainUID}-${Date.now()}`,
         address: this.newAddressForm.address!,
-        chainUID: this.newAddressForm.chainUID || 'ethereum',
-        walletType: this.newAddressForm.walletType || 'manual',
+        chainUID: this.newAddressForm.chainUID!,
+        walletType: 'custom',
         label: this.newAddressForm.label!,
         addedAt: new Date(),
       };
 
       this.savedAddresses = [...this.savedAddresses, newAddress];
       this.addressAdded.emit(newAddress);
+      this.saveAddresses();
     }
 
-    this.saveAddresses();
     this.handleCancelEdit();
   };
 
@@ -174,26 +170,8 @@ export class EuclidAddressBook {
     this.newAddressForm = {};
   };
 
-  private handleRemoveAddress = (address: SavedAddress) => {
-    this.savedAddresses = this.savedAddresses.filter(addr => addr.id !== address.id);
-    this.saveAddresses();
-    this.addressRemoved.emit(address);
-  };
-
-  private handleSelectAddress = (address: SavedAddress) => {
-    // Update last used timestamp
-    address.lastUsed = new Date();
-    this.saveAddresses();
-
-    this.addressSelected.emit(address);
-  };
-
   private handleConnectWallet = () => {
     appStore.openWalletModal();
-  };
-
-  private handleConnectWalletForChain = (chainUID: string) => {
-    appStore.openWalletModal(chainUID);
   };
 
   private formatAddress(address: string): string {
@@ -229,27 +207,22 @@ export class EuclidAddressBook {
   }
 
   private getWalletsForChain(chainUID: string): WalletData[] {
-    // Get connected wallets for this specific chain
-    const connectedWallets = this.getConnectedWallets().filter(wallet => wallet.chainUID === chainUID);
+    // Get ALL wallets (connected + saved) with real-time status for this specific chain
+    const allWallets = this.getAllWallets().filter(wallet => wallet.chainUID === chainUID);
 
-    // Get saved addresses for this chain and convert to WalletData format
-    const savedAddresses = this.getDisplayedAddresses().filter(addr => addr.chainUID === chainUID);
-    const chain = this.getAllChains().find(c => c.chain_uid === chainUID);
-
-    const savedAsWallets: WalletData[] = savedAddresses.map(address =>
-      this.convertAddressToWallet(address, chain)
-    );
-
-    // Merge and deduplicate by address
-    const allWallets = [...connectedWallets];
-    savedAsWallets.forEach(savedWallet => {
-      const alreadyExists = allWallets.some(wallet => wallet.address === savedWallet.address);
-      if (!alreadyExists) {
-        allWallets.push(savedWallet);
-      }
-    });
-
-    return allWallets;
+    // Convert to WalletData format
+    return allWallets.map(wallet => ({
+      id: wallet.id,
+      address: wallet.address,
+      chainUID: wallet.chainUID,
+      chainName: wallet.chainName,
+      chainLogo: wallet.chainLogo,
+      chainType: wallet.chainType,
+      walletType: wallet.walletType,
+      provider: wallet.provider,
+      label: wallet.label,
+      autoConnect: wallet.autoConnect ?? false,
+    }));
   }
 
   private handleChainSelect = (chainUID: string) => {
@@ -275,6 +248,11 @@ export class EuclidAddressBook {
     return getConnectedWallets();
   }
 
+  private getAllWallets() {
+    // Just return all saved wallets from the store
+    return this.getConnectedWallets();
+  }
+
   private convertAddressToWallet(address: SavedAddress, chain?: { display_name: string; logo: string; type: string }) {
     return {
       id: address.id,
@@ -285,8 +263,8 @@ export class EuclidAddressBook {
       chainType: chain?.type || 'Unknown',
       walletType: address.walletType,
       provider: address.walletType,
-      isConnected: false, // Saved addresses are not connected by default
       label: address.label,
+      autoConnect: false, // Default for converted addresses
     };
   }
 
@@ -387,56 +365,79 @@ export class EuclidAddressBook {
   }
 
   private renderWalletsList() {
-    const connectedWallets = this.getConnectedWallets();
+    const allWallets = this.getAllWallets();
 
     return (
       <div class="wallets-section">
-        {/* Wallets Header */}
         <div class="chain-header">
           <div class="chain-header-info">
             <div class="wallets-icon">💼</div>
             <div>
-              <h3>Connected Wallets</h3>
+              <h3>All Wallets</h3>
               <div class="meta">
                 <span class="badge">All Chains</span>
-                <span class="chain-id">{connectedWallets.length} wallets</span>
+                <span class="chain-id">{allWallets.length} wallets</span>
               </div>
             </div>
           </div>
           <div class="actions">
             <euclid-button
+              variant="ghost"
+              size="sm"
+              onClick={this.handleAddAddress}
+            >
+              + Add Custom
+            </euclid-button>
+            <euclid-button
               variant="primary"
               size="sm"
               onClick={() => appStore.openWalletModal()}
             >
-              + Connect Wallet
+              🔗 Connect Wallet
             </euclid-button>
           </div>
         </div>
 
-        {/* Wallets List */}
         <div class="addresses">
-          {connectedWallets.length === 0 ? (
+          {allWallets.length === 0 ? (
             <div class="empty">
               <div class="icon">💼</div>
-              <h4>No connected wallets</h4>
-              <p>Connect a wallet to start managing your addresses across all chains</p>
+              <h4>No wallets added</h4>
+              <p>Connect a wallet or add a custom address to get started</p>
               <div class="actions">
                 <euclid-button variant="primary" onClick={() => appStore.openWalletModal()}>
                   Connect Wallet
+                </euclid-button>
+                <euclid-button variant="ghost" onClick={this.handleAddAddress}>
+                  Add Custom Address
                 </euclid-button>
               </div>
             </div>
           ) : (
             <div class="wallet-list">
-              {connectedWallets.map(wallet => (
+              {allWallets.map(wallet => (
                 <euclid-wallet
                   key={wallet.id}
-                  wallet={wallet}
+                  wallet={{
+                    id: wallet.id,
+                    address: wallet.address,
+                    chainUID: wallet.chainUID,
+                    chainName: wallet.chainName,
+                    chainLogo: wallet.chainLogo,
+                    chainType: wallet.chainType,
+                    walletType: wallet.walletType,
+                    provider: wallet.provider,
+                    label: wallet.label,
+                    autoConnect: wallet.autoConnect ?? false,
+                  }}
                   clickable={true}
-                  showConnectionStatus={true}
+                  showConnectionStatus={false}
                   showChainInfo={true}
+                  showActions={true}
                   onWalletClick={(event) => this.handleSelectWallet(event.detail)}
+                  onWalletDelete={(event) => this.handleWalletDelete(event.detail)}
+                  onWalletEdit={(event) => this.handleWalletEdit(event.detail)}
+                  onWalletToggleAutoConnect={(event) => this.handleToggleAutoConnect(event.detail)}
                 />
               ))}
             </div>
@@ -447,7 +448,53 @@ export class EuclidAddressBook {
   }
 
   private handleSelectWallet = (_wallet: WalletData) => {
-    // You can add wallet selection logic here if needed
+    // Wallet selection logic if needed
+  };
+
+  private handleRemoveWallet = (wallet: WalletData) => {
+    const success = removeWallet(wallet.chainUID);
+    if (success) {
+      this.savedAddresses = this.savedAddresses.filter(addr =>
+        !(addr.address === wallet.address && addr.chainUID === wallet.chainUID)
+      );
+      this.saveAddresses();
+    }
+  };
+
+  private handleWalletDelete = (wallet: WalletData) => {
+    this.handleRemoveWallet(wallet);
+  };
+
+  private handleWalletEdit = (_wallet: WalletData) => {
+    // TODO: Implement wallet editing
+  };
+
+  private handleToggleAutoConnect = (wallet: WalletData) => {
+    console.log('🔄 Toggle auto-connect for wallet:', wallet);
+
+    // Ensure we have a proper boolean value (handle undefined)
+    const currentAutoConnect = wallet.autoConnect ?? false;
+    console.log('🔄 Current autoConnect:', currentAutoConnect);
+
+    // Toggle auto-connect setting in wallet store
+    const newAutoConnect = !currentAutoConnect;
+    console.log('🔄 New autoConnect value:', newAutoConnect);
+
+    // Update the wallet in store with new auto-connect setting
+    walletStore.addWallet(wallet.chainUID, {
+      address: wallet.address,
+      walletType: wallet.walletType as WalletType, // Cast string to WalletType
+      name: wallet.label,
+      balances: [],
+      chainName: wallet.chainName,
+      chainType: wallet.chainType as ChainType, // Cast string to ChainType
+      chainLogo: wallet.chainLogo,
+      autoConnect: newAutoConnect
+    });
+
+    console.log('🔄 Updated wallet store - wallet store should auto-update UI');
+    // DON'T use refreshTrigger - it causes entire app to re-render!
+    // The wallet store update should automatically trigger UI refresh
   };
 
   render() {
@@ -459,9 +506,11 @@ export class EuclidAddressBook {
       <div class="address-book">
         <div class="header">
           <h2>📖 Address Book</h2>
-          <euclid-button variant="ghost" size="sm" onClick={() => { this.refreshTrigger = Date.now(); }}>
-            🔄 Sync
-          </euclid-button>
+          <div class="header-actions" style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
+            <euclid-button variant="ghost" size="sm" onClick={() => { this.loadSavedAddresses(); }}>
+              🔄 Sync
+            </euclid-button>
+          </div>
         </div>
 
         {this.isEditing && this.renderAddressForm()}
@@ -480,7 +529,7 @@ export class EuclidAddressBook {
                 <div class="chain-type">All Chains</div>
               </div>
               <div class="chain-badges">
-                <span class="count">{this.getConnectedWallets().length}</span>
+                <span class="count">{getAllWallets().length}</span>
               </div>
             </div>
 
@@ -533,7 +582,7 @@ export class EuclidAddressBook {
                     <euclid-button
                       variant="secondary"
                       size="sm"
-                      onClick={() => this.handleConnectWalletForChain(this.selectedChainUID)}
+                      onClick={() => appStore.openWalletModal(this.selectedChainUID)}
                     >
                       🔗 Connect
                     </euclid-button>
@@ -558,7 +607,7 @@ export class EuclidAddressBook {
                       <h4>No addresses for {selectedChain.display_name}</h4>
                       <p>Connect a wallet or add an address manually</p>
                       <div class="actions">
-                        <euclid-button variant="primary" onClick={() => this.handleConnectWalletForChain(this.selectedChainUID)}>
+                        <euclid-button variant="primary" onClick={() => appStore.openWalletModal(this.selectedChainUID)}>
                           Connect Wallet
                         </euclid-button>
                         <euclid-button
@@ -573,15 +622,19 @@ export class EuclidAddressBook {
                       </div>
                     </div>
                   ) : (
-                    <div class="address-list">
+                    <div class="wallet-list">
                       {selectedChainAddresses.map(wallet => (
                         <euclid-wallet
                           key={wallet.id}
                           wallet={wallet}
                           clickable={true}
-                          showConnectionStatus={true}
+                          showConnectionStatus={false}
                           showChainInfo={false}
+                          showActions={true}
                           onWalletClick={(event) => this.handleSelectWallet(event.detail)}
+                          onWalletDelete={(event) => this.handleWalletDelete(event.detail)}
+                          onWalletEdit={(event) => this.handleWalletEdit(event.detail)}
+                          onWalletToggleAutoConnect={(event) => this.handleToggleAutoConnect(event.detail)}
                         />
                       ))}
                     </div>

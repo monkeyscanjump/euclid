@@ -4,16 +4,16 @@ import type { UserBalance } from '../utils/types/api.types';
 import type { BaseStore } from './types';
 import { walletAdapterFactory } from '../utils/wallet-adapters';
 import { walletStorage, migrateFromLocalStorage } from '../utils/storage/indexdb-storage';
+import { isCoreWalletType } from '../utils/types/wallet.types';
 // import { wrapStoreWithSmartUpdates } from '../utils/store-update-coordinator';
 
 // Extended wallet state to support multiple wallets - USING OBJECTS NOT MAPS
 interface ExtendedWalletState extends Record<string, unknown> {
-  // Core wallet state (legacy single wallet support)
-  isConnected: boolean;
+  // Core wallet state (legacy single wallet support) - simplified
   address: string | null;
   chainId: string | null;
   chainUID: string | null;
-  walletType: 'metamask' | 'keplr' | 'phantom' | 'cosmostation' | 'walletconnect' | 'custom' | null;
+  walletType: string | null; // Allow any string to handle all wallet types
   balances: UserBalance[];
   loading: boolean;
   error: string | null;
@@ -28,7 +28,6 @@ interface ExtendedWalletState extends Record<string, unknown> {
 }
 
 const initialState: ExtendedWalletState = {
-  isConnected: false,
   address: null,
   chainId: null,
   chainUID: null,
@@ -87,11 +86,10 @@ const actions = {
           lastSync: Date.now(),
         });
 
-        // Set primary wallet state from first connected wallet
+        // Set primary wallet state from first saved wallet
         const firstWallet = Object.values(savedWalletsObject)[0];
         if (firstWallet) {
           smartStore.smartUpdate({
-            isConnected: true,
             address: firstWallet.address,
             chainUID: firstWallet.chainUID,
             walletType: firstWallet.walletType,
@@ -106,7 +104,12 @@ const actions = {
     console.log('Wallet store initialized');
   },
 
-  async connectWallet(walletType: 'metamask' | 'keplr' | 'phantom', chainId?: string) {
+  async connectWallet(walletType: string, chainId?: string) {
+    // Only support core wallet types - USE HELPER FUNCTION!
+    if (!isCoreWalletType(walletType)) {
+      throw new Error(`Unsupported wallet type: ${walletType}`);
+    }
+
     state.loading = true;
     state.error = null;
 
@@ -120,7 +123,6 @@ const actions = {
       const connection = await adapter.connect(chainId);
 
       // Set old structure for backward compatibility
-      state.isConnected = true;
       state.address = connection.address;
       state.chainId = connection.chainId;
       state.chainUID = connection.chainId; // For now, using chainId as chainUID
@@ -132,8 +134,8 @@ const actions = {
       actions.addWallet(chainUID, {
         address: connection.address,
         walletType: walletType,
-        isConnected: true,
-        balances: []
+        balances: [],
+        autoConnect: false // Default auto-connect to OFF for new wallets
       });
 
       console.log('✅ Wallet connected and added to both old and new structures:', {
@@ -155,7 +157,7 @@ const actions = {
       actions.removeWallet(chainUID);
     } else {
       // Disconnect all wallets
-      if (state.walletType) {
+      if (state.walletType && isCoreWalletType(state.walletType)) {
         try {
           const adapter = walletAdapterFactory.getAdapter(state.walletType);
           await adapter.disconnect();
@@ -166,7 +168,6 @@ const actions = {
 
       // Clear all wallet state
       smartStore.smartUpdate({
-        isConnected: false,
         address: null,
         chainId: null,
         chainUID: null,
@@ -213,16 +214,17 @@ const actions = {
   },
 
   async switchChain(chainId: string) {
-    if (!state.walletType) {
-      throw new Error('No wallet connected');
+    if (!state.walletType || !isCoreWalletType(state.walletType)) {
+      throw new Error('No supported wallet connected');
     }
 
     state.loading = true;
     state.error = null;
 
     try {
-      const adapter = walletAdapterFactory.getAdapter(state.walletType);
-      await adapter.switchChain(chainId);
+      // TODO: Implement switchChain method in WalletAdapter interface
+      // const adapter = walletAdapterFactory.getAdapter(state.walletType);
+      // await adapter.switchChain(chainId);
 
       state.chainId = chainId;
       state.chainUID = chainId;
@@ -245,8 +247,7 @@ const actions = {
     const fullWalletInfo: WalletInfo = {
       ...walletInfo,
       chainUID,
-      type: walletInfo.walletType, // Set legacy alias
-      name: walletInfo.walletType, // Set legacy name
+      name: walletInfo.name || walletInfo.walletType,
       addedAt: new Date(),
       lastUsed: new Date(),
     };
@@ -274,11 +275,10 @@ const actions = {
       lastSync: Date.now(),
     });
 
-    // Update primary wallet state only if no wallet is currently connected
-    if (!state.isConnected || !state.address) {
+    // Update primary wallet state only if no wallet is currently active
+    if (!state.address) {
       console.log('🔗 Setting as primary wallet (no existing primary)');
       smartStore.smartUpdate({
-        isConnected: true,
         address: walletInfo.address,
         chainUID: chainUID,
         walletType: walletInfo.walletType,
@@ -318,7 +318,6 @@ const actions = {
         });
       } else {
         smartStore.smartUpdate({
-          isConnected: false,
           address: null,
           chainUID: null,
           walletType: null,
@@ -435,10 +434,14 @@ const getters = {
     }
   },
 
-  isWalletAvailable: (walletType: 'metamask' | 'keplr' | 'phantom') => {
+  isWalletAvailable: (walletType: string) => {
     try {
-      const adapter = walletAdapterFactory.getAdapter(walletType);
-      return adapter.isAvailable();
+      // Only check for core wallet types that we have adapters for
+      if (isCoreWalletType(walletType)) {
+        const adapter = walletAdapterFactory.getAdapter(walletType);
+        return adapter.isAvailable();
+      }
+      return false;
     } catch {
       return false;
     }
@@ -449,13 +452,28 @@ const getters = {
   },
 
   // Multi-wallet getters
-  isWalletConnected: (chainUID: string) => {
-    const wallet = state.connectedWallets[chainUID];
-    return wallet ? wallet.isConnected : false;
+  hasWallet: (chainUID: string) => {
+    // Check if wallet exists for this chain
+    return !!state.connectedWallets[chainUID];
   },
 
+  getAllWallets: () => {
+    // Return all saved wallets
+    return Object.values(state.connectedWallets);
+  },
+
+  /**
+   * @deprecated Use hasWallet() instead
+   */
+  isWalletConnected: (chainUID: string) => {
+    return !!state.connectedWallets[chainUID];
+  },
+
+  /**
+   * @deprecated Use getAllWallets() instead
+   */
   getAllConnectedWallets: () => {
-    return Object.values(state.connectedWallets).filter(wallet => wallet.isConnected);
+    return Object.values(state.connectedWallets);
   },
 
   getWalletBalance: (chainUID: string, tokenSymbol: string) => {
@@ -487,11 +505,10 @@ const getters = {
   },
 };
 
-// Proper store type definition extending BaseStore
 export interface WalletStore extends BaseStore<ExtendedWalletState> {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
-  connectWallet: (walletType: 'metamask' | 'keplr' | 'phantom', chainId?: string) => Promise<void>;
+  connectWallet: (walletType: string, chainId?: string) => Promise<void>;
   disconnectWallet: (chainUID?: string) => Promise<void>;
   setBalances: (balances: UserBalance[]) => void;
   updateBalance: (tokenId: string, balance: string) => void;
@@ -507,14 +524,17 @@ export interface WalletStore extends BaseStore<ExtendedWalletState> {
   getBalance: (tokenId: string) => UserBalance | undefined;
   getFormattedBalance: (tokenId: string, decimals?: number) => string;
   hasSufficientBalance: (tokenIdOrChainUID: string, amountOrTokenId?: string, amountParam?: string) => boolean;
-  isWalletAvailable: (walletType: 'metamask' | 'keplr' | 'phantom') => boolean;
-  getAvailableWallets: () => ('metamask' | 'keplr' | 'phantom')[];
-  isWalletConnected: (chainUID: string) => boolean;
-  getAllConnectedWallets: () => WalletInfo[];
+  isWalletAvailable: (walletType: string) => boolean;
+  getAvailableWallets: () => string[];
+  hasWallet: (chainUID: string) => boolean;
+  getAllWallets: () => WalletInfo[];
   getWalletBalance: (chainUID: string, tokenSymbol: string) => UserBalance | null;
   getWallet: (chainUID: string) => WalletInfo | null;
   addTransaction: (chainUID: string, transaction: { txHash: string; timestamp?: number; type?: string }) => void;
   updateTransactionStatus: (chainUID: string, txHash: string, status: 'pending' | 'confirmed' | 'failed') => void;
+  // Deprecated methods for backward compatibility
+  isWalletConnected: (chainUID: string) => boolean;
+  getAllConnectedWallets: () => WalletInfo[];
 }
 
 export const walletStore: WalletStore = {

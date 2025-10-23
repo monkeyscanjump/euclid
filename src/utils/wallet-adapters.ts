@@ -3,8 +3,23 @@
  * Unified interface for different wallet providers
  */
 
-import type { WalletAdapter } from './types/euclid-api.types';
-import type { EuclidChainConfig, TransactionResponse } from './types/api.types';
+import { WalletType, CoreWalletType, CORE_WALLET_TYPES } from './types/wallet.types';
+
+// Type aliases for methods that need these types (TODO: Replace with proper types)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type TransactionResponse = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type EuclidChainConfig = any;
+
+/**
+ * Base wallet adapter interface
+ */
+export interface WalletAdapter {
+  type: WalletType;
+  isAvailable(): boolean;
+  connect(chainId?: string): Promise<{ address: string; chainId: string }>;
+  disconnect(): Promise<void>;
+}
 
 /**
  * MetaMask wallet adapter for EVM chains
@@ -52,6 +67,47 @@ export class MetaMaskAdapter implements WalletAdapter {
   async disconnect(): Promise<void> {
     // MetaMask doesn't have a disconnect method, this is handled by the wallet
     console.log('MetaMask disconnect requested');
+  }
+
+  async getCurrentAccount(): Promise<{ address: string; chainId: string; name?: string } | null> {
+    if (!this.isAvailable()) {
+      return null;
+    }
+
+    try {
+      // Get current accounts without prompting
+      const accounts = await window.ethereum.request({
+        method: 'eth_accounts'
+      }) as string[];
+
+      if (!accounts || accounts.length === 0) {
+        return null;
+      }
+
+      // Get current chain ID
+      const chainId = await window.ethereum.request({
+        method: 'eth_chainId'
+      }) as string;
+
+      // Try to get wallet name from extension
+      let walletName: string | undefined;
+      try {
+        // For MetaMask, we know it's MetaMask if isMetaMask is true
+        walletName = window.ethereum.isMetaMask ? 'MetaMask' : 'EVM Wallet';
+      } catch {
+        // Fallback to generic name
+        walletName = 'MetaMask';
+      }
+
+      return {
+        address: accounts[0],
+        chainId: parseInt(chainId, 16).toString(),
+        name: walletName
+      };
+    } catch (error) {
+      console.warn('Failed to get current MetaMask account:', error);
+      return null;
+    }
   }
 
   async getBalance(address: string): Promise<string> {
@@ -192,6 +248,46 @@ export class KeplrAdapter implements WalletAdapter {
     console.log('Keplr disconnect requested');
   }
 
+  async getCurrentAccount(): Promise<{ address: string; chainId: string; name?: string } | null> {
+    if (!this.isAvailable()) {
+      return null;
+    }
+
+    try {
+      // Try to get current account for the default chain WITHOUT PROMPTING
+      const defaultChainId = 'cosmoshub-4';
+
+      // DO NOT CALL enable() - it prompts the user!
+      // Only check if we already have access
+
+      const offlineSigner = window.keplr.getOfflineSigner(defaultChainId) as {
+        getAccounts: () => Promise<Array<{ address: string; name?: string }>>;
+      };
+
+      const accounts = await offlineSigner.getAccounts();
+      if (!accounts || accounts.length === 0) {
+        return null;
+      }
+
+      // Try to get wallet name
+      let walletName: string | undefined;
+      try {
+        walletName = accounts[0].name || 'Keplr Wallet';
+      } catch {
+        walletName = 'Keplr Wallet';
+      }
+
+      return {
+        address: accounts[0].address,
+        chainId: defaultChainId,
+        name: walletName
+      };
+    } catch (error) {
+      console.warn('Failed to get current Keplr account:', error);
+      return null;
+    }
+  }
+
   async getBalance(_address: string): Promise<string> {
     // This would require a Cosmos LCD client
     throw new Error('Balance checking not implemented for Keplr');
@@ -310,6 +406,40 @@ export class PhantomAdapter implements WalletAdapter {
     }
   }
 
+  async getCurrentAccount(): Promise<{ address: string; chainId: string; name?: string } | null> {
+    if (!this.isAvailable()) {
+      return null;
+    }
+
+    try {
+      // For Phantom, if already connected, this should return the current connection
+      const response = await window.solana.connect();
+      if (!response?.publicKey) {
+        return null;
+      }
+
+      // For Solana, chainId is typically 'mainnet-beta' or 'devnet'
+      const chainId = 'solana-mainnet';
+
+      // Try to get wallet name
+      let walletName: string | undefined;
+      try {
+        walletName = window.solana.isPhantom ? 'Phantom' : 'Solana Wallet';
+      } catch {
+        walletName = 'Phantom';
+      }
+
+      return {
+        address: response.publicKey.toString(),
+        chainId,
+        name: walletName
+      };
+    } catch {
+      // User probably not connected
+      return null;
+    }
+  }
+
   async getBalance(_address: string): Promise<string> {
     // This would require a Solana connection
     throw new Error('Balance checking not implemented for Phantom');
@@ -343,16 +473,16 @@ export class WalletAdapterFactory {
     this.adapters.set('phantom', new PhantomAdapter());
   }
 
-  getAdapter(type: 'metamask' | 'keplr' | 'phantom' | 'cosmostation' | 'walletconnect' | 'custom'): WalletAdapter {
+  getAdapter(type: WalletType): WalletAdapter {
     // Map additional types to existing adapters for now
     let adapterType = type;
     if (type === 'cosmostation') adapterType = 'keplr'; // Cosmostation uses similar interface to Keplr
     if (type === 'walletconnect') adapterType = 'metamask'; // WalletConnect for EVM
     if (type === 'custom') adapterType = 'metamask'; // Default to MetaMask for custom wallets
 
-    const adapter = this.adapters.get(adapterType);
+    const adapter = this.adapters.get(adapterType as CoreWalletType);
     if (!adapter) {
-      throw new Error(`Unsupported wallet type: ${type}`);
+      throw new Error(`Wallet adapter not found for type: ${type}`);
     }
     return adapter;
   }
@@ -361,8 +491,12 @@ export class WalletAdapterFactory {
     return Array.from(this.adapters.values()).filter(adapter => adapter.isAvailable());
   }
 
-  getAvailableWalletTypes(): ('metamask' | 'keplr' | 'phantom')[] {
-    return this.getAvailableAdapters().map(adapter => adapter.type);
+  getAvailableWalletTypes(): CoreWalletType[] {
+    return this.getAvailableAdapters()
+      .map(adapter => adapter.type)
+      .filter((type): type is CoreWalletType =>
+        CORE_WALLET_TYPES.includes(type as CoreWalletType)
+      );
   }
 }
 

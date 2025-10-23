@@ -14,8 +14,14 @@ import type {
   TransactionResponse
 } from './api.types';
 
+import type {
+  WalletType,
+  Wallet
+} from './wallet.types';
+
 // Re-export for convenience
 export type { RoutePath } from './api.types';
+export type { WalletType, Wallet } from './wallet.types';
 
 // Legacy alias
 export type ChainInfo = EuclidChainConfig;
@@ -25,32 +31,17 @@ export type ChainInfo = EuclidChainConfig;
 // ============================================================================
 
 export interface WalletState extends Record<string, unknown> {
-  isConnected: boolean;
   address: string | null;
   chainId: string | null;
   chainUID: string | null;
-  walletType: 'metamask' | 'keplr' | 'phantom' | null;
+  walletType: WalletType | null;
   balances: UserBalance[];
   loading: boolean;
   error: string | null;
 }
 
-// Multi-chain wallet info type
-export interface WalletInfo {
-  address: string;
-  chainUID: string;
-  isConnected: boolean;
-  walletType: 'metamask' | 'keplr' | 'phantom' | 'cosmostation' | 'walletconnect' | 'custom';
-  type?: 'metamask' | 'keplr' | 'phantom' | 'cosmostation' | 'walletconnect' | 'custom'; // legacy alias for walletType
-  name?: string; // legacy compatibility
-  balances: UserBalance[];
-  // Additional fields for multi-chain support
-  chainName?: string;
-  chainType?: string;
-  chainLogo?: string;
-  addedAt?: Date;
-  lastUsed?: Date;
-}
+// Multi-chain wallet info type - just use Wallet interface directly
+export type WalletInfo = Wallet;
 
 export interface SwapState extends Record<string, unknown> {
   tokenIn: TokenMetadata | null;
@@ -161,19 +152,8 @@ export interface EuclidRESTClient {
 }
 
 // ============================================================================
-// WALLET ADAPTER TYPES
+// WALLET ADAPTER TYPES - REMOVED: Now using wallet.types.ts
 // ============================================================================
-
-export interface WalletAdapter {
-  type: 'metamask' | 'keplr' | 'phantom';
-  isAvailable(): boolean;
-  connect(chainId?: string): Promise<{ address: string; chainId: string }>;
-  disconnect(): Promise<void>;
-  getBalance(address: string): Promise<string>;
-  signAndBroadcast(transaction: TransactionResponse): Promise<string>;
-  switchChain(chainId: string): Promise<void>;
-  addChain(config: EuclidChainConfig): Promise<void>;
-}
 
 // ============================================================================
 // EVENT TYPES
@@ -183,7 +163,7 @@ export interface WalletConnectedEvent {
   address: string;
   chainId: string;
   chainUID: string;
-  walletType: 'metamask' | 'keplr' | 'phantom';
+  walletType: WalletType;
 }
 
 export interface SwapCompletedEvent {
@@ -210,8 +190,7 @@ export interface LiquidityRemovedEvent {
 // ============================================================================
 // UTILITY TYPES
 // ============================================================================
-
-export type ChainType = 'EVM' | 'Cosmwasm';
+// ChainType moved to wallet.types.ts
 
 export interface FormattedBalance {
   raw: string;

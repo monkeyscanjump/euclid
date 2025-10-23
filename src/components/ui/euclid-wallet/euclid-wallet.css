@@ -81,6 +81,16 @@
   color: var(--euclid-success-color, #16a34a);
 }
 
+.connection-indicator.disconnected {
+  background: var(--euclid-error-bg, #fee2e2);
+  color: var(--euclid-error-color, #dc2626);
+}
+
+.connection-indicator.checking {
+  background: var(--euclid-warning-bg, #fef3c7);
+  color: var(--euclid-warning-color, #d97706);
+}
+
 .connection-indicator.saved {
   background: var(--euclid-muted-bg, #f1f5f9);
   color: var(--euclid-text-secondary, #64748b);
@@ -165,5 +175,85 @@
 
   .connection-dot {
     box-shadow: 0 0 0 2px var(--euclid-surface-dark, #1e293b);
+  }
+}
+
+/* Action Buttons */
+.wallet-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  margin-left: auto;
+}
+
+.wallet-card:hover .wallet-actions {
+  opacity: 1;
+}
+
+.wallet-card .wallet-actions[style*="opacity: 1"] {
+  opacity: 1;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  background: var(--euclid-surface-secondary, #f8fafc);
+  color: var(--euclid-text-secondary, #64748b);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+}
+
+.action-btn:hover {
+  background: var(--euclid-surface-tertiary, #f1f5f9);
+  transform: scale(1.05);
+}
+
+.disconnect-btn:hover {
+  background: var(--euclid-warning-50, #fefbeb);
+  color: var(--euclid-warning-600, #d97706);
+}
+
+.delete-btn:hover {
+  background: var(--euclid-error-50, #fef2f2);
+  color: var(--euclid-error-600, #dc2626);
+}
+
+.edit-btn:hover {
+  background: var(--euclid-primary-50, #eff6ff);
+  color: var(--euclid-primary-600, #2563eb);
+}
+
+/* Dark theme support for action buttons */
+@media (prefers-color-scheme: dark) {
+  .action-btn {
+    background: var(--euclid-surface-dark-secondary, #374151);
+    color: var(--euclid-text-secondary-dark, #94a3b8);
+  }
+
+  .action-btn:hover {
+    background: var(--euclid-surface-dark-tertiary, #4b5563);
+  }
+
+  .disconnect-btn:hover {
+    background: var(--euclid-warning-900, #78350f);
+    color: var(--euclid-warning-300, #fbbf24);
+  }
+
+  .delete-btn:hover {
+    background: var(--euclid-error-900, #7f1d1d);
+    color: var(--euclid-error-300, #fca5a5);
+  }
+
+  .edit-btn:hover {
+    background: var(--euclid-primary-900, #1e3a8a);
+    color: var(--euclid-primary-300, #93c5fd);
   }
 }

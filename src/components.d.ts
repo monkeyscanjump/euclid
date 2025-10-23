@@ -554,6 +554,10 @@ export namespace Components {
          */
         "clickable": boolean;
         /**
+          * @default false
+         */
+        "showActions": boolean;
+        /**
           * @default true
          */
         "showChainInfo": boolean;
@@ -944,6 +948,9 @@ declare global {
     };
     interface HTMLEuclidWalletElementEventMap {
         "walletClick": WalletData;
+        "walletDelete": WalletData;
+        "walletEdit": WalletData;
+        "walletToggleAutoConnect": WalletData;
     }
     interface HTMLEuclidWalletElement extends Components.EuclidWallet, HTMLStencilElement {
         addEventListener<K extends keyof HTMLEuclidWalletElementEventMap>(type: K, listener: (this: HTMLEuclidWalletElement, ev: EuclidWalletCustomEvent<HTMLEuclidWalletElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -1607,6 +1614,13 @@ declare namespace LocalJSX {
          */
         "clickable"?: boolean;
         "onWalletClick"?: (event: EuclidWalletCustomEvent<WalletData>) => void;
+        "onWalletDelete"?: (event: EuclidWalletCustomEvent<WalletData>) => void;
+        "onWalletEdit"?: (event: EuclidWalletCustomEvent<WalletData>) => void;
+        "onWalletToggleAutoConnect"?: (event: EuclidWalletCustomEvent<WalletData>) => void;
+        /**
+          * @default false
+         */
+        "showActions"?: boolean;
         /**
           * @default true
          */

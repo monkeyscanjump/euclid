@@ -5,6 +5,7 @@ import { WalletAdapterFactory } from '../../../utils/wallet-adapter';
 import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
 import { walletMetadata } from '../../../assets/wallet-logos';
 import type { EuclidChainConfig } from '../../../utils/types/api.types';
+import { isEvmWalletType, isCosmosWalletType } from '../../../utils/types/wallet.types';
 
 export interface WalletProvider {
   id: string;
@@ -144,11 +145,11 @@ export class EuclidWalletContent {
 
     return this.walletProviders.filter(wallet => {
       if (isEvmChain) {
-        // EVM chains support MetaMask, Phantom, WalletConnect
-        return ['metamask', 'phantom', 'walletconnect'].includes(wallet.id);
+        // EVM chains support MetaMask, Phantom, WalletConnect - USE HELPER FUNCTION!
+        return isEvmWalletType(wallet.id);
       } else if (isCosmwasmChain) {
-        // CosmWasm chains support Keplr, Cosmostation, WalletConnect
-        return ['keplr', 'cosmostation', 'walletconnect'].includes(wallet.id);
+        // CosmWasm chains support Keplr, Cosmostation, WalletConnect - USE HELPER FUNCTION!
+        return isCosmosWalletType(wallet.id) || wallet.id === 'walletconnect';
       }
       return false;
     });

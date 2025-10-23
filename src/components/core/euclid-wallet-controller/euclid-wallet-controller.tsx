@@ -6,6 +6,7 @@ import { EUCLID_EVENTS, dispatchEuclidEvent } from '../../../utils/events';
 import type { EuclidConfig } from '../../../utils/env';
 import { DEFAULT_CONFIG } from '../../../utils/env';
 import type { EuclidChainConfig } from '../../../utils/types/api.types';
+import { WalletType, isValidWalletType, isEvmWalletType, isCosmosWalletType } from '../../../utils/types/wallet.types';
 
 @Component({
   tag: 'euclid-wallet-controller',
@@ -168,15 +169,14 @@ export class EuclidWalletController {
 
     console.log('🔗 Using chain config:', chainConfig);
 
-    // Validate wallet type (including phantom)
-    const validWalletTypes = ['keplr', 'metamask', 'cosmostation', 'walletconnect', 'phantom'];
-    if (!validWalletTypes.includes(walletType)) {
+    // Validate wallet type using helper function - NO MORE HARDCODED ARRAYS!
+    if (!isValidWalletType(walletType)) {
       throw new Error(`Unsupported wallet type: ${walletType}`);
     }
 
     console.log('✅ Wallet type validation passed');    // Use the wallet adapter factory for proper separation of concerns
     console.log('🔗 Calling WalletAdapterFactory.connectWallet...');
-    const result = await WalletAdapterFactory.connectWallet(walletType as 'keplr' | 'metamask' | 'cosmostation' | 'walletconnect' | 'phantom', chainConfig);
+    const result = await WalletAdapterFactory.connectWallet(walletType as WalletType, chainConfig);
 
     console.log('🔗 Wallet adapter result:', result);
 
@@ -187,10 +187,9 @@ export class EuclidWalletController {
       walletStore.addWallet(chainUID, {
         address: result.address,
         name: walletType,
-        walletType: walletType as 'keplr' | 'metamask' | 'phantom',
-        type: walletType as 'keplr' | 'metamask' | 'phantom', // legacy alias
-        isConnected: true,
-        balances: []
+        walletType: walletType as WalletType,
+        balances: [],
+        autoConnect: false // Default auto-connect to OFF for new wallets
       });
 
       console.log('📡 Emitting connection success event...');
@@ -277,9 +276,9 @@ export class EuclidWalletController {
       return null;
     }
 
-    // Validate that the wallet type is compatible with the chain
-    const isEvmWallet = ['metamask', 'phantom', 'walletconnect'].includes(walletType);
-    const isCosmosWallet = ['keplr', 'cosmostation'].includes(walletType);
+    // Validate that the wallet type is compatible with the chain - USE HELPER FUNCTIONS!
+    const isEvmWallet = isEvmWalletType(walletType);
+    const isCosmosWallet = isCosmosWalletType(walletType);
 
     if (config.type === 'EVM' && !isEvmWallet) {
       return null;

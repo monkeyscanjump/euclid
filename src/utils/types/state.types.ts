@@ -6,8 +6,8 @@ export interface WalletInfo {
   chainUID: string;
   name?: string;
   type: 'keplr' | 'metamask' | 'walletconnect' | 'other';
-  isConnected: boolean;
   balances: TokenBalance[];
+  autoConnect?: boolean; // Auto-reconnect when session expires
 }
 
 export interface WalletState {

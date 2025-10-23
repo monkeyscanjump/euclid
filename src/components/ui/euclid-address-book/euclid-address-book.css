@@ -259,6 +259,12 @@
   height: 100%;
 }
 
+.wallets-section {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
 .chain-header {
   display: flex;
   justify-content: space-between;
@@ -650,4 +656,41 @@
     align-self: flex-end;
     margin-left: 0;
   }
+}
+
+/* Wallet Groups */
+.wallets-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--euclid-space-6);
+  height: 100%;
+  overflow-y: auto;
+}
+
+.wallet-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--euclid-space-4);
+}
+
+.group-title {
+  font-size: var(--euclid-text-sm);
+  font-weight: var(--euclid-font-medium);
+  color: var(--euclid-text-secondary);
+  margin: 0;
+  padding: var(--euclid-space-2) var(--euclid-space-3);
+  background: var(--euclid-surface-secondary);
+  border-radius: var(--euclid-radius-sm);
+  border: 1px solid var(--euclid-border);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+/* Ensure wallet-list uses grid layout with proper overflow handling */
+.wallet-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--euclid-space-4);
+  /* Remove fixed height to allow natural content flow */
 }
